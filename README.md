@@ -1,6 +1,6 @@
 # brainkit
 
-An opinionated second brain, built as a [pi](https://github.com/badlogic/pi-mono) extension. Talk to your agent — it knows your vault, your people, your accomplishments. Open pi anywhere, brainkit is always with you.
+An opinionated second brain, powered by [pi](https://github.com/badlogic/pi-mono). Just talk.
 
 ```
         _---~~(~~-_.
