@@ -29,98 +29,56 @@ Or try it without installing:
 pi -e git:github.com/oribarilan/brainkit
 ```
 
+Update anytime with `pi update`. Brainkit tells you when a new version is available.
+
+## What is this?
+
+A structured markdown vault that follows the [PARA method](https://fortelabs.com/blog/para/), with an agent that actually understands it. You talk, things happen:
+
+- _"I just shipped the API redesign"_ — adds it to your bragfile, in the right section
+- _"I had a meeting with Sarah about the migration"_ — creates meeting notes, cross-references Sarah from contacts, files it under the right project
+- _"Who was that engineer from the platform team?"_ — searches your contacts
+
+No commands, no formatting, no manual filing. The agent handles it.
+
 ## Getting Started
 
 ```bash
 pi
 ```
 
-Then:
-
-1. Type `/setup` or _"help me set up my vault"_
-2. The agent walks you through a getting-to-know-you conversation — work, personal life, preferences
-3. It creates your vault structure, writes your config, and pre-creates directories that match your life
-4. Start talking
-
-## What is this?
-
-Brainkit turns pi into a persistent knowledge system. It's a structured markdown vault organized with the [PARA method](https://fortelabs.com/blog/para/), extended with typed tools for deterministic operations and skills that teach the agent domain knowledge.
-
-You don't interact with brainkit through commands or UIs. You talk:
-
-- _"I just shipped the API redesign"_ — agent offers to add it to your bragfile
-- _"I had a meeting with Sarah about the migration"_ — agent creates structured meeting notes, cross-references Sarah from your contacts, files it under the right project
-- _"Who was that engineer from the platform team?"_ — agent searches your contacts
-
-The agent handles formatting, placement, and conventions. You just talk.
-
-## Principles
-
-### Discoverability
-
-Everything is easy to find. Rotating status bar hints, command reference in the header, and skills that teach the agent to mention features when they're relevant — gently, not pushily.
-
-### Just Works
-
-No commands needed for common operations. Skills teach the agent judgment — _when_ to create meeting notes, _when_ to suggest a brag entry, _how_ to decide where something goes in PARA. Typed tools handle the rest deterministically.
-
-### Auto-Update
-
-Brainkit checks for updates on session start. A sticky status bar shows when a new version is available. After updating, you see what changed.
+Type `/setup` and the agent walks you through a getting-to-know-you conversation — your work, your personal life, your preferences. It creates a vault that matches your actual life, not an empty template.
 
 ## Features
 
-### PARA Vault Structure
+### PARA vault
 
-Mandatory, opinionated organization:
+Everything goes into four directories:
 
 - **`01_projects/`** — active efforts with a deadline (work and personal)
-- **`02_areas/`** — ongoing responsibilities (career, health, finances, home)
-- **`03_resources/`** — reference material (notes, recipes, patterns)
-- **`04_archive/`** — completed/inactive items
+- **`02_areas/`** — ongoing responsibilities (career, health, finances)
+- **`03_resources/`** — reference material and interests
+- **`04_archive/`** — done or no longer relevant
 
 ### Bragfile
 
-A running log of professional accomplishments at `02_areas/career/bragfile.md`. The `brain_add_brag` tool programmatically finds the right half-year/month section and appends a correctly formatted entry — the agent never guesses at placement. The agent recognizes accomplishments in conversation and offers to capture them. If your bragfile hasn't been updated in 14+ days, the agent gently reminds you.
+A log of professional accomplishments at `02_areas/career/bragfile.md`. The agent recognizes accomplishments in conversation and offers to capture them. Entries are placed programmatically — correct section, correct format, every time. Nudges you if it's been more than two weeks.
 
 ### Contacts
 
-A people index at `03_resources/contacts.md` spanning both professional and personal life. Search with `brain_query_contacts`, add with `brain_add_contact`. The agent cross-references people mentioned in conversation and suggests adding new contacts.
+A people index at `03_resources/contacts.md` — colleagues, family, doctors, anyone. The agent cross-references people when they come up in conversation and suggests adding new ones.
 
-### Meeting Notes
+### Meeting notes
 
-Structured notes filed under the relevant PARA directory. Named `YYYY-MM-DD-topic.md`. Works for work meetings, doctor appointments, school conferences — the agent creates them when you mention any kind of meeting, with attendees, decisions, and action items.
+Structured notes from any meeting — work, doctor visits, school conferences. Filed under the relevant PARA directory, named `YYYY-MM-DD-topic.md`, with attendees, decisions, and action items.
 
-### Vault Health
+### Vault health
 
-`/doctor` checks your vault and fixes issues — creates missing directories, validates naming conventions, reports orphaned files, and verifies your GitHub repo is private. Never deletes, always archives. Detects stale projects that may need archiving.
+`/doctor` fixes issues automatically — missing directories, naming violations, orphaned files. Checks that your GitHub repo is private. Detects stale projects that might need archiving. Never deletes, always archives.
 
-### Auto-Commit
+### Auto-commit
 
-Vault changes are automatically committed to git after each conversation. Debounced (30s) so rapid changes collapse into one commit. Flushes on session end. Skips silently if not a git repo.
-
-### Personalized Onboarding
-
-First run walks you through a comprehensive getting-to-know-you conversation — your professional role, team, current projects, personal responsibilities, family, hobbies. The agent uses this to pre-create PARA directories that match your actual life and write a rich config. The vault feels personalized from the start, not empty and generic.
-
-## Architecture
-
-Two layers that complement each other:
-
-| Layer                  | What                     | Why                                                                        |
-| ---------------------- | ------------------------ | -------------------------------------------------------------------------- |
-| **Tools** (TypeScript) | Deterministic operations | `brain_add_brag` finds the right section and appends correctly, every time |
-| **Skills** (Markdown)  | Domain knowledge         | Teaches the agent _when_ to suggest a brag, _how_ to structure notes       |
-
-Tools handle the **how**. Skills handle the **when** and **why**.
-
-## Updating
-
-```bash
-pi update
-```
-
-Brainkit shows a sticky status bar notification when updates are available, and displays a changelog on first run after updating.
+Vault changes are git-committed automatically after conversations. Debounced so rapid changes collapse into one commit. Skips silently if not a git repo.
 
 ## License
 
