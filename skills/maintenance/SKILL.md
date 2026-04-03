@@ -35,6 +35,16 @@ The tool checks:
 - New features may require new directories or files.
 - `/doctor` handles this: calls `brain_doctor` which creates missing structure and reports changes.
 
+## Staleness Detection
+
+When the user asks about vault health or cleanup, proactively check for stale content:
+
+- **Stale projects** — projects with no recent files or updates. Use `brain_search` to check for recent dated files (meeting notes, entries). If a project has no files newer than ~3 months, suggest asking the user if it should be archived.
+- **Stale resources** — resources that haven't been referenced or updated. Less urgent than projects, but worth mentioning during cleanup.
+- **Empty directories** — PARA subdirectories with no content (just a README.md). Suggest removing or archiving.
+
+When suggesting archival, always ask — never archive without user confirmation. Follow the archival workflow described in the PARA skill.
+
 ## Common Issues and Fixes
 
 | Issue                  | Fix                                              |
