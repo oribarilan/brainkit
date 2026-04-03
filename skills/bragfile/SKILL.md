@@ -1,6 +1,8 @@
 # Bragfile
 
-A running log of professional accomplishments. Lives at `02_areas/career/bragfile.md`. Used for performance reviews, resume updates, and self-advocacy.
+A running log of **professional** accomplishments. Lives at `02_areas/career/bragfile.md`. Used for performance reviews, resume updates, and self-advocacy.
+
+The bragfile is specifically for career and work accomplishments. Personal wins (ran first 10K, finished a home renovation, learned a new language) are great — but they belong in the relevant personal area notes (e.g., `02_areas/health/`, `01_projects/home-renovation/`) rather than the bragfile.
 
 ## Format
 

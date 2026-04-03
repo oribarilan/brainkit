@@ -22,6 +22,12 @@ Each person gets an H2 heading (full name) with structured fields:
 - **Role**: Engineering Manager
 - **Team**: Security
 - **Relation**: Skip-level manager
+
+## Dr. Emily Park
+
+- **Role**: Family Doctor
+- **Relation**: Primary care physician since 2023
+- **Relevant For**: Annual checkups, referrals
 ```
 
 - **Required**: Name (the H2 heading)
@@ -38,12 +44,16 @@ Each person gets an H2 heading (full name) with structured fields:
 - User mentions a person by name — check if they're in contacts
 - Creating meeting notes — link attendees to contacts
 - Discussing a project — mention relevant contacts who may be useful
+- Personal contexts — doctor appointments, school meetings, contractor discussions
 
 ## When to Suggest Adding a Contact
 
-Offer when the user mentions someone new who seems professionally relevant:
+Offer when the user mentions someone new who seems relevant — professionally or personally:
 
 - A new colleague, collaborator, or stakeholder comes up in conversation
 - Meeting notes reference someone not already in the index
+- A new personal contact comes up — neighbor, contractor, kids' teacher, financial advisor
+
+Contacts span both professional and personal life. A person might be both a colleague and a friend — that's fine, note both relationships.
 
 Never add people without asking first. A simple "Want me to add them to your contacts?" is enough.

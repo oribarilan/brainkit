@@ -8,23 +8,23 @@ PARA is a system by Tiago Forte for organizing information into four categories:
 
 Short-term work with a clear goal AND a clear end state. When it's done, it's done.
 
-Examples: `launch-api-v2/`, `hire-frontend-dev/`, `migrate-to-aws/`
+Examples: `launch-api-v2/`, `hire-frontend-dev/`, `migrate-to-aws/`, `home-renovation/`, `learn-rust/`, `half-marathon-training/`
 
 ### `02_areas/` — Ongoing responsibilities
 
 Long-term responsibilities with NO end date. Maintained continuously over time.
 
-Examples: `career/`, `health/`, `team-management/`, `finances/`
+Examples: `career/`, `team-management/`, `health/`, `finances/`, `home/`, `parenting/`
 
 ### `03_resources/` — Reference material
 
 Topics of interest or useful reference. Not tied to a specific responsibility.
 
-Examples: `rust-notes/`, `architecture-patterns/`, `interview-questions/`
+Examples: `rust-notes/`, `architecture-patterns/`, `interview-questions/`, `cooking-recipes/`, `travel-planning/`, `book-notes/`
 
 ### `04_archive/` — Inactive items
 
-The graveyard for completed projects, abandoned efforts, and outdated resources. Items from any of the above three categories end up here.
+The graveyard for completed projects, abandoned efforts, and outdated resources. Items from any of the above three categories end up here — completed personal projects, past hobbies, and finished professional work alike.
 
 ## How to decide where something goes
 

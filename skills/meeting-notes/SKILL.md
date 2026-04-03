@@ -9,9 +9,20 @@ Structured notes from meetings, filed under the relevant PARA directory based on
 - General or recurring meeting → `03_resources/meetings/` or relevant resource dir
 - Use judgment based on what the meeting is about.
 
+Personal examples:
+
+- Doctor appointment → `02_areas/health/`
+- Parent-teacher conference → `02_areas/parenting/`
+- Contractor meeting → `01_projects/home-renovation/`
+- Financial advisor session → `02_areas/finances/`
+
+## What Counts as a "Meeting"
+
+In a personal context, "meetings" include doctor appointments, school meetings, financial advisor sessions, contractor walkthroughs, or any scheduled conversation worth capturing notes from.
+
 ## Naming Convention
 
-`YYYY-MM-DD-topic.md` (e.g., `2026-04-03-api-redesign-kickoff.md`)
+`YYYY-MM-DD-topic.md` (e.g., `2026-04-03-api-redesign-kickoff.md`, `2026-04-03-annual-checkup.md`)
 
 ## Template
 
@@ -44,6 +55,7 @@ Key points discussed, organized by topic.
 - **Bold all decisions and action items.**
 - Use `self` to refer to the vault owner.
 - Keep it concise — capture decisions and actions, not transcripts.
+- Personal meetings may be simpler — a doctor visit might just have notes and follow-ups, no formal "decisions" or "action items" sections needed.
 - Use `brain_write` to create the file in the right location.
 
 ## When to Create

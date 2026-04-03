@@ -21,10 +21,12 @@ When a user runs /setup or asks to set up their vault:
 
 1. Ask where their vault should live (absolute path)
 2. Call brain_setup_vault with the path
-3. Ask personalization questions: name, role, expertise (comma-separated), tone preference, scope (professional/personal/both)
-4. Construct a brainkit.toml and write it with brain_write at path "brainkit.toml"
+3. Use the onboarding skill to conduct a comprehensive Q&A covering both professional and personal life — basics (name, role, expertise), work context (projects, team, collaborators, work rhythm), personal life (family, personal projects, responsibilities, hobbies), and communication preferences (tone, custom rules)
+4. Construct a brainkit.toml with a rich `context` field summarizing everything learned, and write it with brain_write at path "brainkit.toml"
 5. Call brain_doctor to create the vault structure
-6. Confirm setup is complete
+6. Pre-create relevant PARA directories with README.md files based on the conversation
+7. Offer first brag entry and first contacts based on what was discussed
+8. Confirm setup is complete
 
 Example brainkit.toml:
 
@@ -37,7 +39,14 @@ name = "Ori"
 role = "Senior Backend Engineer"
 expertise = ["distributed systems", "API design"]
 tone = "direct and technical"
-scope = "professional"
+scope = "both"
+context = """
+Professional: Senior Backend Engineer at Acme Corp, threat detection platform.
+Team of 8, reports to VP Engineering.
+
+Personal: Married, two kids. Interests: woodworking, running.
+Training for a half marathon. Planning kitchen renovation.
+"""
 rules = []
 
 [features]
