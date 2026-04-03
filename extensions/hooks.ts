@@ -36,7 +36,7 @@ const ACCOMPLISHMENT_KEYWORDS = [
  * than its own work.  We look for "you"/"your" within ~50 characters of the
  * keyword match.
  */
-function containsUserAccomplishment(text: string): boolean {
+export function containsUserAccomplishment(text: string): boolean {
   const lowerText = text.toLowerCase();
 
   for (const keyword of ACCOMPLISHMENT_KEYWORDS) {

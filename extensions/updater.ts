@@ -23,7 +23,7 @@ function getLocalVersion(): string {
   return pkg.version ?? "0.0.0";
 }
 
-function isNewerVersion(current: string, remote: string): boolean {
+export function isNewerVersion(current: string, remote: string): boolean {
   const c = current.split(".").map(Number);
   const r = remote.split(".").map(Number);
   for (let i = 0; i < 3; i++) {
@@ -37,7 +37,7 @@ function isNewerVersion(current: string, remote: string): boolean {
 // Changelog parsing
 // ---------------------------------------------------------------------------
 
-function parseChangelog(content: string, fromVersion: string, toVersion: string): string | null {
+export function parseChangelog(content: string, fromVersion: string, toVersion: string): string | null {
   // fromVersion = lastSeenVersion (old), toVersion = currentVersion (new)
   // Return entries from toVersion down to (but not including) fromVersion
   const sections = content.split(/^## /m).filter((s) => s.trim());

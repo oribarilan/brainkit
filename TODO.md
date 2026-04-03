@@ -23,7 +23,7 @@ Ideas and future work for brainkit.
 ## Infrastructure
 
 - [ ] **npm distribution** — Publish to npm for shorter install commands and semver guarantees.
-- [ ] **Test suite** — Unit tests for vault operations, bragfile parsing, contacts parsing, system prompt builder, changelog parser, version comparison.
+- [x] **Test suite** — Unit tests for vault operations, bragfile parsing, contacts parsing, system prompt builder, changelog parser, version comparison.
 - [ ] **CI/CD** — GitHub Actions for linting, testing, and automated releases with changelog generation.
 - [ ] **Vault backup** — Periodic git commits of the vault, or integration with git-based backup.
 - [ ] **Multi-vault support** — Switch between vaults (work, personal) from within a session.

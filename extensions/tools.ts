@@ -48,7 +48,7 @@ function getAllMarkdownFiles(dir: string): string[] {
   return results;
 }
 
-function isPathWithinVault(vaultPath: string, relativePath: string): boolean {
+export function isPathWithinVault(vaultPath: string, relativePath: string): boolean {
   const resolved = path.resolve(vaultPath, relativePath);
   const normalizedVault = path.resolve(vaultPath);
   return resolved.startsWith(normalizedVault + path.sep) || resolved === normalizedVault;
