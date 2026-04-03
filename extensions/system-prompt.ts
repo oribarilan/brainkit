@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import { isVaultFresh } from "./vault.js";
 import type { BrainkitConfig } from "./vault.js";
 
 // ---------------------------------------------------------------------------
@@ -134,6 +135,23 @@ export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd
 
       sections.push(projectContext);
     }
+  }
+
+  // ── 8. Onboarding (fresh vault detection) ─────────────────────────
+  try {
+    if (isVaultFresh(vaultPath, config)) {
+      const onboarding = [
+        "## Fresh Vault Detected",
+        "",
+        "This vault was just set up and has no content yet.",
+        "Guide the user through their first entries using the onboarding skill.",
+        "Be conversational and welcoming, not a checklist.",
+      ].join("\n");
+
+      sections.push(onboarding);
+    }
+  } catch {
+    // If detection fails, skip — don't block the prompt
   }
 
   return sections.join("\n\n") + "\n";

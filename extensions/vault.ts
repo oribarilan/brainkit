@@ -369,6 +369,47 @@ export function addContact(vaultPath: string, contact: Contact): void {
 }
 
 // ---------------------------------------------------------------------------
+// Vault freshness detection
+// ---------------------------------------------------------------------------
+
+export function isVaultFresh(vaultPath: string, config: BrainkitConfig): boolean {
+  // A vault is "fresh" if all of these are true:
+  // 1. Bragfile is empty or just has the heading (if feature enabled)
+  // 2. Contacts file is empty or just has the heading (if feature enabled)
+  // 3. No project directories exist in 01_projects/
+
+  let bragEmpty = true;
+  let contactsEmpty = true;
+  let noProjects = true;
+
+  if (config.features.bragfile) {
+    const content = readBragfile(vaultPath);
+    // "empty" means null, empty string, or just "# Bragfile\n" (the template)
+    bragEmpty = content === null || content.trim() === "" || content.trim() === "# Bragfile";
+  }
+
+  if (config.features.contacts) {
+    const content = readContacts(vaultPath);
+    contactsEmpty = content === null || content.trim() === "" || content.trim() === "# Contacts";
+  }
+
+  try {
+    const projectsDir = path.resolve(vaultPath, PARA.projects);
+    const entries = fs.readdirSync(projectsDir);
+    const dirs = entries.filter((e) => {
+      if (e.startsWith(".")) return false;
+      const stat = fs.statSync(path.join(projectsDir, e));
+      return stat.isDirectory();
+    });
+    noProjects = dirs.length === 0;
+  } catch {
+    // Directory doesn't exist or isn't readable — treat as no projects
+  }
+
+  return bragEmpty && contactsEmpty && noProjects;
+}
+
+// ---------------------------------------------------------------------------
 // Health checks
 // ---------------------------------------------------------------------------
 

@@ -14,6 +14,7 @@ import {
   runHealthChecks,
   readVaultFile,
   writeVaultFile,
+  isVaultFresh,
   type Contact,
   type BrainkitConfig,
 } from "../vault.js";
@@ -760,5 +761,61 @@ describe("runHealthChecks", () => {
 
     const namingResult = results.find((r) => r.check === "Naming conventions");
     expect(namingResult?.status).toBe("pass");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isVaultFresh
+// ---------------------------------------------------------------------------
+
+describe("isVaultFresh", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "brainkit-test-"));
+    setupHealthyVault(tempDir);
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("returns true for a freshly created vault", () => {
+    const config = makeConfig();
+    expect(isVaultFresh(tempDir, config)).toBe(true);
+  });
+
+  it("returns false when bragfile has entries", () => {
+    appendBragEntry(tempDir, { description: "Shipped something" });
+    const config = makeConfig();
+    expect(isVaultFresh(tempDir, config)).toBe(false);
+  });
+
+  it("returns false when contacts has entries", () => {
+    addContact(tempDir, { name: "Alice", role: "Engineer" });
+    const config = makeConfig();
+    expect(isVaultFresh(tempDir, config)).toBe(false);
+  });
+
+  it("returns false when projects directory has subdirectories", () => {
+    mkdirSync(join(tempDir, PARA.projects, "my-project"), { recursive: true });
+    const config = makeConfig();
+    expect(isVaultFresh(tempDir, config)).toBe(false);
+  });
+
+  it("returns true when bragfile feature is disabled and contacts are empty", () => {
+    const config = makeConfig({ bragfile: false });
+    expect(isVaultFresh(tempDir, config)).toBe(true);
+  });
+
+  it("returns true when contacts feature is disabled and bragfile is empty", () => {
+    const config = makeConfig({ contacts: false });
+    expect(isVaultFresh(tempDir, config)).toBe(true);
+  });
+
+  it("ignores hidden directories in projects", () => {
+    mkdirSync(join(tempDir, PARA.projects, ".hidden"), { recursive: true });
+    const config = makeConfig();
+    expect(isVaultFresh(tempDir, config)).toBe(true);
   });
 });

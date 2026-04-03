@@ -30,7 +30,7 @@ Ideas and future work for brainkit.
 
 ## UX
 
-- [ ] **Onboarding improvements** — Detect empty vault and guide user through first brag entry, first contact, first meeting note.
+- [x] **Onboarding improvements** — Detect empty vault and guide user through first brag entry, first contact, first meeting note.
 - [ ] **Vault statistics** — Richer stats: entries per week trend, most referenced contacts, most active projects.
 - [ ] **Custom themes** — Let users customize the rose color, status bar style, hint frequency.
 - [ ] **Export** — Export bragfile as PDF or formatted document for sharing.
