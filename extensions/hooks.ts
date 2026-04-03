@@ -1,6 +1,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
 import { buildSystemPrompt } from "./system-prompt.js";
+import { scheduleAutoCommit, flushAutoCommit } from "./auto-commit.js";
 import type { BrainkitConfig } from "./vault.js";
 
 // ---------------------------------------------------------------------------
@@ -147,5 +148,21 @@ export function setupHooks(
   // ── 3. Session naming ──────────────────────────────────────────────
   pi.on("session_start", (_event, _ctx) => {
     pi.setSessionName("[brainkit]");
+  });
+
+  // ── 4. Auto-commit — debounced after agent turns ────────────────────
+  pi.on("agent_end", (_event, _ctx) => {
+    const vaultPath = getVaultPath();
+    if (vaultPath !== null) {
+      scheduleAutoCommit(vaultPath);
+    }
+  });
+
+  // ── 5. Flush auto-commit on session shutdown ───────────────────────
+  pi.on("session_shutdown", (_event, _ctx) => {
+    const vaultPath = getVaultPath();
+    if (vaultPath !== null) {
+      flushAutoCommit(vaultPath);
+    }
   });
 }

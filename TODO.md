@@ -4,7 +4,7 @@ Ideas and future work for brainkit.
 
 ## Extensions & Tools
 
-- [ ] **Todo/task management** — `brain_add_todo`, `brain_list_todos`, `brain_complete_todo`. Track tasks in the vault with status, priority, due dates. File under relevant PARA directory.
+- [x] **Todo/task management** — Dropped. Brainkit is a knowledge system, not a task manager.
 - [ ] **Self-review generation** — `brain_review` tool that summarizes bragfile entries for a given time period. Useful for performance review prep.
 - [ ] **Weekly/daily digest** — On session start (or on demand), summarize recent vault activity: new brag entries, contacts added, projects updated, meetings logged.
 - [ ] **Vault search improvements** — Fuzzy matching, relevance scoring, search within specific date ranges, search by tag/keyword.
@@ -16,15 +16,15 @@ Ideas and future work for brainkit.
 ## Skills
 
 - [ ] **Onboarding skill** — First-run guidance that's more conversational. Teach the user what brainkit can do through a natural conversation rather than a setup wizard.
-- [ ] **Archival skill** — Dedicated skill for archival workflows: when to archive, how to write archive notes, how to find archived content.
-- [ ] **Conditional skill loading** — Only load skills for enabled features to reduce context usage.
+- [x] **Archival skill** — Covered by PARA and maintenance skills (archival triggers, staleness detection).
+- [x] **Conditional skill loading** — Dropped. Feature flags aren't user-facing; all skills are always relevant.
 
 ## Infrastructure
 
 - [ ] **npm distribution** — Publish to npm for shorter install commands and semver guarantees.
 - [x] **Test suite** — Unit tests for vault operations, bragfile parsing, contacts parsing, system prompt builder, changelog parser, version comparison.
 - [x] **CI/CD** — GitHub Actions for linting, testing, and automated releases with changelog generation.
-- [ ] **Vault backup** — Periodic git commits of the vault, or integration with git-based backup.
+- [x] **Vault backup** — Debounced auto-commit after agent turns, flush on session shutdown.
 - [ ] **Multi-vault support** — Switch between vaults (work, personal) from within a session.
 
 ## UX
