@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildSystemPrompt, detectProjectContext } from "../system-prompt.js";
@@ -288,5 +288,60 @@ describe("buildSystemPrompt", () => {
     const prompt = buildSystemPrompt(config, vaultPath);
 
     expect(prompt).not.toContain("## Current Project Context");
+  });
+
+  describe("bragfile staleness reminder", () => {
+    let staleDir: string;
+
+    beforeEach(() => {
+      staleDir = mkdtempSync(join(tmpdir(), "brainkit-stale-"));
+      mkdirSync(join(staleDir, "01_projects"), { recursive: true });
+      mkdirSync(join(staleDir, "02_areas", "career"), { recursive: true });
+      mkdirSync(join(staleDir, "03_resources"), { recursive: true });
+      mkdirSync(join(staleDir, "04_archive"), { recursive: true });
+    });
+
+    afterEach(() => {
+      rmSync(staleDir, { recursive: true, force: true });
+    });
+
+    it("includes reminder when bragfile is stale (>14 days)", () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 20);
+      const dateStr = oldDate.toISOString().slice(0, 10);
+      writeFileSync(
+        join(staleDir, "02_areas", "career", "bragfile.md"),
+        `# Bragfile\n\n## H1 2026\n\n### January\n\n- **${dateStr}**: Old entry\n`,
+        "utf-8",
+      );
+
+      const config = makeConfig();
+      const prompt = buildSystemPrompt(config, staleDir);
+
+      expect(prompt).toContain("## Reminder");
+      expect(prompt).toContain("hasn't been updated in");
+    });
+
+    it("excludes reminder when bragfile is recent", () => {
+      const recentDate = new Date();
+      const dateStr = recentDate.toISOString().slice(0, 10);
+      writeFileSync(
+        join(staleDir, "02_areas", "career", "bragfile.md"),
+        `# Bragfile\n\n## H1 2026\n\n### January\n\n- **${dateStr}**: Recent entry\n`,
+        "utf-8",
+      );
+
+      const config = makeConfig();
+      const prompt = buildSystemPrompt(config, staleDir);
+
+      expect(prompt).not.toContain("## Reminder");
+    });
+
+    it("excludes reminder when bragfile feature is disabled", () => {
+      const config = makeConfig({ features: { ...makeConfig().features, bragfile: false } });
+      const prompt = buildSystemPrompt(config, staleDir);
+
+      expect(prompt).not.toContain("## Reminder");
+    });
   });
 });

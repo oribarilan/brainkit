@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { isVaultFresh } from "./vault.js";
+import { isVaultFresh, getBragStats } from "./vault.js";
 import type { BrainkitConfig } from "./vault.js";
 
 // ---------------------------------------------------------------------------
@@ -137,7 +137,32 @@ export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd
     }
   }
 
-  // ── 8. Onboarding (fresh vault detection) ─────────────────────────
+  // ── 8. Bragfile staleness reminder ──────────────────────────────────
+  if (config.features.bragfile) {
+    try {
+      const stats = getBragStats(vaultPath);
+      if (stats.lastEntryDate !== null) {
+        const last = new Date(stats.lastEntryDate + "T00:00:00");
+        const now = new Date();
+        const daysSince = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSince >= 14) {
+          const reminder = [
+            "## Reminder",
+            "",
+            `Your bragfile hasn't been updated in ${String(daysSince)} days (last entry: ${stats.lastEntryDate}).`,
+            "If anything noteworthy happened recently, gently suggest capturing it.",
+            "Don't be pushy — mention it once, naturally.",
+          ].join("\n");
+
+          sections.push(reminder);
+        }
+      }
+    } catch {
+      // If stats fail, skip — don't block the prompt
+    }
+  }
+
+  // ── 9. Onboarding (fresh vault detection) ─────────────────────────
   try {
     if (isVaultFresh(vaultPath, config)) {
       const onboarding = [
