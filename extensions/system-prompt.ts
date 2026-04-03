@@ -40,7 +40,7 @@ export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd
   identity += `${user.name} is a ${user.role} with expertise in ${user.expertise.join(", ")}.\n`;
   identity += `This is a ${user.scope} vault.`;
 
-  if (user.context) {
+  if (user.context !== undefined && user.context !== "") {
     identity += `\n\n${user.context}`;
   }
 
@@ -122,7 +122,7 @@ export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd
   sections.push(behavioral);
 
   // ── 7. Project context (smart detection) ────────────────────────────
-  if (cwd) {
+  if (cwd !== undefined && cwd !== "") {
     const project = detectProjectContext(vaultPath, cwd);
     if (project) {
       const projectContext = [

@@ -4,6 +4,11 @@
     "module": "ES2022",
     "moduleResolution": "bundler",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
@@ -13,5 +18,5 @@
     "lib": ["ES2022"]
   },
   "include": ["extensions/**/*.ts"],
-  "exclude": ["node_modules", "extensions/__tests__"]
+  "exclude": ["node_modules"]
 }

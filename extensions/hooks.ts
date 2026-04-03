@@ -42,15 +42,16 @@ function containsUserAccomplishment(text: string): boolean {
   for (const keyword of ACCOMPLISHMENT_KEYWORDS) {
     let searchStart = 0;
 
-    while (true) {
+    for (;;) {
       const kwIndex = lowerText.indexOf(keyword, searchStart);
       if (kwIndex === -1) break;
 
       // Ensure the keyword is at a word boundary (not part of a larger word)
-      const charBefore = kwIndex > 0 ? lowerText[kwIndex - 1] : " ";
-      const charAfter = kwIndex + keyword.length < lowerText.length ? lowerText[kwIndex + keyword.length] : " ";
+      const charBefore = kwIndex > 0 ? (lowerText[kwIndex - 1] ?? " ") : " ";
+      const charAfter =
+        kwIndex + keyword.length < lowerText.length ? (lowerText[kwIndex + keyword.length] ?? " ") : " ";
 
-      if (/\w/.test(charBefore!) || /\w/.test(charAfter!)) {
+      if (/\w/.test(charBefore) || /\w/.test(charAfter)) {
         searchStart = kwIndex + keyword.length;
         continue;
       }
@@ -93,10 +94,10 @@ export function setupHooks(
   const suggestedMessageIndices = new Set<number>();
 
   // ── 1. System prompt injection ─────────────────────────────────────
-  pi.on("before_agent_start", async (event, ctx) => {
+  pi.on("before_agent_start", (event, ctx) => {
     const vaultPath = getVaultPath();
     const config = getConfig();
-    if (!vaultPath || !config) return;
+    if (vaultPath === null || config === null) return;
 
     const vaultPrompt = buildSystemPrompt(config, vaultPath, ctx.cwd);
     return {
@@ -105,14 +106,14 @@ export function setupHooks(
   });
 
   // ── 2. Auto-brag detection ─────────────────────────────────────────
-  pi.on("agent_end", async (event, _ctx) => {
+  pi.on("agent_end", (event, _ctx) => {
     const vaultPath = getVaultPath();
     const config = getConfig();
-    if (!vaultPath || !config) return;
+    if (vaultPath === null || config === null) return;
     if (!config.features.bragfile) return;
 
     const messages = event.messages;
-    if (!messages || messages.length === 0) return;
+    if (messages.length === 0) return;
 
     // Find the last assistant message
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -144,7 +145,7 @@ export function setupHooks(
   });
 
   // ── 3. Session naming ──────────────────────────────────────────────
-  pi.on("session_start", async (_event, _ctx) => {
+  pi.on("session_start", (_event, _ctx) => {
     pi.setSessionName("[brainkit]");
   });
 }

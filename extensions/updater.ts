@@ -19,7 +19,7 @@ const REMOTE_PACKAGE_URL = "https://raw.githubusercontent.com/oribarilan/brainki
 function getLocalVersion(): string {
   const extensionDir = path.dirname(fileURLToPath(import.meta.url));
   const pkgPath = path.resolve(extensionDir, "..", "package.json");
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8")) as { version?: string };
   return pkg.version ?? "0.0.0";
 }
 
@@ -66,7 +66,7 @@ async function checkForUpdate(currentVersion: string): Promise<string | null> {
     const response = await fetch(REMOTE_PACKAGE_URL);
     if (!response.ok) return null;
     const data = (await response.json()) as { version?: string };
-    if (data.version && isNewerVersion(currentVersion, data.version)) {
+    if (data.version !== undefined && data.version !== "" && isNewerVersion(currentVersion, data.version)) {
       return data.version;
     }
   } catch {
@@ -80,23 +80,28 @@ async function checkForUpdate(currentVersion: string): Promise<string | null> {
 // ---------------------------------------------------------------------------
 
 export function setupUpdater(pi: ExtensionAPI): void {
-  pi.on("session_start", async (_event, ctx) => {
+  pi.on("session_start", (_event, ctx) => {
     const currentVersion = getLocalVersion();
     const theme = ctx.ui.theme;
     const globalConfig = readGlobalConfig();
 
     // --- Changelog check ---
-    if (globalConfig) {
+    if (globalConfig !== null) {
       const lastSeen = globalConfig.lastSeenVersion;
 
-      if (lastSeen && lastSeen !== currentVersion && isNewerVersion(lastSeen, currentVersion)) {
+      if (
+        lastSeen !== undefined &&
+        lastSeen !== "" &&
+        lastSeen !== currentVersion &&
+        isNewerVersion(lastSeen, currentVersion)
+      ) {
         // New version just installed — show changelog
         const extensionDir = path.dirname(fileURLToPath(import.meta.url));
         const changelogPath = path.resolve(extensionDir, "..", "CHANGELOG.md");
         try {
           const content = fs.readFileSync(changelogPath, "utf-8");
           const entries = parseChangelog(content, lastSeen, currentVersion);
-          if (entries) {
+          if (entries !== null) {
             ctx.ui.notify(`[brainkit] Updated to v${currentVersion}\n\n${entries}`, "info");
           } else {
             ctx.ui.notify(`[brainkit] Updated to v${currentVersion}`, "info");
@@ -107,7 +112,7 @@ export function setupUpdater(pi: ExtensionAPI): void {
       }
 
       // Update lastSeenVersion
-      if (!lastSeen || lastSeen !== currentVersion) {
+      if (lastSeen === undefined || lastSeen !== currentVersion) {
         writeGlobalConfig({
           ...globalConfig,
           lastSeenVersion: currentVersion,
@@ -116,8 +121,8 @@ export function setupUpdater(pi: ExtensionAPI): void {
     }
 
     // --- Remote update check (non-blocking) ---
-    checkForUpdate(currentVersion).then((remoteVersion) => {
-      if (remoteVersion) {
+    void checkForUpdate(currentVersion).then((remoteVersion) => {
+      if (remoteVersion !== null) {
         ctx.ui.setStatus(
           "brainkit-update",
           theme.fg("warning", `v${remoteVersion} available`) +

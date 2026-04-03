@@ -69,6 +69,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       date: Type.Optional(Type.String({ description: "Date YYYY-MM-DD" })),
       project: Type.Optional(Type.String({ description: "Related project" })),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
@@ -79,7 +80,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       }
 
       let description = params.description;
-      if (params.project) {
+      if (params.project !== undefined) {
         description = `**${params.project}**: ${description}`;
       }
 
@@ -94,7 +95,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       };
     },
     renderCall(args, theme, _context) {
-      const desc = args.description ?? "";
+      const desc = args.description;
       const truncated = desc.length > 60 ? desc.slice(0, 57) + "..." : desc;
       return new Text(theme.fg("toolTitle", theme.bold("add-brag ")) + theme.fg("dim", `"${truncated}"`), 0, 0);
     },
@@ -112,6 +113,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     parameters: Type.Object({
       query: Type.String({ description: "Search query for contacts" }),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
@@ -122,7 +124,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       }
 
       const content = readContacts(vaultPath);
-      if (!content) {
+      if (content === null) {
         return {
           content: [{ type: "text", text: "No contacts file found. Add contacts first with brain_add_contact." }],
           details: {},
@@ -141,9 +143,9 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
 
       const formatted = matches.map((c) => {
         const parts = [c.name];
-        if (c.role) parts.push(`Role: ${c.role}`);
-        if (c.team) parts.push(`Team: ${c.team}`);
-        if (c.relation) parts.push(`Relation: ${c.relation}`);
+        if (c.role !== undefined) parts.push(`Role: ${c.role}`);
+        if (c.team !== undefined) parts.push(`Team: ${c.team}`);
+        if (c.relation !== undefined) parts.push(`Relation: ${c.relation}`);
         return parts.join(" | ");
       });
 
@@ -162,8 +164,9 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
 
       for (const line of lines) {
         const segments = line.split(" | ");
-        if (segments.length > 1) {
-          parts.push(theme.fg("accent", segments[0]) + " " + theme.fg("muted", segments.slice(1).join(" | ")));
+        const firstSegment = segments[0];
+        if (segments.length > 1 && firstSegment !== undefined) {
+          parts.push(theme.fg("accent", firstSegment) + " " + theme.fg("muted", segments.slice(1).join(" | ")));
         } else {
           parts.push(theme.fg("muted", line));
         }
@@ -186,6 +189,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       connection: Type.Optional(Type.String({ description: "Connection details" })),
       relevantFor: Type.Optional(Type.String({ description: "What they are relevant for" })),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
@@ -231,6 +235,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         }),
       ),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
@@ -270,12 +275,15 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         let matchFound = false;
 
         for (let i = 0; i < lines.length; i++) {
-          if (lines[i].toLowerCase().includes(lowerQuery)) {
+          const currentLine = lines[i];
+          if (currentLine !== undefined && currentLine.toLowerCase().includes(lowerQuery)) {
             if (!matchFound) {
               matchFound = true;
-              if (i > 0) contextLines.push(lines[i - 1]);
-              contextLines.push(lines[i]);
-              if (i < lines.length - 1) contextLines.push(lines[i + 1]);
+              const prevLine = lines[i - 1];
+              if (i > 0 && prevLine !== undefined) contextLines.push(prevLine);
+              contextLines.push(currentLine);
+              const nextLine = lines[i + 1];
+              if (i < lines.length - 1 && nextLine !== undefined) contextLines.push(nextLine);
             }
           }
         }
@@ -334,6 +342,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     parameters: Type.Object({
       path: Type.String({ description: "Relative path within the vault" }),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
@@ -373,7 +382,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         theme.fg("success", "✓ ") +
           theme.fg(
             "muted",
-            `Read ${lineCount} lines from ${(result.details as Record<string, string>)?.path ?? "file"}`,
+            `Read ${lineCount} lines from ${(result.details as Record<string, string> | undefined)?.["path"] ?? "file"}`,
           ),
         0,
         0,
@@ -390,6 +399,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       path: Type.String({ description: "Relative path within the vault" }),
       content: Type.String({ description: "File content to write" }),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
@@ -445,6 +455,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     parameters: Type.Object({
       vaultPath: Type.String({ description: "Absolute path to the vault directory" }),
     }),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = params.vaultPath.trim();
       if (!path.isAbsolute(vaultPath)) {
@@ -487,6 +498,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     description:
       "Check vault health and fix issues. Creates missing PARA directories and key files, then runs health checks.",
     parameters: Type.Object({}),
+    // eslint-disable-next-line @typescript-eslint/require-await
     async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {

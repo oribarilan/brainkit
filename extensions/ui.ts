@@ -27,8 +27,8 @@ export function setupUI(
 
   function formatStatus(theme: Theme): string {
     const vaultPath = getVaultPath();
-    const hint = theme.fg("dim", HINTS[hintIndex]);
-    if (vaultPath) {
+    const hint = theme.fg("dim", HINTS[hintIndex] ?? "");
+    if (vaultPath !== null) {
       const dirName = path.basename(vaultPath);
       return theme.fg("accent", `[brainkit]`) + " " + theme.fg("success", dirName) + theme.fg("dim", " · ") + hint;
     }
@@ -38,16 +38,16 @@ export function setupUI(
   // -------------------------------------------------------------------------
   // Custom header — rose + quick reference
   // -------------------------------------------------------------------------
-  pi.on("session_start", async (_event, ctx) => {
+  pi.on("session_start", (_event, ctx) => {
     currentTheme = ctx.ui.theme;
 
     if (ctx.hasUI) {
       ctx.ui.setHeader((_tui, theme) => {
         return {
           render(_width: number): string[] {
-            const accent = (s: string) => theme.fg("accent", s);
-            const dim = (s: string) => theme.fg("dim", s);
-            const muted = (s: string) => theme.fg("muted", s);
+            const accent = (s: string): string => theme.fg("accent", s);
+            const dim = (s: string): string => theme.fg("dim", s);
+            const muted = (s: string): string => theme.fg("muted", s);
             return [
               "",
               accent("        _---~~(~~-_."),
@@ -86,7 +86,7 @@ export function setupUI(
   });
 
   // Clean up timer on shutdown
-  pi.on("session_shutdown", async () => {
+  pi.on("session_shutdown", () => {
     if (hintTimer) {
       clearInterval(hintTimer);
       hintTimer = null;

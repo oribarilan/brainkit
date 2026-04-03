@@ -165,7 +165,12 @@ function getHalfYearLabel(date: Date): string {
 }
 
 function getMonthLabel(date: Date): string {
-  return MONTH_NAMES[date.getMonth()];
+  // getMonth() returns 0-11, always a valid index into MONTH_NAMES
+  const name = MONTH_NAMES[date.getMonth()];
+  if (name === undefined) {
+    return "Unknown";
+  }
+  return name;
 }
 
 function formatDateString(date: Date): string {
@@ -176,7 +181,10 @@ function formatDateString(date: Date): string {
 }
 
 function parseDateString(dateStr: string): Date {
-  const [y, m, d] = dateStr.split("-").map(Number);
+  const parts = dateStr.split("-").map(Number);
+  const y = parts[0] ?? 0;
+  const m = parts[1] ?? 1;
+  const d = parts[2] ?? 1;
   return new Date(y, m - 1, d);
 }
 
@@ -185,7 +193,7 @@ export function readBragfile(vaultPath: string): string | null {
 }
 
 export function appendBragEntry(vaultPath: string, entry: BragEntry): string {
-  const entryDate = entry.date ? parseDateString(entry.date) : new Date();
+  const entryDate = entry.date !== undefined ? parseDateString(entry.date) : new Date();
   const dateStr = entry.date ?? formatDateString(entryDate);
   const halfYearLabel = getHalfYearLabel(entryDate);
   const monthLabel = getMonthLabel(entryDate);
@@ -236,7 +244,7 @@ export function appendBragEntry(vaultPath: string, entry: BragEntry): string {
 
 export function getBragStats(vaultPath: string): BragStats {
   const content = readBragfile(vaultPath);
-  if (!content) {
+  if (content === null || content === "") {
     return { totalEntries: 0, lastEntryDate: null, entriesByMonth: {} };
   }
 
@@ -249,6 +257,7 @@ export function getBragStats(vaultPath: string): BragStats {
   while ((match = entryPattern.exec(content)) !== null) {
     totalEntries++;
     const dateStr = match[1];
+    if (dateStr === undefined) continue;
     const monthKey = dateStr.slice(0, 7);
     entriesByMonth[monthKey] = (entriesByMonth[monthKey] ?? 0) + 1;
 
@@ -275,16 +284,19 @@ export function parseContacts(content: string): Contact[] {
   for (const section of sections) {
     const lines = section.split("\n");
     const nameLine = lines[0]?.trim();
-    if (!nameLine) continue;
+    if (nameLine === undefined || nameLine === "") continue;
 
     const contact: Contact = { name: nameLine };
 
     for (const line of lines.slice(1)) {
       const fieldMatch = line.match(/^- \*\*(.+?)\*\*:\s*(.+)/);
-      if (!fieldMatch) continue;
+      if (fieldMatch === null) continue;
 
-      const key = fieldMatch[1].toLowerCase().trim();
-      const value = fieldMatch[2].trim();
+      const matchedKey = fieldMatch[1];
+      const matchedValue = fieldMatch[2];
+      if (matchedKey === undefined || matchedValue === undefined) continue;
+      const key = matchedKey.toLowerCase().trim();
+      const value = matchedValue.trim();
 
       switch (key) {
         case "alias":
@@ -328,19 +340,19 @@ export function searchContacts(contacts: Contact[], query: string): Contact[] {
       contact.relevantFor,
     ];
 
-    return searchableFields.some((field) => field != null && field.toLowerCase().includes(lowerQuery));
+    return searchableFields.some((field) => field !== undefined && field.toLowerCase().includes(lowerQuery));
   });
 }
 
 export function addContact(vaultPath: string, contact: Contact): void {
   const lines: string[] = [`## ${contact.name}`, ""];
 
-  if (contact.alias) lines.push(`- **Alias**: ${contact.alias}`);
-  if (contact.role) lines.push(`- **Role**: ${contact.role}`);
-  if (contact.team) lines.push(`- **Team**: ${contact.team}`);
-  if (contact.relation) lines.push(`- **Relation**: ${contact.relation}`);
-  if (contact.connection) lines.push(`- **Connection**: ${contact.connection}`);
-  if (contact.relevantFor) lines.push(`- **Relevant For**: ${contact.relevantFor}`);
+  if (contact.alias !== undefined) lines.push(`- **Alias**: ${contact.alias}`);
+  if (contact.role !== undefined) lines.push(`- **Role**: ${contact.role}`);
+  if (contact.team !== undefined) lines.push(`- **Team**: ${contact.team}`);
+  if (contact.relation !== undefined) lines.push(`- **Relation**: ${contact.relation}`);
+  if (contact.connection !== undefined) lines.push(`- **Connection**: ${contact.connection}`);
+  if (contact.relevantFor !== undefined) lines.push(`- **Relevant For**: ${contact.relevantFor}`);
 
   lines.push("");
 
