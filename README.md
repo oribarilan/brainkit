@@ -15,6 +15,33 @@ An opinionated second brain, built as a [pi](https://github.com/badlogic/pi-mono
                    { }
 ```
 
+## Install
+
+Requires [pi](https://github.com/badlogic/pi-mono) installed and configured with an LLM provider.
+
+```bash
+pi install git:github.com/oribarilan/brainkit
+```
+
+Or try it without installing:
+
+```bash
+pi -e git:github.com/oribarilan/brainkit
+```
+
+## Getting Started
+
+```bash
+pi
+```
+
+Then:
+
+1. Type `/setup` or _"help me set up my vault"_
+2. The agent walks you through a getting-to-know-you conversation — work, personal life, preferences
+3. It creates your vault structure, writes your config, and pre-creates directories that match your life
+4. Start talking
+
 ## What is this?
 
 Brainkit turns pi into a persistent knowledge system. It's a structured markdown vault organized with the [PARA method](https://fortelabs.com/blog/para/), extended with typed tools for deterministic operations and skills that teach the agent domain knowledge.
@@ -86,43 +113,6 @@ Two layers that complement each other:
 | **Skills** (Markdown)  | Domain knowledge         | Teaches the agent _when_ to suggest a brag, _how_ to structure notes       |
 
 Tools handle the **how**. Skills handle the **when** and **why**.
-
-## Install
-
-### Prerequisites
-
-- [pi](https://github.com/badlogic/pi-mono) installed and configured with an LLM provider
-
-### Install
-
-```bash
-pi install git:github.com/oribarilan/brainkit
-```
-
-Or try it without installing:
-
-```bash
-pi -e git:github.com/oribarilan/brainkit
-```
-
-To pin a specific version:
-
-```bash
-pi install git:github.com/oribarilan/brainkit@v1.0.0
-```
-
-## Getting Started
-
-```bash
-pi
-```
-
-Then:
-
-1. Type `/setup` or _"help me set up my vault"_
-2. The agent walks you through a getting-to-know-you conversation — work, personal life, preferences
-3. It creates your vault structure, writes your config, and pre-creates directories that match your life
-4. Start talking
 
 ## Updating
 
