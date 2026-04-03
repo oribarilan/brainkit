@@ -47,6 +47,10 @@ All tools are prefixed with `brain_` and registered via `pi.registerTool()`. Eac
 - **Parameters**: none
 - **Behavior**: Creates missing PARA directories and key files (bragfile, contacts), runs health checks, returns structured results with fixes shown
 
+### GitHub Repo Privacy Check
+
+brain_doctor checks if the vault's GitHub repo is private. Uses `git` to detect the remote and `gh` CLI to check visibility. If the repo is public, reports an error with the fix command: `gh repo edit owner/repo --visibility private`. Skips silently if not a git repo, no GitHub remote, or `gh` CLI not available.
+
 ## Commands
 
 ### /setup
@@ -93,6 +97,10 @@ Every turn, builds and injects the vault system prompt:
 
 Scans assistant's last message for accomplishment keywords ("shipped", "launched", "completed", etc.) near "you"/"your". If detected, sends a desktop notification suggesting capture. Tracks already-suggested messages to avoid repeating.
 
+### agent_end — Auto-Commit
+
+After each agent turn, schedules a debounced git commit (30 seconds). If another turn happens within the window, the timer resets. On session_shutdown, flushes immediately — commits any pending changes. Skips silently if the vault isn't a git repo or has no changes. Commit message: `brainkit: auto-save YYYY-MM-DD`.
+
 ### session_start — Initialization
 
 Loads vault config, sets up UI, starts hint rotation timer.
@@ -100,6 +108,10 @@ Loads vault config, sets up UI, starts hint rotation timer.
 ### session_shutdown — Cleanup
 
 Clears hint rotation timer.
+
+### session_shutdown — Flush Auto-Commit
+
+Commits any uncommitted vault changes immediately before the session ends.
 
 ## System Prompt Builder
 
@@ -112,3 +124,7 @@ The system prompt is built dynamically in TypeScript (not a template engine). It
 5. Custom rules (from config)
 6. Behavioral rules (always: use brain\_\* tools, search first, cite sources, never delete)
 7. Project context (smart cwd detection)
+
+### Bragfile Staleness Reminder
+
+When the bragfile hasn't been updated in 14+ days, the system prompt includes a gentle reminder section. The agent mentions it naturally in conversation — not as a notification, but as part of its awareness.

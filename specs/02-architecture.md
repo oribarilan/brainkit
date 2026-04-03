@@ -33,6 +33,7 @@ brainkit/
     hooks.ts                # System prompt injection, auto-brag detection
     system-prompt.ts        # Dynamic system prompt builder
     updater.ts              # Version checking, changelog display
+    auto-commit.ts          # Debounced git auto-commit
   skills/                   # Markdown — intelligence layer
     brainkit/SKILL.md       # Root: what brainkit is, conventions, tools overview
     para/SKILL.md           # PARA method, categories, decision framework
@@ -40,6 +41,7 @@ brainkit/
     contacts/SKILL.md       # Contacts format, cross-referencing, suggestions
     meeting-notes/SKILL.md  # Meeting notes placement, naming, structure
     maintenance/SKILL.md    # Vault health, naming rules, archive workflow
+    onboarding/SKILL.md     # First-run Q&A guidance
   specs/                    # Design documents (not loaded by pi)
 ```
 

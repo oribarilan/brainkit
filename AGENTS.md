@@ -17,6 +17,7 @@ extensions/         # TypeScript — tools, commands, UI, hooks
   hooks.ts          # System prompt injection, auto-brag detection
   system-prompt.ts  # Dynamic system prompt builder
   updater.ts        # Version checking, changelog display
+  auto-commit.ts    # Debounced git auto-commit
 skills/             # Markdown — domain knowledge for the agent
   brainkit/         # Root skill (conventions, setup flow, tools overview)
   para/             # PARA method
@@ -24,6 +25,7 @@ skills/             # Markdown — domain knowledge for the agent
   contacts/         # Contacts feature
   meeting-notes/    # Meeting notes feature
   maintenance/      # Vault health and maintenance
+  onboarding/       # First-run Q&A guidance
 specs/              # Design documents (vision, architecture, decisions)
 ```
 

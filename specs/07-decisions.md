@@ -175,3 +175,19 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 **Reasoning**: Users shouldn't have to manually check for updates. The version check is non-blocking (async fetch, fire-and-forget) so it never delays session start. The sticky status bar ensures the user sees the update availability without being interrupted — it persists alongside the rotating hints. The changelog on first run after update tells users what's new, reducing surprise and encouraging adoption of new features. `lastSeenVersion` is tracked in the global config to detect when an update has been applied.
 
 **Mechanism**: `pi update` is the built-in pi command that pulls the latest from git for non-pinned packages. No custom update command needed.
+
+---
+
+### 20. Debounced auto-commit for vault backup
+
+**Decision**: After each agent turn, schedule a git commit with a 30-second debounce. If another turn happens within the window, the timer resets. On session shutdown, flush immediately. No auto-push — only local commits.
+
+**Reasoning**: Vault changes should be tracked in git for history and backup. Per-mutation commits are too noisy. Session-end-only commits miss changes if pi crashes. Debounced commits hit the sweet spot — granular enough to survive crashes, quiet enough to not clutter the git log. Multiple rapid changes (like setup creating 5 directories) collapse into one commit. No auto-push because pushing is aggressive and assumes the remote is always available.
+
+---
+
+### 21. GitHub repo privacy check in brain_doctor
+
+**Decision**: brain_doctor checks if the vault's GitHub repo is public and reports it as an error with a fix command.
+
+**Reasoning**: The vault contains personal and professional information — contacts, accomplishments, meeting notes, personal life details. A public repo exposes all of this. The check uses `git` + `gh` CLI and skips silently if either isn't available. This is a security-first default — better to warn every health check than to let a public repo go unnoticed.
