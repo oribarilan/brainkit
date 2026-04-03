@@ -14,7 +14,7 @@ just dev        # start pi with the latest local extension
 just test       # run tests
 just lint       # eslint + typecheck
 just format     # format with prettier
-just check      # lint + format check + test (run before pushing)
+just check      # lint + format check + test (run before committing)
 ```
 
 ## Pull Requests

@@ -81,7 +81,7 @@ export const KEY_FILES = {
 // Global config
 // ---------------------------------------------------------------------------
 
-export function getGlobalConfigPath(): string {
+function getGlobalConfigPath(): string {
   return path.join(os.homedir(), ".config", "brainkit", "config.json");
 }
 
@@ -139,13 +139,6 @@ export function writeVaultFile(vaultPath: string, relativePath: string, content:
   fs.writeFileSync(fullPath, content, "utf-8");
 }
 
-export function appendVaultFile(vaultPath: string, relativePath: string, content: string): void {
-  const fullPath = path.resolve(vaultPath, relativePath);
-  const dir = path.dirname(fullPath);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.appendFileSync(fullPath, content, "utf-8");
-}
-
 // ---------------------------------------------------------------------------
 // Bragfile operations
 // ---------------------------------------------------------------------------
@@ -182,12 +175,17 @@ function formatDateString(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+function parseDateString(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export function readBragfile(vaultPath: string): string | null {
   return readVaultFile(vaultPath, KEY_FILES.bragfile);
 }
 
 export function appendBragEntry(vaultPath: string, entry: BragEntry): string {
-  const entryDate = entry.date ? new Date(entry.date) : new Date();
+  const entryDate = entry.date ? parseDateString(entry.date) : new Date();
   const dateStr = entry.date ?? formatDateString(entryDate);
   const halfYearLabel = getHalfYearLabel(entryDate);
   const monthLabel = getMonthLabel(entryDate);
@@ -469,14 +467,7 @@ export function runHealthChecks(vaultPath: string, config: BrainkitConfig): Heal
     });
   }
 
-  const allowedRootEntries = new Set([
-    ...Object.values(PARA),
-    KEY_FILES.config,
-    ".git",
-    ".gitignore",
-    ".obsidian",
-    "README.md",
-  ]);
+  const allowedRootEntries = new Set([...Object.values(PARA), KEY_FILES.config, "README.md"]);
 
   try {
     const rootEntries = fs.readdirSync(vaultPath);

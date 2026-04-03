@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
@@ -16,7 +17,7 @@ const REMOTE_PACKAGE_URL = "https://raw.githubusercontent.com/oribarilan/brainki
 // ---------------------------------------------------------------------------
 
 function getLocalVersion(): string {
-  const extensionDir = path.dirname(new URL(import.meta.url).pathname);
+  const extensionDir = path.dirname(fileURLToPath(import.meta.url));
   const pkgPath = path.resolve(extensionDir, "..", "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
   return pkg.version ?? "0.0.0";
@@ -90,7 +91,7 @@ export function setupUpdater(pi: ExtensionAPI): void {
 
       if (lastSeen && lastSeen !== currentVersion && isNewerVersion(lastSeen, currentVersion)) {
         // New version just installed — show changelog
-        const extensionDir = path.dirname(new URL(import.meta.url).pathname);
+        const extensionDir = path.dirname(fileURLToPath(import.meta.url));
         const changelogPath = path.resolve(extensionDir, "..", "CHANGELOG.md");
         try {
           const content = fs.readFileSync(changelogPath, "utf-8");

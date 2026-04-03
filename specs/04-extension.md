@@ -8,7 +8,7 @@ All tools are prefixed with `brain_` and registered via `pi.registerTool()`. Eac
 
 - **Parameters**: `description` (string), `date?` (YYYY-MM-DD), `project?` (string)
 - **Behavior**: Programmatically parses bragfile, finds/creates half-year and month sections, appends formatted entry
-- **Rendering**: Shows `✓ Added: **2026-04-03**: description` in success color
+- **Rendering**: Shows `✓ - **2026-04-03**: description` in success/muted colors
 
 ### brain_query_contacts
 

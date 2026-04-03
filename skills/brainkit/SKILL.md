@@ -64,7 +64,7 @@ vault-health = true
 - `/setup` — set up or update vault configuration
 - `/doctor` — run a health check and fix common issues
 
-The agent handles general queries like "show me my vault" or "what can you do" naturally — no explicit `/brain` or `/help` commands needed.
+The agent handles general queries like "show me my vault" or "what can you do" naturally — no special commands needed beyond /setup and /doctor.
 
 ## Discoverability
 

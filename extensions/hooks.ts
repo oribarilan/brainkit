@@ -7,7 +7,7 @@ import type { BrainkitConfig } from "./vault.js";
 // Desktop notification helper
 // ---------------------------------------------------------------------------
 
-export function notifyDesktop(title: string, body: string): void {
+function notifyDesktop(title: string, body: string): void {
   // OSC 777 for Ghostty, iTerm2, WezTerm
   process.stdout.write(`\x1b]777;notify;${title};${body}\x07`);
 }
@@ -136,7 +136,7 @@ export function setupHooks(
 
       if (containsUserAccomplishment(content)) {
         suggestedMessageIndices.add(i);
-        notifyDesktop("brainkit", "Sounds like an accomplishment! Use Ctrl+B to capture it.");
+        notifyDesktop("brainkit", "Sounds like an accomplishment! Ask me to add it to your bragfile.");
       }
 
       break; // Only check the last assistant message

@@ -32,6 +32,7 @@ brainkit/
     ui.ts                   # Header, status bar
     hooks.ts                # System prompt injection, auto-brag detection
     system-prompt.ts        # Dynamic system prompt builder
+    updater.ts              # Version checking, changelog display
   skills/                   # Markdown — intelligence layer
     brainkit/SKILL.md       # Root: what brainkit is, conventions, tools overview
     para/SKILL.md           # PARA method, categories, decision framework
@@ -61,8 +62,6 @@ pi install /path/to/brainkit
 ```
 
 npm distribution can be added later for semver guarantees and shorter install commands (`pi install npm:brainkit`).
-
-```
 
 ## Data Flow
 
@@ -107,9 +106,8 @@ User sends message
 /doctor (thin wrapper — sends message to agent)
 │
 └─► Agent receives message
-└─► Calls brain_doctor tool (fixes missing dirs/files, runs health checks)
-
-````
+    └─► Calls brain_doctor tool (fixes missing dirs/files, runs health checks)
+```
 
 ## Configuration
 
@@ -119,7 +117,7 @@ User sends message
 {
   "vaultPath": "/Users/ori/brain"
 }
-````
+```
 
 Set via `brain_setup_vault` tool (triggered by `/setup` command). Tells the extension where the vault lives.
 

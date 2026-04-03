@@ -27,7 +27,7 @@ export function setupUI(
 
   function formatStatus(theme: Theme): string {
     const vaultPath = getVaultPath();
-    const hint = theme.fg("dim", HINTS[hintIndex % HINTS.length]);
+    const hint = theme.fg("dim", HINTS[hintIndex]);
     if (vaultPath) {
       const dirName = path.basename(vaultPath);
       return theme.fg("accent", `[brainkit]`) + " " + theme.fg("success", dirName) + theme.fg("dim", " · ") + hint;
@@ -78,7 +78,7 @@ export function setupUI(
     // Rotate hints every 12 seconds
     if (hintTimer) clearInterval(hintTimer);
     hintTimer = setInterval(() => {
-      hintIndex++;
+      hintIndex = (hintIndex + 1) % HINTS.length;
       if (currentTheme) {
         ctx.ui.setStatus("brainkit", formatStatus(currentTheme));
       }

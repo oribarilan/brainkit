@@ -58,7 +58,7 @@ function isPathWithinVault(vaultPath: string, relativePath: string): boolean {
 // Tool registration
 // ---------------------------------------------------------------------------
 
-export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | null): void {
+export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | null, reloadVault: () => void): void {
   // ── 1. brain_add_brag ──────────────────────────────────────────────
   pi.registerTool({
     name: "brain_add_brag",
@@ -80,10 +80,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
 
       let description = params.description;
       if (params.project) {
-        description = description.replace(params.project, `**${params.project}**`);
-        if (!description.includes(`**${params.project}**`)) {
-          description = `**${params.project}**: ${description}`;
-        }
+        description = `**${params.project}**: ${description}`;
       }
 
       const entry = appendBragEntry(vaultPath, {
@@ -97,7 +94,8 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       };
     },
     renderCall(args, theme, _context) {
-      const truncated = args.description?.length > 60 ? args.description.slice(0, 57) + "..." : args.description;
+      const desc = args.description ?? "";
+      const truncated = desc.length > 60 ? desc.slice(0, 57) + "..." : desc;
       return new Text(theme.fg("toolTitle", theme.bold("add-brag ")) + theme.fg("dim", `"${truncated}"`), 0, 0);
     },
     renderResult(result, _options, theme, _context) {
@@ -345,13 +343,6 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         };
       }
 
-      if (params.path.includes("..")) {
-        return {
-          content: [{ type: "text", text: "Error: Path traversal is not allowed. Do not use '..' in paths." }],
-          details: {},
-        };
-      }
-
       if (!isPathWithinVault(vaultPath, params.path)) {
         return {
           content: [{ type: "text", text: "Error: Path must be within the vault directory." }],
@@ -404,13 +395,6 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       if (vaultPath === null) {
         return {
           content: [{ type: "text", text: "Error: Vault path not configured. Please run /setup first." }],
-          details: {},
-        };
-      }
-
-      if (params.path.includes("..")) {
-        return {
-          content: [{ type: "text", text: "Error: Path traversal is not allowed. Do not use '..' in paths." }],
           details: {},
         };
       }
@@ -475,6 +459,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
 
       // Write global config
       writeGlobalConfig({ vaultPath });
+      reloadVault(); // Refresh in-memory state so subsequent tools work
 
       return {
         content: [
@@ -586,7 +571,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { fixes, results, passCount, warnCount, errorCount },
       };
     },
-    renderCall(args, theme, _context) {
+    renderCall(_args, theme, _context) {
       return new Text(theme.fg("toolTitle", theme.bold("doctor")), 0, 0);
     },
     renderResult(result, _options, theme, _context) {

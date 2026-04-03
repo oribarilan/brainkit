@@ -16,8 +16,7 @@ How we implement this:
 
 - **Header**: Rose ASCII art with quick command reference on every session start
 - **Rotating hints**: Status bar cycles through tips every 12 seconds
-- **`/help` command**: Full reference panel for all commands and tools
-- **`/brain` command**: Dashboard with vault stats and quick actions
+- **`/setup` and `/doctor` commands**: Thin wrappers that trigger the agent — easy to discover and type
 - **Skills**: Each skill includes guidance on when to proactively mention features ("Sounds like an accomplishment — want me to add it to your bragfile?")
 - **Tool descriptions**: Every tool has clear descriptions so the agent knows when to use them
 - **Contextual suggestions**: The agent is taught (via skills) to mention relevant features when the conversation touches on them — gently, not pushily
