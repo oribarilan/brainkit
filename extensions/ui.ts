@@ -27,12 +27,16 @@ export function setupUI(
 
   function formatStatus(theme: Theme): string {
     const vaultPath = getVaultPath();
-    const hint = theme.fg("dim", HINTS[hintIndex] ?? "");
     if (vaultPath !== null) {
       const dirName = path.basename(vaultPath);
+      const hint = theme.fg("dim", HINTS[hintIndex] ?? "");
       return theme.fg("accent", `[brainkit]`) + " " + theme.fg("success", dirName) + theme.fg("dim", " · ") + hint;
     }
-    return theme.fg("warning", "[brainkit] no vault") + theme.fg("dim", " · ") + hint;
+    return (
+      theme.fg("warning", "[brainkit] no vault") +
+      theme.fg("dim", " · ") +
+      theme.fg("dim", "/setup to configure your vault")
+    );
   }
 
   // -------------------------------------------------------------------------
