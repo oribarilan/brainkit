@@ -72,6 +72,12 @@ Based on the conversation, do all of this:
    - If they mentioned a recent accomplishment → offer to add as first brag entry
    - If they mentioned colleagues → offer to add as first contacts
 
+6. **Privacy check:**
+   - After setup, `brain_doctor` automatically checks if the vault's GitHub repo is private
+   - If the repo is public, warn the user immediately — their second brain is visible to everyone
+   - Suggest fixing it: `gh repo edit owner/repo --visibility private`
+   - This is a security concern — the vault contains personal and professional information
+
 ## Tone
 
 - Warm but efficient. Not overly chatty, not robotic.

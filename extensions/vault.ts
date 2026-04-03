@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { execSync } from "node:child_process";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 
 // ---------------------------------------------------------------------------
@@ -545,6 +546,41 @@ export function runHealthChecks(vaultPath: string, config: BrainkitConfig): Heal
       status: "error",
       message: `Could not read vault root: ${err instanceof Error ? err.message : String(err)}`,
     });
+  }
+
+  // --- GitHub repo privacy check ---
+  try {
+    execSync("git rev-parse --git-dir", { cwd: vaultPath, stdio: "pipe" });
+    // It's a git repo — check for GitHub remote
+    const remoteUrl = execSync("git remote get-url origin", { cwd: vaultPath, stdio: "pipe" }).toString().trim();
+
+    if (remoteUrl.includes("github.com")) {
+      // Extract owner/repo from URL
+      const match = /github\.com[/:]([^/]+\/[^/.]+)/.exec(remoteUrl);
+      if (match !== null) {
+        const repo = match[1];
+        if (repo !== undefined) {
+          const ghOutput = execSync(`gh repo view ${repo} --json isPrivate`, { stdio: "pipe" }).toString().trim();
+          const parsed = JSON.parse(ghOutput) as { isPrivate?: boolean };
+
+          if (parsed.isPrivate === true) {
+            results.push({
+              check: "GitHub repo privacy",
+              status: "pass",
+              message: "Vault repo is private",
+            });
+          } else {
+            results.push({
+              check: "GitHub repo privacy",
+              status: "error",
+              message: `Vault repo ${repo} is PUBLIC. Your second brain is visible to everyone. Make it private: gh repo edit ${repo} --visibility private`,
+            });
+          }
+        }
+      }
+    }
+  } catch {
+    // Not a git repo, no remote, or gh CLI not available — skip silently
   }
 
   return results;
