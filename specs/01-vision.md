@@ -1,69 +1,51 @@
-# Vision & Philosophy
+# Vision & Principles
 
-## What is Brainkit
+## What Brainkit Is
 
-Brainkit is an opinionated CLI tool that helps users bootstrap and maintain a GitHub repository as their personal "second brain." It is built on the conviction that plain markdown files in a git-backed repo, guided by well-crafted agent skills, are the best foundation for a personal knowledge management system.
+Brainkit is a pi coding agent extension that gives you a persistent, structured second brain. It's a markdown vault organized with the PARA method, with typed tools for programmatic operations and skills that teach the agent domain knowledge.
 
-Brainkit is **not** a note-taking app, a task manager, or an editor. It is a **skill distribution system** — it installs agent skills and conventions into a vault so that any AI coding agent (Copilot, Claude Code, Cursor, OpenCode, Gemini CLI, etc.) knows how to work with the user's second brain effectively.
+You open pi anywhere, brainkit is always with you. The agent knows your vault, your conventions, your people, your accomplishments. You talk naturally — "I just shipped the API redesign" — and the agent knows to offer adding it to your bragfile, filed in the right section, formatted correctly.
 
 ## Core Principles
 
-### Simple
+### 1. Discoverability
 
-- Markdown files, raw text, standard folders.
-- No databases, no proprietary formats, no build steps.
-- The vault is readable and usable without brainkit or any agent.
+Everything should be easy to discover and understand. The user should never wonder "what can this do?"
 
-### Mine
+How we implement this:
+- **Header**: Rose ASCII art with quick command reference on every session start
+- **Rotating hints**: Status bar cycles through tips every 12 seconds
+- **`/help` command**: Full reference panel for all commands and tools
+- **`/brain` command**: Dashboard with vault stats and quick actions
+- **Skills**: Each skill includes guidance on when to proactively mention features ("Sounds like an accomplishment — want me to add it to your bragfile?")
+- **Tool descriptions**: Every tool has clear descriptions so the agent knows when to use them
+- **Contextual suggestions**: The agent is taught (via skills) to mention relevant features when the conversation touches on them — gently, not pushily
 
-- No vendor lock-in. The vault is a plain directory or git repo.
-- Store wherever you want: GitHub, OneDrive, iCloud, local disk.
-- Use any AI agent you want. Brainkit generates multi-provider agent instructions.
-- Compliant by default — no cloud dependencies, no data leaves the user's control.
+### 2. Just Works
 
-### Powerful
+The user should be able to talk naturally and things happen correctly. No commands needed for common operations.
 
-- PARA is the mandatory organizational backbone — every brainkit vault uses Projects, Areas, Resources, and Archive.
-- Agent skills turn a folder of markdown into an intelligent system.
-- The AI agent becomes a partner that can capture, organize, retrieve, and synthesize knowledge.
-- Personalized to the user's role, tone, and workflow.
+How we implement this:
+- **Skills teach judgment**: Skills don't just describe formats — they teach the agent WHEN to create meeting notes, WHEN to suggest a brag entry, HOW to decide where something goes in PARA
+- **Typed tools**: Operations like adding a brag entry are programmatic — the tool finds the right section, creates it if missing, appends in the right format. No LLM interpretation of formatting rules.
+- **System prompt injection**: Every turn, the agent gets fresh context about the vault — user identity, enabled features, conventions, and even smart project detection (if you're in a repo that matches a PARA project, that context is injected)
+- **No keyboard shortcuts required**: The agent handles everything through conversation. No need to memorize key combos.
+- **Global vault access**: The extension knows the vault path from a global config. Works from any directory, any project.
 
-### Progressive
+### 3. Auto-Update (TBD)
 
-- PARA is always present as the foundation. Progressive adoption applies to features built on top of it: bragfile, contacts, meeting notes, etc.
-- Start with just the PARA backbone and add more features over time.
-- Re-run brainkit at any point to adopt new features.
-- Auto-update awareness: brainkit tells you when new features are available.
+Brainkit should be aware when a new version is available and surface this to the user.
 
-## What Brainkit Is Not
+Planned behavior:
+- On session start, check for newer version
+- If update available, notify the user with what's new
+- User chooses whether to update
+- Implementation details to be decided (npm registry check, GitHub releases, etc.)
 
-- **Not a note-taking app.** It doesn't provide an editor or viewer. Use your IDE, Obsidian, or any editor you like.
-- **Not a task manager.** The second brain captures knowledge, not todos.
-- **Not a collaboration tool.** This is a personal vault — no sharing, commenting, or multi-user features.
-- **Not a sync service.** Users manage their own git workflow or cloud sync.
-- **Not an expert knowledge system.** It's for personal recall and productivity, not team documentation.
+## Design Philosophy
 
-## The Second Brain Concept
-
-A second brain is a system for capturing, organizing, and retrieving information outside your biological brain. The three core functions:
-
-1. **Capture** — A frictionless place to store ideas, meeting notes, articles, and anything worth remembering.
-2. **Organize** — Systematic structure for retrieval, not storage. Organize by "where will I look for this?" not "where did I capture it."
-3. **Retrieve** — Tap into your digital memory whenever you need it. AI agents supercharge this.
-
-Brainkit is opinionated about the organizing and retrieval layers. Capture is left to the user (IDE, mobile apps, Telegram bots, etc.).
-
-## Why This Exists (Honest Differentiation)
-
-Tools like Obsidian, Logseq, Notion, and Dendron already manage plain-markdown knowledge bases. Brainkit's differentiation is:
-
-1. **Agent-first design.** The vault is designed to be operated by AI agents, not just read by them. Skills encode workflows (processing meeting notes, maintaining a brag file, querying contacts) as executable agent instructions.
-2. **Progressive feature adoption.** You don't adopt a whole system on day one. Start with one concept, add more as the habit forms.
-3. **Multi-provider.** Skills work across all major AI coding agents via the Agent Skills specification.
-4. **Opinionated conventions.** Instead of maximum flexibility, brainkit ships battle-tested patterns (PARA, brag documents, contacts) with clear rules the agent follows.
-
-## Inspiration
-
-- **Tiago Forte's "Building a Second Brain"** and the PARA method — the organizational foundation.
-- **[Impeccable](https://github.com/pbakaus/impeccable)** — the distribution model. Impeccable installs design skills into repos for AI agents. Brainkit does the same for personal knowledge management.
-- **The Agent Skills specification (agentskills.io)** — the interoperability standard for skill files.
+- **Skills-first**: Skills are the primary interface. The user talks to the agent, the agent uses skills for judgment and tools for execution. Commands exist only as thin shortcuts that trigger the agent — they contain zero logic. There is no parallel UI system competing with conversation.
+- **Opinionated**: PARA is mandatory. Naming conventions are fixed. This isn't a framework — it's a system with opinions.
+- **Never delete**: Content is never deleted. Always archived. The archive is the safe destination for everything.
+- **Extension + Skills**: Two complementary layers. Tools handle deterministic operations (typed parameters, programmatic file manipulation). Skills handle domain knowledge (when to suggest a brag, how to structure meeting notes, where to file things in PARA). Neither alone is sufficient.
+- **Pi-native**: Built specifically for pi's extension API. Not a generic tool that works with any agent. This trade-off gives us typed tools, system prompt injection, and event hooks that a generic approach can't match.

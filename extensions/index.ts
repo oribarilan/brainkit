@@ -1,0 +1,66 @@
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import {
+  readGlobalConfig,
+  readVaultConfig,
+  type BrainkitConfig,
+} from "./vault.js";
+import { registerTools } from "./tools.js";
+import { setupUI } from "./ui.js";
+import { setupHooks } from "./hooks.js";
+
+export default function brainkit(pi: ExtensionAPI) {
+  // --- State ---
+  let vaultPath: string | null = null;
+  let config: BrainkitConfig | null = null;
+
+  const getVaultPath = () => vaultPath;
+  const getConfig = () => config;
+
+  // --- Load vault config ---
+  function loadVault() {
+    const globalConfig = readGlobalConfig();
+    if (globalConfig) {
+      vaultPath = globalConfig.vaultPath;
+      try {
+        config = readVaultConfig(vaultPath);
+      } catch {
+        config = null;
+      }
+    }
+  }
+
+  // Initial load
+  loadVault();
+
+  // --- Register everything ---
+  registerTools(pi, getVaultPath);
+  setupUI(pi, getVaultPath, getConfig);
+  setupHooks(pi, getVaultPath, getConfig);
+
+  // --- /setup command (thin wrapper) ---
+  pi.registerCommand("setup", {
+    description: "Set up your brainkit vault",
+    handler: async (args, ctx) => {
+      pi.sendUserMessage(
+        "I want to set up my brainkit vault. Walk me through the configuration.",
+        { deliverAs: "followUp" },
+      );
+    },
+  });
+
+  // --- /doctor command (thin wrapper) ---
+  pi.registerCommand("doctor", {
+    description: "Check and fix vault health",
+    handler: async (args, ctx) => {
+      pi.sendUserMessage(
+        "Run a health check on my vault and fix any issues.",
+        { deliverAs: "followUp" },
+      );
+    },
+  });
+
+  // --- Reload vault on session start ---
+  pi.on("session_start", async (_event, _ctx) => {
+    loadVault();
+  });
+}
