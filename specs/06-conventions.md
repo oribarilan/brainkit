@@ -19,22 +19,26 @@ vault/
 ## Naming
 
 ### Directories
+
 - Lowercase with hyphens: `my-project/`, `api-redesign/`
 - No spaces, no underscores (except PARA prefixes: `01_projects`, `02_areas`, etc.)
 - PARA prefix format: `NN_name` — only for the four top-level PARA directories
 
 ### Files
+
 - Lowercase with hyphens: `meeting-notes.md`, `api-design.md`
 - Always `.md` extension
 - Exception: `README.md` is always uppercase
 - Meeting notes: `YYYY-MM-DD-topic.md`
 
 ### Config files
+
 - `brainkit.toml` — vault configuration (lowercase, no prefix)
 
 ## Formatting
 
 ### Markdown Conventions
+
 - Use **bold** for: key names, decisions, action items, people names
 - Use first person ("I", "my") — it's a personal vault
 - Use `self` to refer to the vault owner in meeting notes
@@ -42,6 +46,7 @@ vault/
 - Keep content concise — capture decisions and outcomes, not transcripts
 
 ### Bragfile Format
+
 ```markdown
 # Bragfile
 
@@ -58,6 +63,7 @@ vault/
 ```
 
 ### Contacts Format
+
 ```markdown
 # Contacts
 
@@ -71,6 +77,7 @@ vault/
 ```
 
 ### Meeting Notes Format
+
 ```markdown
 # Meeting: Topic Name
 
@@ -93,6 +100,7 @@ Brief summary of what was discussed and decided.
 ## The "Never Delete" Rule
 
 Content is never deleted from the vault. If something needs to be removed:
+
 1. Move it to `04_archive/`
 2. Add a note to its README.md: "Archived on YYYY-MM-DD. Reason: ..."
 3. The archive preserves history indefinitely

@@ -7,10 +7,7 @@ import type { BrainkitConfig } from "./vault.js";
 // Project context detection
 // ---------------------------------------------------------------------------
 
-export function detectProjectContext(
-  vaultPath: string,
-  cwd: string,
-): { name: string; readmePath: string } | null {
+export function detectProjectContext(vaultPath: string, cwd: string): { name: string; readmePath: string } | null {
   const cwdBasename = path.basename(cwd);
   const projectsDir = path.resolve(vaultPath, "01_projects");
 
@@ -33,11 +30,7 @@ export function detectProjectContext(
 // System prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildSystemPrompt(
-  config: BrainkitConfig,
-  vaultPath: string,
-  cwd?: string,
-): string {
+export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd?: string): string {
   const sections: string[] = [];
 
   // ── 1. Identity ──────────────────────────────────────────────────────

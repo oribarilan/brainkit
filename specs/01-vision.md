@@ -13,6 +13,7 @@ You open pi anywhere, brainkit is always with you. The agent knows your vault, y
 Everything should be easy to discover and understand. The user should never wonder "what can this do?"
 
 How we implement this:
+
 - **Header**: Rose ASCII art with quick command reference on every session start
 - **Rotating hints**: Status bar cycles through tips every 12 seconds
 - **`/help` command**: Full reference panel for all commands and tools
@@ -26,21 +27,24 @@ How we implement this:
 The user should be able to talk naturally and things happen correctly. No commands needed for common operations.
 
 How we implement this:
+
 - **Skills teach judgment**: Skills don't just describe formats — they teach the agent WHEN to create meeting notes, WHEN to suggest a brag entry, HOW to decide where something goes in PARA
 - **Typed tools**: Operations like adding a brag entry are programmatic — the tool finds the right section, creates it if missing, appends in the right format. No LLM interpretation of formatting rules.
 - **System prompt injection**: Every turn, the agent gets fresh context about the vault — user identity, enabled features, conventions, and even smart project detection (if you're in a repo that matches a PARA project, that context is injected)
 - **No keyboard shortcuts required**: The agent handles everything through conversation. No need to memorize key combos.
 - **Global vault access**: The extension knows the vault path from a global config. Works from any directory, any project.
 
-### 3. Auto-Update (TBD)
+### 3. Auto-Update
 
-Brainkit should be aware when a new version is available and surface this to the user.
+Brainkit checks for updates on every session start and surfaces them clearly.
 
-Planned behavior:
-- On session start, check for newer version
-- If update available, notify the user with what's new
-- User chooses whether to update
-- Implementation details to be decided (npm registry check, GitHub releases, etc.)
+How we implement this:
+
+- **Version check**: On session start, fetch remote `package.json` from GitHub and compare versions using semver
+- **Sticky status bar**: When an update is available, a persistent status shows `v0.2.0 available · run: pi update` — this doesn't rotate away like hints
+- **Changelog on update**: When a new version is first loaded after `pi update`, brainkit shows what changed — extracts relevant entries from `CHANGELOG.md` between the last-seen and current versions
+- **Update mechanism**: `pi update` (built-in pi command) pulls the latest from GitHub
+- **Non-blocking**: The remote check is async — it never delays session start
 
 ## Design Philosophy
 

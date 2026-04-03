@@ -18,6 +18,7 @@ The agent has tools prefixed with `brain_` to interact with the vault. The vault
 ## Setup Flow
 
 When a user runs /setup or asks to set up their vault:
+
 1. Ask where their vault should live (absolute path)
 2. Call brain_setup_vault with the path
 3. Ask personalization questions: name, role, expertise (comma-separated), tone preference, scope (professional/personal/both)
@@ -26,6 +27,7 @@ When a user runs /setup or asks to set up their vault:
 6. Confirm setup is complete
 
 Example brainkit.toml:
+
 ```toml
 [brainkit]
 version = "0.1.0"

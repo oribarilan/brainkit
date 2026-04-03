@@ -69,7 +69,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       date: Type.Optional(Type.String({ description: "Date YYYY-MM-DD" })),
       project: Type.Optional(Type.String({ description: "Related project" })),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -80,10 +80,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
 
       let description = params.description;
       if (params.project) {
-        description = description.replace(
-          params.project,
-          `**${params.project}**`,
-        );
+        description = description.replace(params.project, `**${params.project}**`);
         if (!description.includes(`**${params.project}**`)) {
           description = `**${params.project}**: ${description}`;
         }
@@ -99,22 +96,13 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { path: "02_areas/career/bragfile.md" },
       };
     },
-    renderCall(args, theme, context) {
-      const truncated =
-        args.description?.length > 60
-          ? args.description.slice(0, 57) + "..."
-          : args.description;
-      return new Text(
-        theme.fg("toolTitle", theme.bold("add-brag ")) + theme.fg("dim", `"${truncated}"`),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      const truncated = args.description?.length > 60 ? args.description.slice(0, 57) + "..." : args.description;
+      return new Text(theme.fg("toolTitle", theme.bold("add-brag ")) + theme.fg("dim", `"${truncated}"`), 0, 0);
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
-      return new Text(
-        theme.fg("success", "✓ ") + theme.fg("muted", text),
-        0, 0,
-      );
+      return new Text(theme.fg("success", "✓ ") + theme.fg("muted", text), 0, 0);
     },
   });
 
@@ -126,7 +114,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     parameters: Type.Object({
       query: Type.String({ description: "Search query for contacts" }),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -166,13 +154,10 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { matchCount: matches.length },
       };
     },
-    renderCall(args, theme, context) {
-      return new Text(
-        theme.fg("toolTitle", theme.bold("query-contacts ")) + theme.fg("dim", `"${args.query}"`),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      return new Text(theme.fg("toolTitle", theme.bold("query-contacts ")) + theme.fg("dim", `"${args.query}"`), 0, 0);
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const lines = text.split("\n");
       const parts: string[] = [];
@@ -203,7 +188,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       connection: Type.Optional(Type.String({ description: "Connection details" })),
       relevantFor: Type.Optional(Type.String({ description: "What they are relevant for" })),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -226,18 +211,12 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { name: params.name },
       };
     },
-    renderCall(args, theme, context) {
-      return new Text(
-        theme.fg("toolTitle", theme.bold("add-contact ")) + theme.fg("dim", `"${args.name}"`),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      return new Text(theme.fg("toolTitle", theme.bold("add-contact ")) + theme.fg("dim", `"${args.name}"`), 0, 0);
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
-      return new Text(
-        theme.fg("success", "✓ ") + theme.fg("muted", text),
-        0, 0,
-      );
+      return new Text(theme.fg("success", "✓ ") + theme.fg("muted", text), 0, 0);
     },
   });
 
@@ -249,10 +228,12 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     parameters: Type.Object({
       query: Type.String({ description: "Search query" }),
       scope: Type.Optional(
-        StringEnum(["all", "projects", "areas", "resources", "archive"] as const, { description: "PARA scope to search" }),
+        StringEnum(["all", "projects", "areas", "resources", "archive"] as const, {
+          description: "PARA scope to search",
+        }),
       ),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -315,23 +296,22 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         };
       }
 
-      const formatted = results.map(
-        (r) => `📄 ${r.relativePath}\n${r.context}`,
-      );
+      const formatted = results.map((r) => `📄 ${r.relativePath}\n${r.context}`);
 
       return {
         content: [{ type: "text", text: formatted.join("\n\n") }],
         details: { resultCount: results.length, scope },
       };
     },
-    renderCall(args, theme, context) {
+    renderCall(args, theme, _context) {
       const scopeLabel = args.scope && args.scope !== "all" ? ` [${args.scope}]` : "";
       return new Text(
         theme.fg("toolTitle", theme.bold("brain-search ")) + theme.fg("dim", `"${args.query}"${scopeLabel}`),
-        0, 0,
+        0,
+        0,
       );
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const lines = text.split("\n");
       const parts: string[] = [];
@@ -356,7 +336,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
     parameters: Type.Object({
       path: Type.String({ description: "Relative path within the vault" }),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -392,18 +372,20 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { path: params.path },
       };
     },
-    renderCall(args, theme, context) {
-      return new Text(
-        theme.fg("toolTitle", theme.bold("read ")) + theme.fg("accent", `vault://${args.path}`),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      return new Text(theme.fg("toolTitle", theme.bold("read ")) + theme.fg("accent", `vault://${args.path}`), 0, 0);
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const lineCount = text.split("\n").length;
       return new Text(
-        theme.fg("success", "✓ ") + theme.fg("muted", `Read ${lineCount} lines from ${result.details?.path ?? "file"}`),
-        0, 0,
+        theme.fg("success", "✓ ") +
+          theme.fg(
+            "muted",
+            `Read ${lineCount} lines from ${(result.details as Record<string, string>)?.path ?? "file"}`,
+          ),
+        0,
+        0,
       );
     },
   });
@@ -417,7 +399,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       path: Type.String({ description: "Relative path within the vault" }),
       content: Type.String({ description: "File content to write" }),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -444,7 +426,12 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       const isArchivePath = normalizedPath.startsWith(PARA.archive + path.sep) || normalizedPath === PARA.archive;
       if (isArchivePath) {
         return {
-          content: [{ type: "text", text: "Error: Writing to the archive directory is not allowed. Use the appropriate PARA directory instead." }],
+          content: [
+            {
+              type: "text",
+              text: "Error: Writing to the archive directory is not allowed. Use the appropriate PARA directory instead.",
+            },
+          ],
           details: {},
         };
       }
@@ -456,18 +443,12 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { path: params.path },
       };
     },
-    renderCall(args, theme, context) {
-      return new Text(
-        theme.fg("toolTitle", theme.bold("write ")) + theme.fg("accent", `vault://${args.path}`),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      return new Text(theme.fg("toolTitle", theme.bold("write ")) + theme.fg("accent", `vault://${args.path}`), 0, 0);
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
-      return new Text(
-        theme.fg("success", "✓ ") + theme.fg("muted", text),
-        0, 0,
-      );
+      return new Text(theme.fg("success", "✓ ") + theme.fg("muted", text), 0, 0);
     },
   });
 
@@ -475,11 +456,12 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
   pi.registerTool({
     name: "brain_setup_vault",
     label: "Setup Vault",
-    description: "Set the vault path for brainkit. Call this during initial setup to tell brainkit where your vault lives.",
+    description:
+      "Set the vault path for brainkit. Call this during initial setup to tell brainkit where your vault lives.",
     parameters: Type.Object({
       vaultPath: Type.String({ description: "Absolute path to the vault directory" }),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const vaultPath = params.vaultPath.trim();
       if (!path.isAbsolute(vaultPath)) {
         return {
@@ -495,22 +477,21 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       writeGlobalConfig({ vaultPath });
 
       return {
-        content: [{ type: "text", text: `Vault path set to: ${vaultPath}. Now create brainkit.toml using brain_write, then run brain_doctor to set up the structure.` }],
+        content: [
+          {
+            type: "text",
+            text: `Vault path set to: ${vaultPath}. Now create brainkit.toml using brain_write, then run brain_doctor to set up the structure.`,
+          },
+        ],
         details: { vaultPath },
       };
     },
-    renderCall(args, theme, context) {
-      return new Text(
-        theme.fg("toolTitle", theme.bold("setup-vault ")) + theme.fg("accent", args.vaultPath),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      return new Text(theme.fg("toolTitle", theme.bold("setup-vault ")) + theme.fg("accent", args.vaultPath), 0, 0);
     },
-    renderResult(result, options, theme, context) {
+    renderResult(result, _options, theme, _context) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
-      return new Text(
-        theme.fg("success", "✓ ") + theme.fg("muted", text),
-        0, 0,
-      );
+      return new Text(theme.fg("success", "✓ ") + theme.fg("muted", text), 0, 0);
     },
   });
 
@@ -518,9 +499,10 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
   pi.registerTool({
     name: "brain_doctor",
     label: "Doctor",
-    description: "Check vault health and fix issues. Creates missing PARA directories and key files, then runs health checks.",
+    description:
+      "Check vault health and fix issues. Creates missing PARA directories and key files, then runs health checks.",
     parameters: Type.Object({}),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
       const vaultPath = getVaultPath();
       if (vaultPath === null) {
         return {
@@ -535,7 +517,9 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         config = readVaultConfig(vaultPath);
       } catch {
         return {
-          content: [{ type: "text", text: "Error: Could not read brainkit.toml. Make sure it exists in the vault root." }],
+          content: [
+            { type: "text", text: "Error: Could not read brainkit.toml. Make sure it exists in the vault root." },
+          ],
           details: {},
         };
       }
@@ -543,7 +527,7 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       // Fix phase: create missing structure
       const fixes: string[] = [];
 
-      for (const [key, dirName] of Object.entries(PARA)) {
+      for (const [, dirName] of Object.entries(PARA)) {
         const dirPath = path.resolve(vaultPath, dirName);
         if (!fs.existsSync(dirPath)) {
           fs.mkdirSync(dirPath, { recursive: true });
@@ -585,9 +569,9 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         lines.push("");
       }
 
-      const passCount = results.filter(r => r.status === "pass").length;
-      const warnCount = results.filter(r => r.status === "warn").length;
-      const errorCount = results.filter(r => r.status === "error").length;
+      const passCount = results.filter((r) => r.status === "pass").length;
+      const warnCount = results.filter((r) => r.status === "warn").length;
+      const errorCount = results.filter((r) => r.status === "error").length;
 
       lines.push(`Health: ${passCount} passed, ${warnCount} warnings, ${errorCount} errors`);
       lines.push("");
@@ -602,29 +586,29 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
         details: { fixes, results, passCount, warnCount, errorCount },
       };
     },
-    renderCall(args, theme, context) {
-      return new Text(
-        theme.fg("toolTitle", theme.bold("doctor")),
-        0, 0,
-      );
+    renderCall(args, theme, _context) {
+      return new Text(theme.fg("toolTitle", theme.bold("doctor")), 0, 0);
     },
-    renderResult(result, options, theme, context) {
-      const details = result.details as any;
+    renderResult(result, _options, theme, _context) {
+      const details = result.details as
+        | { fixes?: string[]; passCount?: number; warnCount?: number; errorCount?: number }
+        | undefined;
       if (!details) {
         const text = result.content[0]?.type === "text" ? result.content[0].text : "";
         return new Text(theme.fg("muted", text), 0, 0);
       }
 
       const parts: string[] = [];
-      
-      if (details.fixes?.length > 0) {
+
+      if (details.fixes && details.fixes.length > 0) {
         parts.push(theme.fg("accent", `Fixed ${details.fixes.length} issue(s)`));
       }
-      
+
       parts.push(
-        theme.fg("success", `${details.passCount ?? 0}✓`) + " " +
-        (details.warnCount > 0 ? theme.fg("warning", `${details.warnCount}⚠`) + " " : "") +
-        (details.errorCount > 0 ? theme.fg("error", `${details.errorCount}✗`) : "")
+        theme.fg("success", `${details.passCount ?? 0}✓`) +
+          " " +
+          ((details.warnCount ?? 0) > 0 ? theme.fg("warning", `${details.warnCount}⚠`) + " " : "") +
+          ((details.errorCount ?? 0) > 0 ? theme.fg("error", `${details.errorCount}✗`) : ""),
       );
 
       return new Text(parts.join(" · "), 0, 0);

@@ -3,6 +3,7 @@
 Structured notes from meetings, filed under the relevant PARA directory based on context.
 
 ## Location
+
 - Related to an active project → `01_projects/<project-name>/`
 - Related to an ongoing area → `02_areas/<area-name>/`
 - General or recurring meeting → `03_resources/meetings/` or relevant resource dir

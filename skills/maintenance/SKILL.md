@@ -37,13 +37,13 @@ The tool checks:
 
 ## Common Issues and Fixes
 
-| Issue | Fix |
-|---|---|
-| Missing PARA directory | Create it. |
-| Missing bragfile | Create with `# Bragfile` heading. |
-| Missing contacts | Create with `# Contacts` heading. |
-| Non-kebab-case names | Suggest renaming — don't rename without asking. |
-| Orphaned root files | Suggest moving to the appropriate PARA category. |
+| Issue                  | Fix                                              |
+| ---------------------- | ------------------------------------------------ |
+| Missing PARA directory | Create it.                                       |
+| Missing bragfile       | Create with `# Bragfile` heading.                |
+| Missing contacts       | Create with `# Contacts` heading.                |
+| Non-kebab-case names   | Suggest renaming — don't rename without asking.  |
+| Orphaned root files    | Suggest moving to the appropriate PARA category. |
 
 ## The "Never Delete" Rule
 

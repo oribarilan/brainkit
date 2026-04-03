@@ -4,16 +4,17 @@
 
 Brainkit has two complementary layers:
 
-| Layer | Format | Purpose | Examples |
-|---|---|---|---|
-| **Extension** | TypeScript | Programmatic operations, UI, event hooks | Tools, commands (thin wrappers), status bar, system prompt |
-| **Skills** | Markdown | Domain knowledge, teaching agent judgment | When to suggest a brag, how to structure meeting notes |
+| Layer         | Format     | Purpose                                   | Examples                                                   |
+| ------------- | ---------- | ----------------------------------------- | ---------------------------------------------------------- |
+| **Extension** | TypeScript | Programmatic operations, UI, event hooks  | Tools, commands (thin wrappers), status bar, system prompt |
+| **Skills**    | Markdown   | Domain knowledge, teaching agent judgment | When to suggest a brag, how to structure meeting notes     |
 
 ### Why Two Layers?
 
 Tools handle the **how** — `brain_add_brag` programmatically finds the right month section and appends a correctly formatted entry. Skills handle the **when** and **why** — the bragfile skill teaches the agent to recognize accomplishments in conversation and suggest capturing them.
 
 Neither alone is sufficient:
+
 - Tools without skills: the agent has buttons but doesn't know when to press them
 - Skills without tools: the agent knows what to do but has to guess at formatting and placement
 
@@ -60,54 +61,55 @@ pi install /path/to/brainkit
 ```
 
 npm distribution can be added later for semver guarantees and shorter install commands (`pi install npm:brainkit`).
+
 ```
 
 ## Data Flow
 
 ```
+
 Session Start
-  │
-  ├─► Load global config (~/.config/brainkit/config.json)
-  │     └─► Get vault path
-  ├─► Load vault config (brainkit.toml)
-  ├─► Register tools (brain_*)
-  ├─► Set up UI (header, status bar, hints)
-  ├─► Load skills (from skills/ directory)
-  └─► Set session name
-        │
+│
+├─► Load global config (~/.config/brainkit/config.json)
+│ └─► Get vault path
+├─► Load vault config (brainkit.toml)
+├─► Register tools (brain\_\*)
+├─► Set up UI (header, status bar, hints)
+├─► Load skills (from skills/ directory)
+└─► Set session name
+│
 User sends message
-  │
-  ├─► before_agent_start hook
-  │     └─► Build system prompt from config
-  │         - User identity, role, expertise
-  │         - Vault structure (PARA)
-  │         - Enabled features and key files
-  │         - Conventions and custom rules
-  │         - Smart project detection (cwd match)
-  │     └─► Inject into system prompt
-  │
-  ├─► Agent processes with tools + skills
-  │     - Skills provide judgment (when/why)
-  │     - Tools provide execution (how)
-  │
-  └─► agent_end hook
-        └─► Auto-brag detection
-            - Scan for accomplishment language
-            - Suggest capturing if relevant
+│
+├─► before_agent_start hook
+│ └─► Build system prompt from config
+│ - User identity, role, expertise
+│ - Vault structure (PARA)
+│ - Enabled features and key files
+│ - Conventions and custom rules
+│ - Smart project detection (cwd match)
+│ └─► Inject into system prompt
+│
+├─► Agent processes with tools + skills
+│ - Skills provide judgment (when/why)
+│ - Tools provide execution (how)
+│
+└─► agent_end hook
+└─► Auto-brag detection - Scan for accomplishment language - Suggest capturing if relevant
 
 /setup (thin wrapper — sends message to agent)
-  │
-  └─► Agent receives message, guided by brainkit skill
-        ├─► Asks user questions (vault path, name, role, etc.)
-        ├─► Calls brain_setup_vault tool (sets vault path, creates dir)
-        ├─► Calls brain_write tool (writes brainkit.toml)
-        └─► Calls brain_doctor tool (creates PARA dirs and key files)
+│
+└─► Agent receives message, guided by brainkit skill
+├─► Asks user questions (vault path, name, role, etc.)
+├─► Calls brain_setup_vault tool (sets vault path, creates dir)
+├─► Calls brain_write tool (writes brainkit.toml)
+└─► Calls brain_doctor tool (creates PARA dirs and key files)
 
 /doctor (thin wrapper — sends message to agent)
-  │
-  └─► Agent receives message
-        └─► Calls brain_doctor tool (fixes missing dirs/files, runs health checks)
-```
+│
+└─► Agent receives message
+└─► Calls brain_doctor tool (fixes missing dirs/files, runs health checks)
+
+````
 
 ## Configuration
 
@@ -117,7 +119,7 @@ User sends message
 {
   "vaultPath": "/Users/ori/brain"
 }
-```
+````
 
 Set via `brain_setup_vault` tool (triggered by `/setup` command). Tells the extension where the vault lives.
 

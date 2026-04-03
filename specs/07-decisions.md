@@ -153,13 +153,25 @@ This documents key design decisions, their reasoning, and alternatives considere
 This also eliminates duplicated logic. Previously, setup lived in both a command (TypeScript TUI wizard) and a skill (agent guidance). Now it lives in one place: the skill teaches the agent what to ask, the tool writes the config. The command is just `pi.sendUserMessage("I want to set up my brainkit vault")`.
 
 **Architecture**:
+
 - **Skills** = intelligence layer. Teach the agent WHAT to do, WHEN to do it, and WHY. Each skill covers a complete feature (PARA, bragfile, contacts, meeting notes, maintenance). Skills are the primary interface.
 - **Tools** = execution layer. Deterministic, typed operations. `brain_add_brag` finds the right section and appends. `brain_doctor` creates missing structure and reports health. Tools do exactly what they're told, reliably.
 - **Commands** = convenience shortcuts. `/setup` sends a message. `/doctor` sends a message. That's it. No logic, no UI, no state management.
 - **Ambient UI** = discoverability. Header shows the rose + command reference. Status bar rotates tips. These are passive — they inform, they don't interact.
 
 **Consequences**:
+
 - No custom TUI panels for doctor/dashboard/help — the agent formats output naturally
 - Skills must be comprehensive enough to guide the agent through complex flows (like the multi-step setup)
 - Tools must be granular enough for the agent to compose them (brain_setup_vault → brain_write → brain_doctor)
 - The agent becomes the universal interface — talking to it is always the right way to interact
+
+---
+
+### 19. Auto-update via GitHub version check + changelog
+
+**Decision**: On session start, fetch the remote `package.json` from GitHub to check for newer versions. If an update is available, show a sticky status bar indicator (`v0.2.0 available · run: pi update`). After `pi update` installs a new version, show the changelog from `CHANGELOG.md` on first run.
+
+**Reasoning**: Users shouldn't have to manually check for updates. The version check is non-blocking (async fetch, fire-and-forget) so it never delays session start. The sticky status bar ensures the user sees the update availability without being interrupted — it persists alongside the rotating hints. The changelog on first run after update tells users what's new, reducing surprise and encouraging adoption of new features. `lastSeenVersion` is tracked in the global config to detect when an update has been applied.
+
+**Mechanism**: `pi update` is the built-in pi command that pulls the latest from git for non-pinned packages. No custom update command needed.

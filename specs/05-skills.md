@@ -7,6 +7,7 @@ Skills are markdown files that teach the agent domain knowledge. Each skill cove
 ### Skill Per Feature, Not Per Workflow
 
 A skill describes a **feature**, not a workflow:
+
 - **Good**: "The bragfile skill teaches everything about the bragfile — format, quality criteria, when to suggest entries, what tool to use"
 - **Bad**: "The add-brag skill teaches how to add a brag entry" (too narrow, misses the bigger picture)
 
@@ -19,6 +20,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 ## Skill Inventory
 
 ### brainkit (root)
+
 - **Always loaded**
 - What brainkit is, vault overview
 - General conventions (naming, formatting, first person, bold usage)
@@ -26,6 +28,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 - Discoverability principle — when to mention features proactively
 
 ### para
+
 - PARA method: Projects, Areas, Resources, Archive
 - Decision framework (deadline → project, ongoing → area, etc.)
 - Directory structure rules (README.md, kebab-case)
@@ -33,6 +36,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 - Key files that live within PARA (bragfile path, contacts path)
 
 ### bragfile
+
 - What it is and why it matters (performance reviews, self-advocacy)
 - Format: half-year → month → dated entries
 - Quality criteria: specific, quantified, impact-focused, action verbs
@@ -41,6 +45,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 - When to suggest: shipping, fixing, leading, mentoring — gently, not pushily
 
 ### contacts
+
 - What the people index is
 - Format: H2 per person, structured fields
 - Tools: `brain_query_contacts`, `brain_add_contact`
@@ -48,6 +53,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 - When to suggest adding: new professionally relevant people, after meeting notes
 
 ### meeting-notes
+
 - Placement rules (project → project dir, area → area dir, general → resources)
 - Naming: `YYYY-MM-DD-topic.md`
 - Structure template: date, attendees, summary, decisions, action items
@@ -56,6 +62,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 - When to create: user mentions a meeting, pastes transcript, asks to summarize
 
 ### maintenance
+
 - What vault health means
 - What /doctor checks and fixes
 - Naming conventions (kebab-case, exceptions)
@@ -69,6 +76,7 @@ Skills are loaded from the `skills/` directory in the pi package. Currently all 
 The extension provides the **mechanism** (typed tools, UI, hooks). Skills provide the **intelligence** (when, why, judgment).
 
 Example flow when user says "I just had a 1:1 with Sarah about the migration":
+
 1. **Meeting-notes skill** → agent knows to create meeting notes, asks clarifying questions
 2. **Contacts skill** → agent checks if Sarah is in contacts, cross-references
 3. **PARA skill** → agent decides where to file (under the migration project if it exists)

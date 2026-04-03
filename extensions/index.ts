@@ -1,12 +1,9 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import {
-  readGlobalConfig,
-  readVaultConfig,
-  type BrainkitConfig,
-} from "./vault.js";
+import { readGlobalConfig, readVaultConfig, type BrainkitConfig } from "./vault.js";
 import { registerTools } from "./tools.js";
 import { setupUI } from "./ui.js";
 import { setupHooks } from "./hooks.js";
+import { setupUpdater } from "./updater.js";
 
 export default function brainkit(pi: ExtensionAPI) {
   // --- State ---
@@ -36,26 +33,23 @@ export default function brainkit(pi: ExtensionAPI) {
   registerTools(pi, getVaultPath);
   setupUI(pi, getVaultPath, getConfig);
   setupHooks(pi, getVaultPath, getConfig);
+  setupUpdater(pi);
 
   // --- /setup command (thin wrapper) ---
   pi.registerCommand("setup", {
     description: "Set up your brainkit vault",
-    handler: async (args, ctx) => {
-      pi.sendUserMessage(
-        "I want to set up my brainkit vault. Walk me through the configuration.",
-        { deliverAs: "followUp" },
-      );
+    handler: async (_args, _ctx) => {
+      pi.sendUserMessage("I want to set up my brainkit vault. Walk me through the configuration.", {
+        deliverAs: "followUp",
+      });
     },
   });
 
   // --- /doctor command (thin wrapper) ---
   pi.registerCommand("doctor", {
     description: "Check and fix vault health",
-    handler: async (args, ctx) => {
-      pi.sendUserMessage(
-        "Run a health check on my vault and fix any issues.",
-        { deliverAs: "followUp" },
-      );
+    handler: async (_args, _ctx) => {
+      pi.sendUserMessage("Run a health check on my vault and fix any issues.", { deliverAs: "followUp" });
     },
   });
 

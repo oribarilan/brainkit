@@ -9,6 +9,7 @@ import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 
 export interface BrainkitGlobalConfig {
   vaultPath: string;
+  lastSeenVersion?: string;
 }
 
 export interface BrainkitConfig {
@@ -112,10 +113,7 @@ export function readVaultConfig(vaultPath: string): BrainkitConfig {
   return parsed as unknown as BrainkitConfig;
 }
 
-export function writeVaultConfig(
-  vaultPath: string,
-  config: BrainkitConfig,
-): void {
+export function writeVaultConfig(vaultPath: string, config: BrainkitConfig): void {
   const configPath = path.resolve(vaultPath, KEY_FILES.config);
   const toml = stringifyToml(config as unknown as Record<string, unknown>);
   fs.writeFileSync(configPath, toml + "\n", "utf-8");
@@ -125,10 +123,7 @@ export function writeVaultConfig(
 // Vault file operations
 // ---------------------------------------------------------------------------
 
-export function readVaultFile(
-  vaultPath: string,
-  relativePath: string,
-): string | null {
+export function readVaultFile(vaultPath: string, relativePath: string): string | null {
   const fullPath = path.resolve(vaultPath, relativePath);
   try {
     return fs.readFileSync(fullPath, "utf-8");
@@ -137,22 +132,14 @@ export function readVaultFile(
   }
 }
 
-export function writeVaultFile(
-  vaultPath: string,
-  relativePath: string,
-  content: string,
-): void {
+export function writeVaultFile(vaultPath: string, relativePath: string, content: string): void {
   const fullPath = path.resolve(vaultPath, relativePath);
   const dir = path.dirname(fullPath);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(fullPath, content, "utf-8");
 }
 
-export function appendVaultFile(
-  vaultPath: string,
-  relativePath: string,
-  content: string,
-): void {
+export function appendVaultFile(vaultPath: string, relativePath: string, content: string): void {
   const fullPath = path.resolve(vaultPath, relativePath);
   const dir = path.dirname(fullPath);
   fs.mkdirSync(dir, { recursive: true });
@@ -199,10 +186,7 @@ export function readBragfile(vaultPath: string): string | null {
   return readVaultFile(vaultPath, KEY_FILES.bragfile);
 }
 
-export function appendBragEntry(
-  vaultPath: string,
-  entry: BragEntry,
-): string {
+export function appendBragEntry(vaultPath: string, entry: BragEntry): string {
   const entryDate = entry.date ? new Date(entry.date) : new Date();
   const dateStr = entry.date ?? formatDateString(entryDate);
   const halfYearLabel = getHalfYearLabel(entryDate);
@@ -218,18 +202,13 @@ export function appendBragEntry(
 
   if (halfYearIndex === -1) {
     const section =
-      (content.length > 0 && !content.endsWith("\n\n")
-        ? content.endsWith("\n")
-          ? "\n"
-          : "\n\n"
-        : "") +
+      (content.length > 0 && !content.endsWith("\n\n") ? (content.endsWith("\n") ? "\n" : "\n\n") : "") +
       `${halfYearHeading}\n\n${monthHeading}\n\n${formattedEntry}\n`;
     content += section;
   } else {
     const afterHalfYear = halfYearIndex + halfYearHeading.length;
     const nextH2Index = content.indexOf("\n## ", afterHalfYear);
-    const halfYearEnd =
-      nextH2Index === -1 ? content.length : nextH2Index;
+    const halfYearEnd = nextH2Index === -1 ? content.length : nextH2Index;
 
     const halfYearSection = content.slice(halfYearIndex, halfYearEnd);
     const monthIndex = halfYearSection.indexOf(monthHeading);
@@ -237,18 +216,14 @@ export function appendBragEntry(
     if (monthIndex === -1) {
       const insertPos = halfYearIndex + halfYearHeading.length;
       const monthSection = `\n\n${monthHeading}\n\n${formattedEntry}\n`;
-      content =
-        content.slice(0, insertPos) + monthSection + content.slice(insertPos);
+      content = content.slice(0, insertPos) + monthSection + content.slice(insertPos);
     } else {
       const absoluteMonthIndex = halfYearIndex + monthIndex;
       const afterMonth = absoluteMonthIndex + monthHeading.length;
 
       const restAfterMonth = content.slice(afterMonth);
       const nextSectionMatch = restAfterMonth.search(/\n###? /);
-      const monthEnd =
-        nextSectionMatch === -1
-          ? content.length
-          : afterMonth + nextSectionMatch;
+      const monthEnd = nextSectionMatch === -1 ? content.length : afterMonth + nextSectionMatch;
 
       const beforeInsert = content.slice(0, monthEnd);
       const afterInsert = content.slice(monthEnd);
@@ -341,10 +316,7 @@ export function parseContacts(content: string): Contact[] {
   return contacts;
 }
 
-export function searchContacts(
-  contacts: Contact[],
-  query: string,
-): Contact[] {
+export function searchContacts(contacts: Contact[], query: string): Contact[] {
   const lowerQuery = query.toLowerCase();
 
   return contacts.filter((contact) => {
@@ -358,9 +330,7 @@ export function searchContacts(
       contact.relevantFor,
     ];
 
-    return searchableFields.some(
-      (field) => field != null && field.toLowerCase().includes(lowerQuery),
-    );
+    return searchableFields.some((field) => field != null && field.toLowerCase().includes(lowerQuery));
   });
 }
 
@@ -372,8 +342,7 @@ export function addContact(vaultPath: string, contact: Contact): void {
   if (contact.team) lines.push(`- **Team**: ${contact.team}`);
   if (contact.relation) lines.push(`- **Relation**: ${contact.relation}`);
   if (contact.connection) lines.push(`- **Connection**: ${contact.connection}`);
-  if (contact.relevantFor)
-    lines.push(`- **Relevant For**: ${contact.relevantFor}`);
+  if (contact.relevantFor) lines.push(`- **Relevant For**: ${contact.relevantFor}`);
 
   lines.push("");
 
@@ -397,10 +366,7 @@ function isKebabCase(name: string): boolean {
   return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(name);
 }
 
-export function runHealthChecks(
-  vaultPath: string,
-  config: BrainkitConfig,
-): HealthCheckResult[] {
+export function runHealthChecks(vaultPath: string, config: BrainkitConfig): HealthCheckResult[] {
   const results: HealthCheckResult[] = [];
 
   try {
@@ -514,9 +480,7 @@ export function runHealthChecks(
 
   try {
     const rootEntries = fs.readdirSync(vaultPath);
-    const orphaned = rootEntries.filter(
-      (entry) => !allowedRootEntries.has(entry) && !entry.startsWith("."),
-    );
+    const orphaned = rootEntries.filter((entry) => !allowedRootEntries.has(entry) && !entry.startsWith("."));
 
     if (orphaned.length === 0) {
       results.push({

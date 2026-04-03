@@ -5,7 +5,7 @@ import type { BrainkitConfig } from "./vault.js";
 export function setupUI(
   pi: ExtensionAPI,
   getVaultPath: () => string | null,
-  getConfig: () => BrainkitConfig | null,
+  _getConfig: () => BrainkitConfig | null,
 ): void {
   // -------------------------------------------------------------------------
   // Hints — rotate in the status bar
