@@ -1,3 +1,7 @@
+---
+description: People index — format, cross-referencing, when to add contacts
+---
+
 # Contacts
 
 A people index at `03_resources/contacts.md`. A reference for remembering who people are, their roles, and how you know them.

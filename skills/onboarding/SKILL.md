@@ -1,3 +1,7 @@
+---
+description: First-run Q&A — guide new users through vault setup covering work and personal life
+---
+
 # Skill: onboarding
 
 When the system prompt indicates a fresh vault, guide the user through a comprehensive getting-to-know-you conversation. This shapes the entire brainkit experience — the more you learn, the better you can help.

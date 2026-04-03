@@ -1,3 +1,7 @@
+---
+description: Core brainkit conventions, tools, commands, and setup flow
+---
+
 # Skill: brainkit
 
 brainkit is a personal second brain system — a structured markdown vault organized using the PARA method. It captures projects, areas of responsibility, resources, and archives in a consistent, searchable format.

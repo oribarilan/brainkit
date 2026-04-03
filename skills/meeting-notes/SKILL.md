@@ -1,3 +1,7 @@
+---
+description: Meeting notes — placement, naming, structure for work and personal meetings
+---
+
 # Meeting Notes
 
 Structured notes from meetings, filed under the relevant PARA directory based on context.

@@ -1,3 +1,7 @@
+---
+description: Vault health, naming conventions, staleness detection, archive workflow
+---
+
 # Vault Maintenance
 
 Keeping the vault organized, consistent, and healthy. The vault is a living system that needs occasional care.

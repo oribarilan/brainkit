@@ -1,3 +1,7 @@
+---
+description: Professional accomplishments log — format, quality criteria, when to suggest entries
+---
+
 # Bragfile
 
 A running log of **professional** accomplishments. Lives at `02_areas/career/bragfile.md`. Used for performance reviews, resume updates, and self-advocacy.

@@ -1,3 +1,7 @@
+---
+description: PARA method — Projects, Areas, Resources, Archive organization system
+---
+
 # Skill: PARA method
 
 PARA is a system by Tiago Forte for organizing information into four categories: **Projects**, **Areas**, **Resources**, and **Archive**. brainkit uses PARA as the top-level vault structure.
