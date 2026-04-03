@@ -47,35 +47,43 @@ Brainkit checks for updates on session start. A sticky status bar shows when a n
 
 Mandatory, opinionated organization:
 
-- **`01_projects/`** — active efforts with a deadline
-- **`02_areas/`** — ongoing responsibilities
-- **`03_resources/`** — reference material
+- **`01_projects/`** — active efforts with a deadline (work and personal)
+- **`02_areas/`** — ongoing responsibilities (career, health, finances, home)
+- **`03_resources/`** — reference material (notes, recipes, patterns)
 - **`04_archive/`** — completed/inactive items
 
 ### Bragfile
 
-A running log of accomplishments at `02_areas/career/bragfile.md`. The `brain_add_brag` tool handles formatting and section placement. The agent recognizes accomplishments in conversation and offers to capture them.
+A running log of professional accomplishments at `02_areas/career/bragfile.md`. The `brain_add_brag` tool programmatically finds the right half-year/month section and appends a correctly formatted entry — the agent never guesses at placement. The agent recognizes accomplishments in conversation and offers to capture them. If your bragfile hasn't been updated in 14+ days, the agent gently reminds you.
 
 ### Contacts
 
-A people index at `03_resources/contacts.md`. Search with `brain_query_contacts`, add with `brain_add_contact`. The agent cross-references people mentioned in conversation.
+A people index at `03_resources/contacts.md` spanning both professional and personal life. Search with `brain_query_contacts`, add with `brain_add_contact`. The agent cross-references people mentioned in conversation and suggests adding new contacts.
 
 ### Meeting Notes
 
-Structured notes filed under the relevant PARA directory. Named `YYYY-MM-DD-topic.md`. The agent creates them when you mention a meeting — with attendees, decisions, and action items.
+Structured notes filed under the relevant PARA directory. Named `YYYY-MM-DD-topic.md`. Works for work meetings, doctor appointments, school conferences — the agent creates them when you mention any kind of meeting, with attendees, decisions, and action items.
 
 ### Vault Health
 
-`/doctor` checks your vault and fixes issues — creates missing directories, validates naming conventions, reports orphaned files. Never deletes, always archives.
+`/doctor` checks your vault and fixes issues — creates missing directories, validates naming conventions, reports orphaned files, and verifies your GitHub repo is private. Never deletes, always archives. Detects stale projects that may need archiving.
+
+### Auto-Commit
+
+Vault changes are automatically committed to git after each conversation. Debounced (30s) so rapid changes collapse into one commit. Flushes on session end. Skips silently if not a git repo.
+
+### Personalized Onboarding
+
+First run walks you through a comprehensive getting-to-know-you conversation — your professional role, team, current projects, personal responsibilities, family, hobbies. The agent uses this to pre-create PARA directories that match your actual life and write a rich config. The vault feels personalized from the start, not empty and generic.
 
 ## Architecture
 
 Two layers that complement each other:
 
-| Layer                  | What                     | Why                                                                          |
-| ---------------------- | ------------------------ | ---------------------------------------------------------------------------- |
-| **Tools** (TypeScript) | Deterministic operations | `brain_add_brag` finds the right section and appends correctly, every time   |
-| **Skills** (Markdown)  | Domain knowledge         | Teaches the agent _when_ to suggest a brag, _how_ to structure meeting notes |
+| Layer                  | What                     | Why                                                                        |
+| ---------------------- | ------------------------ | -------------------------------------------------------------------------- |
+| **Tools** (TypeScript) | Deterministic operations | `brain_add_brag` finds the right section and appends correctly, every time |
+| **Skills** (Markdown)  | Domain knowledge         | Teaches the agent _when_ to suggest a brag, _how_ to structure notes       |
 
 Tools handle the **how**. Skills handle the **when** and **why**.
 
@@ -112,8 +120,8 @@ pi
 Then:
 
 1. Type `/setup` or _"help me set up my vault"_
-2. The agent walks you through configuration — vault path, name, role, preferences
-3. Type `/doctor` or _"check my vault"_ to create the initial structure
+2. The agent walks you through a getting-to-know-you conversation — work, personal life, preferences
+3. It creates your vault structure, writes your config, and pre-creates directories that match your life
 4. Start talking
 
 ## Updating
