@@ -35,13 +35,13 @@ Update anytime with `pi update`. Brainkit tells you when a new version is availa
 
 ## What is this?
 
-A "second brain" is a system for capturing and organizing everything you know — accomplishments, people, meeting notes, projects, ideas — so you can find it when you need it instead of keeping it all in your head.
+A "second brain" is a system for capturing and organizing everything you know (accomplishments, people, meeting notes, projects, ideas) so you can find it when you need it instead of keeping it all in your head.
 
 Brainkit is an opinionated implementation of that idea. It's a structured markdown vault that follows the [PARA method](https://fortelabs.com/blog/para/), with an AI agent that actually understands it. You talk, things happen:
 
-- _"I just shipped the API redesign"_ — adds it to your bragfile, in the right section
-- _"I had a meeting with Sarah about the migration"_ — creates meeting notes, cross-references Sarah from contacts, files it under the right project
-- _"Who was that engineer from the platform team?"_ — searches your contacts
+- _"I just shipped the API redesign"_ → adds it to your bragfile, in the right section
+- _"I had a meeting with Sarah about the migration"_ → creates meeting notes, cross-references Sarah from contacts, files it under the right project
+- _"Who was that engineer from the platform team?"_ → searches your contacts
 
 No commands, no formatting, no manual filing. The agent handles it.
 
