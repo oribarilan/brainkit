@@ -1,6 +1,6 @@
 # brainkit
 
-An opinionated second brain, powered by [pi](https://github.com/badlogic/pi-mono). Just talk.
+An opinionated second brain, powered by [pi](https://github.com/badlogic/pi-mono). Gift your awesome brain its well-deserved memory.
 
 ```
         _---~~(~~-_.
