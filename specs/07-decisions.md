@@ -60,7 +60,7 @@ This documents key design decisions, their reasoning, and alternatives considere
 
 **Decision**: Skip the self-review feature (generating review summaries from bragfile entries) for v1.
 
-**Reasoning**: Focus on core features that establish the vault foundation. Self-review can be added later as a skill + tool once the bragfile has enough data to be useful.
+**Reasoning**: Focus on core features that establish the vault foundation. Self-review can be added later as a skill + tool once the bragfile has enough data to be useful. No feature flag is defined until the feature is built (YAGNI).
 
 ---
 
@@ -191,3 +191,25 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 **Decision**: brain_doctor checks if the vault's GitHub repo is public and reports it as an error with a fix command.
 
 **Reasoning**: The vault contains personal and professional information — contacts, accomplishments, meeting notes, personal life details. A public repo exposes all of this. The check uses `git` + `gh` CLI and skips silently if either isn't available. This is a security-first default — better to warn every health check than to let a public repo go unnoticed.
+
+---
+
+### 22. Pi-first with CLI fallback (supersedes #1)
+
+**Decision**: Support two modes — pi extension (recommended, full experience) and CLI (`npx brainkit`) that distributes skills to any coding agent. Pi remains the primary target.
+
+**Reasoning**: Decision #1 rejected the hybrid approach "for v1" due to maintenance cost. With the skills-first architecture now stable (Decision #18), adding CLI distribution is low-cost: skills are the same files, the CLI just copies them into provider directories and generates an AGENTS.md. The core value (organized vault + agent that understands conventions) works without typed tools — tools add reliability and polish, not fundamental capability. Locking users into pi excluded the majority of developers who use other agents.
+
+**Trade-off**: CLI users lose typed tools (deterministic formatting), custom UI, auto-commit, auto-brag detection, and staleness reminders. Accepted — the core experience is still valuable, and it's an on-ramp to pi.
+
+**What changed since #1**: Skills are comprehensive enough to guide any capable agent. The dual-format skill approach (action-oriented language, no tool-specific references) means zero transformation is needed during CLI installation. One source, two distribution paths.
+
+---
+
+### 23. Dual-format skills — action-oriented, no tool references
+
+**Decision**: Write skills with action-oriented language ("add a brag entry to `02_areas/career/bragfile.md`") instead of referencing specific tools ("use `brain_add_brag`"). Pi tools are registered separately in `tools.ts`.
+
+**Reasoning**: Skills teach domain knowledge (conventions, judgment, formats). Tools are the execution mechanism. These are already architecturally decoupled (Decision #18). When skills reference tool names inline, CLI agents without those tools get confused — they try to call nonexistent tools or hallucinate behavior. Action-oriented language works for both modes: CLI agents use file editing, pi agents use typed tools. Single source of truth, zero transformation during CLI installation, zero maintenance overhead.
+
+**Alternative considered**: (a) Prepend a preamble telling CLI agents to ignore tool references — fragile, agents forget mid-skill. (b) Strip tool references during installation — maintenance burden, error-prone regex. Dual-format avoids both problems.

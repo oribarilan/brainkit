@@ -23,9 +23,6 @@ function makeConfig(overrides?: Partial<BrainkitConfig>): BrainkitConfig {
     features: {
       bragfile: true,
       contacts: true,
-      "meeting-notes": true,
-      "self-review": false,
-      "vault-health": true,
       ...overrides?.features,
     },
     ...overrides,
@@ -117,7 +114,7 @@ describe("buildSystemPrompt", () => {
 
   it("includes bragfile section when enabled", () => {
     const config = makeConfig({
-      features: { bragfile: true, contacts: false, "meeting-notes": true, "self-review": false, "vault-health": true },
+      features: { bragfile: true, contacts: false },
     });
     const prompt = buildSystemPrompt(config, vaultPath);
 
@@ -127,7 +124,7 @@ describe("buildSystemPrompt", () => {
 
   it("excludes bragfile section when disabled", () => {
     const config = makeConfig({
-      features: { bragfile: false, contacts: true, "meeting-notes": true, "self-review": false, "vault-health": true },
+      features: { bragfile: false, contacts: true },
     });
     const prompt = buildSystemPrompt(config, vaultPath);
 
@@ -137,7 +134,7 @@ describe("buildSystemPrompt", () => {
 
   it("includes contacts section when enabled", () => {
     const config = makeConfig({
-      features: { bragfile: false, contacts: true, "meeting-notes": true, "self-review": false, "vault-health": true },
+      features: { bragfile: false, contacts: true },
     });
     const prompt = buildSystemPrompt(config, vaultPath);
 
@@ -147,7 +144,7 @@ describe("buildSystemPrompt", () => {
 
   it("excludes contacts section when disabled", () => {
     const config = makeConfig({
-      features: { bragfile: true, contacts: false, "meeting-notes": true, "self-review": false, "vault-health": true },
+      features: { bragfile: true, contacts: false },
     });
     const prompt = buildSystemPrompt(config, vaultPath);
 

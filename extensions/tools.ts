@@ -21,6 +21,8 @@ import {
   writeGlobalConfig,
 } from "./vault.js";
 
+import type { BrainkitConfig } from "./vault.js";
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -58,7 +60,12 @@ export function isPathWithinVault(vaultPath: string, relativePath: string): bool
 // Tool registration
 // ---------------------------------------------------------------------------
 
-export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | null, reloadVault: () => void): void {
+export function registerTools(
+  pi: ExtensionAPI,
+  getVaultPath: () => string | null,
+  getConfig: () => BrainkitConfig | null,
+  reloadVault: () => void,
+): void {
   // ── 1. brain_add_brag ──────────────────────────────────────────────
   pi.registerTool({
     name: "brain_add_brag",
@@ -75,6 +82,14 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       if (vaultPath === null) {
         return {
           content: [{ type: "text", text: "Error: Vault path not configured. Please run /setup first." }],
+          details: {},
+        };
+      }
+
+      const cfg = getConfig();
+      if (cfg !== null && !cfg.features.bragfile) {
+        return {
+          content: [{ type: "text", text: "Bragfile feature is disabled. Enable it in brainkit.toml." }],
           details: {},
         };
       }
@@ -119,6 +134,14 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       if (vaultPath === null) {
         return {
           content: [{ type: "text", text: "Error: Vault path not configured. Please run /setup first." }],
+          details: {},
+        };
+      }
+
+      const cfg = getConfig();
+      if (cfg !== null && !cfg.features.contacts) {
+        return {
+          content: [{ type: "text", text: "Contacts feature is disabled. Enable it in brainkit.toml." }],
           details: {},
         };
       }
@@ -195,6 +218,14 @@ export function registerTools(pi: ExtensionAPI, getVaultPath: () => string | nul
       if (vaultPath === null) {
         return {
           content: [{ type: "text", text: "Error: Vault path not configured. Please run /setup first." }],
+          details: {},
+        };
+      }
+
+      const cfg = getConfig();
+      if (cfg !== null && !cfg.features.contacts) {
+        return {
+          content: [{ type: "text", text: "Contacts feature is disabled. Enable it in brainkit.toml." }],
           details: {},
         };
       }

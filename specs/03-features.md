@@ -114,4 +114,4 @@ Custom TUI panel showing fixes applied and health results with ✓/⚠/✗ indic
 
 ## Self-Review (Future)
 
-Not implemented in v1. Planned: generate self-review summaries from bragfile entries for a given time period.
+Not implemented in v1. Planned: generate self-review summaries from bragfile entries for a given time period. No feature flag exists yet — will be added when this feature is built.

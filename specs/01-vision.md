@@ -51,4 +51,4 @@ How we implement this:
 - **Opinionated**: PARA is mandatory. Naming conventions are fixed. This isn't a framework — it's a system with opinions.
 - **Never delete**: Content is never deleted. Always archived. The archive is the safe destination for everything.
 - **Extension + Skills**: Two complementary layers. Tools handle deterministic operations (typed parameters, programmatic file manipulation). Skills handle domain knowledge (when to suggest a brag, how to structure meeting notes, where to file things in PARA). Neither alone is sufficient.
-- **Pi-native**: Built specifically for pi's extension API. Not a generic tool that works with any agent. This trade-off gives us typed tools, system prompt injection, and event hooks that a generic approach can't match.
+- **Pi-first**: Built primarily for pi's extension API, which provides typed tools, system prompt injection, and event hooks that a generic approach can't match. A CLI mode distributes skills to any coding agent (Claude Code, Copilot, OpenCode, Codex) for the core vault experience — but pi remains the recommended path for the full end-to-end agentic flow.

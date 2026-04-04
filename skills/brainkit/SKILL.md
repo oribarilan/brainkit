@@ -56,9 +56,6 @@ rules = []
 [features]
 bragfile = true
 contacts = true
-meeting-notes = true
-self-review = false
-vault-health = true
 ```
 
 ## Available tools

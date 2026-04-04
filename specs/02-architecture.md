@@ -144,12 +144,20 @@ rules = [
 [features]
 bragfile = true
 contacts = true
-meeting-notes = true
-self-review = false
-vault-health = true
 ```
 
 Created by the agent via `brain_write`, guided by the brainkit skill during `/setup`.
+
+#### What `brainkit.toml` controls
+
+| Section      | Fields                                                           | Used by                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `[brainkit]` | `version`                                                        | Version tracking                                                                                                                        |
+| `[user]`     | `name`, `role`, `expertise`, `tone`, `scope`, `context`, `rules` | System prompt builder, AGENTS.md generation (CLI)                                                                                       |
+| `[features]` | `bragfile`, `contacts`                                           | Tool gating (tools return error when feature disabled), system prompt (omits feature sections), health checks (skips disabled features) |
+| `[agents]`   | `providers`                                                      | CLI only — which agent harnesses to install skills for                                                                                  |
+
+Feature flags only exist for features with runtime behavior. No flag is defined until the feature is built.
 
 ## Vault Structure
 

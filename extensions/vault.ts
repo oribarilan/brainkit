@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { execSync } from "node:child_process";
-import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
+import { parse as parseToml } from "smol-toml";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,9 +27,6 @@ export interface BrainkitConfig {
   features: {
     bragfile: boolean;
     contacts: boolean;
-    "meeting-notes": boolean;
-    "self-review": boolean;
-    "vault-health": boolean;
   };
   agents?: { providers?: string[] };
 }
@@ -112,12 +109,6 @@ export function readVaultConfig(vaultPath: string): BrainkitConfig {
   const raw = fs.readFileSync(configPath, "utf-8");
   const parsed = parseToml(raw);
   return parsed as unknown as BrainkitConfig;
-}
-
-export function writeVaultConfig(vaultPath: string, config: BrainkitConfig): void {
-  const configPath = path.resolve(vaultPath, KEY_FILES.config);
-  const toml = stringifyToml(config as unknown as Record<string, unknown>);
-  fs.writeFileSync(configPath, toml + "\n", "utf-8");
 }
 
 // ---------------------------------------------------------------------------

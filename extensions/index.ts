@@ -30,7 +30,7 @@ export default function brainkit(pi: ExtensionAPI): void {
   loadVault();
 
   // --- Register everything ---
-  registerTools(pi, getVaultPath, loadVault);
+  registerTools(pi, getVaultPath, getConfig, loadVault);
   setupUI(pi, getVaultPath, getConfig);
   setupHooks(pi, getVaultPath, getConfig);
   setupUpdater(pi);

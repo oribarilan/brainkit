@@ -37,9 +37,6 @@ scope = "professional"
 [features]
 bragfile = true
 contacts = true
-meeting-notes = false
-self-review = false
-vault-health = true
 `.trim();
 
 function makeConfig(overrides?: Partial<BrainkitConfig["features"]>): BrainkitConfig {
@@ -55,9 +52,6 @@ function makeConfig(overrides?: Partial<BrainkitConfig["features"]>): BrainkitCo
     features: {
       bragfile: true,
       contacts: true,
-      "meeting-notes": false,
-      "self-review": false,
-      "vault-health": true,
       ...overrides,
     },
   };
