@@ -1,6 +1,8 @@
 # brainkit
 
-An augmentation kit for your brain, powered by [pi](https://github.com/badlogic/pi-mono).
+**An augmentation kit for your brain.**
+
+An opinionated second brain implementation, powered by [pi](https://github.com/badlogic/pi-mono) (and your own model of choice).
 
 ```
         _---~~(~~-_.
