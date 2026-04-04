@@ -1,6 +1,6 @@
 # brainkit
 
-An opinionated second brain, powered by [pi](https://github.com/badlogic/pi-mono). The sidekick your awesome brain deserves.
+An augmentation kit for your brain, powered by [pi](https://github.com/badlogic/pi-mono).
 
 ```
         _---~~(~~-_.
