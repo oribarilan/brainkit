@@ -32,7 +32,7 @@ The core value (organized vault + agent that understands conventions) works in b
 ### One command
 
 ```bash
-npx brain-kit
+npx @oribish/brainkit
 ```
 
 The CLI is CWD-based — it always operates on the current working directory. The CWD becomes the vault root. There is no vault path argument, no global vault registry, and no indirection. Users `cd` into the directory they want as their vault, then run the command.
@@ -49,7 +49,7 @@ Health checks are handled by the maintenance skill — the user asks their agent
 ### First run (no `brainkit.toml` in CWD)
 
 ```
-$ cd ~/brain && npx brain-kit
+$ cd ~/brain && npx @oribish/brainkit
 
   [brainkit] Setting up a new vault in:
              ~/brain
@@ -98,7 +98,7 @@ Note: CLI onboarding is intentionally thinner than pi's 5-phase agent-guided flo
 ### Subsequent runs (`brainkit.toml` found in CWD)
 
 ```
-$ npx brain-kit
+$ npx @oribish/brainkit
 
   [brainkit] Vault found in current directory.
   [brainkit] This will overwrite installed skills and AGENTS.md.
@@ -163,15 +163,15 @@ The `name` field must match the parent directory name per the Agent Skills spec.
 
 The source `skills/` directory uses one subdirectory per skill (for pi's skill loading). The CLI installer maps this to the Agent Skills layout:
 
-| Source                        | Installed as                                    |
-| ----------------------------- | ----------------------------------------------- |
-| `skills/brainkit/SKILL.md`    | `.agents/skills/brainkit/SKILL.md`              |
-| `skills/para/SKILL.md`        | `.agents/skills/brainkit/references/para.md`    |
-| `skills/bragfile/SKILL.md`    | `.agents/skills/brainkit/references/bragfile.md` |
-| `skills/contacts/SKILL.md`    | `.agents/skills/brainkit/references/contacts.md` |
+| Source                          | Installed as                                          |
+| ------------------------------- | ----------------------------------------------------- |
+| `skills/brainkit/SKILL.md`      | `.agents/skills/brainkit/SKILL.md`                    |
+| `skills/para/SKILL.md`          | `.agents/skills/brainkit/references/para.md`          |
+| `skills/bragfile/SKILL.md`      | `.agents/skills/brainkit/references/bragfile.md`      |
+| `skills/contacts/SKILL.md`      | `.agents/skills/brainkit/references/contacts.md`      |
 | `skills/meeting-notes/SKILL.md` | `.agents/skills/brainkit/references/meeting-notes.md` |
-| `skills/maintenance/SKILL.md` | `.agents/skills/brainkit/references/maintenance.md` |
-| `skills/onboarding/SKILL.md`  | `.agents/skills/brainkit/references/onboarding.md` |
+| `skills/maintenance/SKILL.md`   | `.agents/skills/brainkit/references/maintenance.md`   |
+| `skills/onboarding/SKILL.md`    | `.agents/skills/brainkit/references/onboarding.md`    |
 
 The transformation is structural only — files are copied and placed into the `references/` layout. Content is not modified. The root `SKILL.md` needs relative links to `references/*.md` that the CLI installer adds during installation (the source file's `## Available tools` and setup sections are replaced with references to supporting files and action-oriented instructions for CLI agents).
 
@@ -213,7 +213,7 @@ The CLI generates an `AGENTS.md` in the vault root. This is read by all supporte
 The existing `buildSystemPrompt` function in `extensions/system-prompt.ts` is already pi-agnostic (no pi imports, only Node.js builtins). ~80% of its output is shared between modes — identity, vault structure, conventions, custom rules, project context, staleness reminders. Only two sections are pi-specific:
 
 - **Section 3** (key files): References `brain_add_brag`, `brain_query_contacts` tool names
-- **Section 6** (behavioral rules): Says "Use the brain_* tools"
+- **Section 6** (behavioral rules): Says "Use the brain\_\* tools"
 
 Rather than maintaining a separate CLI template that drifts, the function is refactored to accept a mode parameter:
 
@@ -223,11 +223,12 @@ type PromptMode = "pi" | "cli";
 export function buildSystemPrompt(
   config: BrainkitConfig,
   vaultPath: string,
-  options?: { cwd?: string; mode?: PromptMode }
+  options?: { cwd?: string; mode?: PromptMode },
 ): string;
 ```
 
 When `mode: "cli"`:
+
 - Section 3 uses action-oriented language: "Add entries to `02_areas/career/bragfile.md`" instead of "Use the `brain_add_brag` tool"
 - Section 6 becomes: "Use your built-in file editing to manage vault files. Follow the conventions and formats described in the installed skills."
 
@@ -286,12 +287,12 @@ The CLI is compiled to ESM JavaScript via the TypeScript compiler and published 
 ```json
 {
   "bin": {
-    "brain-kit": "./dist/cli/index.js"
+    "brainkit": "./dist/cli/index.js"
   }
 }
 ```
 
-The `dist/cli/index.js` file starts with `#!/usr/bin/env node`. When users run `npx brain-kit`, npm downloads the package and executes the compiled CLI entry point. No additional runtime dependencies (tsx, jiti, esbuild) are needed.
+The `dist/cli/index.js` file starts with `#!/usr/bin/env node`. When users run `npx @oribish/brainkit`, npm downloads the package and executes the compiled CLI entry point. No additional runtime dependencies (tsx, jiti, esbuild) are needed.
 
 Build is added to the justfile:
 
@@ -341,7 +342,7 @@ Same vault and skills, without pi-specific extras.
 > but some features (auto-commit, staleness reminders, auto-brag detection)
 > are only available in the pi extension.
 
-npx brain-kit
+npx @oribish/brainkit
 ```
 
 ## Why not a separate package?

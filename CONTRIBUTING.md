@@ -43,6 +43,8 @@ Current runtime dependencies: `smol-toml`. That's it.
 
 ## Deploy Flow
 
+### Pi extension (primary)
+
 There is no build step. Brainkit is distributed as source via git — pi loads TypeScript directly using jiti.
 
 1. Changes merged to `main` are immediately available to users who run `pi update`
@@ -53,6 +55,21 @@ There is no build step. Brainkit is distributed as source via git — pi loads T
    ```
 3. Users on `pi install git:github.com/oribarilan/brainkit` (no ref) track `main`
 4. Users on `pi install git:github.com/oribarilan/brainkit@v0.2.0` are pinned
+
+### CLI (`npx @oribish/brainkit`)
+
+The CLI is published to npm as `@oribish/brainkit`. This is currently a manual process (not in CI/CD).
+
+1. Run all checks: `just check`
+2. Build the CLI: `just build-cli`
+3. Bump `version` in `package.json` and update `CHANGELOG.md`
+4. Publish to npm:
+   ```bash
+   npm publish --access=public
+   ```
+5. Tag and push as described above
+
+The CLI compiles `cli/` and shared modules from `extensions/` to `dist/` via `tsc`. The `dist/` directory is gitignored but included in the npm package via the `files` field in `package.json`.
 
 ## Project Structure
 

@@ -1,5 +1,5 @@
 {
-  "name": "brainkit",
+  "name": "@oribish/brainkit",
   "version": "0.1.0",
   "description": "Second brain extension for pi - capture, organize, and retrieve knowledge with PARA method",
   "keywords": [
@@ -11,6 +11,14 @@
     "type": "git",
     "url": "https://github.com/oribarilan/brainkit"
   },
+  "bin": {
+    "brainkit": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist/",
+    "extensions/",
+    "skills/"
+  ],
   "pi": {
     "extensions": [
       "./extensions/index.ts",

@@ -49,7 +49,7 @@ Transition naturally — "Now let's set up the personal side too."
 
 Based on the conversation, do all of this:
 
-1. **Write brainkit.toml** via `brain_write` at path `brainkit.toml`:
+1. **Write brainkit.toml** at the vault root:
    - Set name, role, expertise, tone
    - Set scope to "both" (since we're covering personal and professional)
    - Write a rich `context` field summarizing everything learned:
@@ -62,11 +62,11 @@ Based on the conversation, do all of this:
    - Set features (all enabled by default)
    - Add any custom rules mentioned
 
-2. **Call brain_setup_vault** with the vault path (if not already set)
+2. **Create the vault directory** at the configured path (if not already set)
 
-3. **Call brain_doctor** to create PARA structure
+3. **Create PARA structure** (the four directories with README.md files)
 
-4. **Pre-create directories** via `brain_write` based on what was discussed:
+4. **Pre-create directories** based on what was discussed:
    - Professional projects mentioned → create in `01_projects/` with README.md
    - Personal areas mentioned → create in `02_areas/` with README.md (e.g., `02_areas/health/`, `02_areas/finances/`)
    - Personal projects mentioned → create in `01_projects/` with README.md
@@ -77,7 +77,7 @@ Based on the conversation, do all of this:
    - If they mentioned colleagues → offer to add as first contacts
 
 6. **Privacy check:**
-   - After setup, `brain_doctor` automatically checks if the vault's GitHub repo is private
+   - After setup, automatically check if the vault's GitHub repo is private
    - If the repo is public, warn the user immediately — their second brain is visible to everyone
    - Suggest fixing it: `gh repo edit owner/repo --visibility private`
    - This is a security concern — the vault contains personal and professional information

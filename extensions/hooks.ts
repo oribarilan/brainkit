@@ -100,7 +100,7 @@ export function setupHooks(
     const config = getConfig();
     if (vaultPath === null || config === null) return;
 
-    const vaultPrompt = buildSystemPrompt(config, vaultPath, ctx.cwd);
+    const vaultPrompt = buildSystemPrompt(config, vaultPath, { cwd: ctx.cwd });
     return {
       systemPrompt: event.systemPrompt + "\n\n" + vaultPrompt,
     };

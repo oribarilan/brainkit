@@ -6,11 +6,9 @@ description: Vault health, naming conventions, staleness detection, archive work
 
 Keeping the vault organized, consistent, and healthy. The vault is a living system that needs occasional care.
 
-## The brain_doctor Tool
+## Health Checks
 
-Use the `brain_doctor` tool to run health checks and fix issues programmatically. When the user runs `/doctor` or asks about vault health, call `brain_doctor` to get a structured report.
-
-The tool checks:
+When the user asks about vault health, check the following:
 
 - **Config validity** — `brainkit.toml` parses correctly.
 - **PARA directory structure** — all 4 dirs exist (`01_projects`, `02_areas`, `03_resources`, `04_archive`).
@@ -18,7 +16,7 @@ The tool checks:
 - **Naming conventions** — kebab-case for dirs and files.
 - **No orphaned files** in vault root.
 
-`brain_doctor` creates missing directories and files automatically — no manual intervention needed for structural issues. It returns a structured report so the agent can summarize what was found and what was fixed.
+Create missing directories and files automatically — no manual intervention needed for structural issues. Summarize what was found and what was fixed.
 
 ## Naming Conventions
 
@@ -37,13 +35,13 @@ The tool checks:
 
 - After brainkit updates, the vault structure may need adjustment.
 - New features may require new directories or files.
-- `/doctor` handles this: calls `brain_doctor` which creates missing structure and reports changes.
+- `/doctor` handles this: run a health check to create missing structure and report changes.
 
 ## Staleness Detection
 
 When the user asks about vault health or cleanup, proactively check for stale content:
 
-- **Stale projects** — projects with no recent files or updates. Use `brain_search` to check for recent dated files (meeting notes, entries). If a project has no files newer than ~3 months, suggest asking the user if it should be archived.
+- **Stale projects** — projects with no recent files or updates. Search the vault for recent dated files (meeting notes, entries). If a project has no files newer than ~3 months, suggest asking the user if it should be archived.
 - **Stale resources** — resources that haven't been referenced or updated. Less urgent than projects, but worth mentioning during cleanup.
 - **Empty directories** — PARA subdirectories with no content (just a README.md). Suggest removing or archiving.
 

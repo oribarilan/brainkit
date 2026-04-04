@@ -14,6 +14,8 @@ import {
   runHealthChecks,
   readVaultFile,
   writeVaultFile,
+  readVaultConfig,
+  writeVaultConfig,
   isVaultFresh,
   type Contact,
   type BrainkitConfig,
@@ -811,5 +813,29 @@ describe("isVaultFresh", () => {
     mkdirSync(join(tempDir, PARA.projects, ".hidden"), { recursive: true });
     const config = makeConfig();
     expect(isVaultFresh(tempDir, config)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// writeVaultConfig
+// ---------------------------------------------------------------------------
+
+describe("writeVaultConfig", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "brainkit-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("writes config that can be read back", () => {
+    const config = makeConfig();
+    writeVaultConfig(tempDir, config);
+    const readBack = readVaultConfig(tempDir);
+    expect(readBack.user.name).toBe("Test User");
+    expect(readBack.features.bragfile).toBe(true);
   });
 });

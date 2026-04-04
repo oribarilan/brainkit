@@ -38,11 +38,6 @@ Each person gets an H2 heading (full name) with structured fields:
 - **Optional fields**: Role, Team, Relation, Connection, Relevant For, Alias
 - **Alias** is for nicknames or shortened names (e.g., `- **Alias**: SJ, Sarah`)
 
-## Tools
-
-- `brain_query_contacts` — search by name, role, team, or any field
-- `brain_add_contact` — add a new person
-
 ## When to Cross-Reference Contacts
 
 - User mentions a person by name — check if they're in contacts

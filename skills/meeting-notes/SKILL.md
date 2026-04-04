@@ -60,7 +60,7 @@ Key points discussed, organized by topic.
 - Use `self` to refer to the vault owner.
 - Keep it concise — capture decisions and actions, not transcripts.
 - Personal meetings may be simpler — a doctor visit might just have notes and follow-ups, no formal "decisions" or "action items" sections needed.
-- Use `brain_write` to create the file in the right location.
+- Create the file in the appropriate PARA directory based on the meeting's context.
 
 ## When to Create
 

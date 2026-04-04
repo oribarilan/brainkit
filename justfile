@@ -35,3 +35,7 @@ check:
     just lint
     just format-check
     just test
+
+# build CLI for npm distribution
+build-cli:
+    npx tsc --project cli/tsconfig.json

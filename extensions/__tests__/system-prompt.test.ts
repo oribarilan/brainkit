@@ -263,7 +263,7 @@ describe("buildSystemPrompt", () => {
       mkdirSync(join(vaultDir, "01_projects", "my-app"), { recursive: true });
 
       const config = makeConfig();
-      const prompt = buildSystemPrompt(config, vaultDir, "/work/my-app");
+      const prompt = buildSystemPrompt(config, vaultDir, { cwd: "/work/my-app" });
 
       expect(prompt).toContain("## Current Project Context");
       expect(prompt).toContain("my-app");
@@ -274,7 +274,7 @@ describe("buildSystemPrompt", () => {
       mkdirSync(join(vaultDir, "01_projects", "my-app"), { recursive: true });
 
       const config = makeConfig();
-      const prompt = buildSystemPrompt(config, vaultDir, "/work/other-app");
+      const prompt = buildSystemPrompt(config, vaultDir, { cwd: "/work/other-app" });
 
       expect(prompt).not.toContain("## Current Project Context");
     });
@@ -339,6 +339,41 @@ describe("buildSystemPrompt", () => {
       const prompt = buildSystemPrompt(config, staleDir);
 
       expect(prompt).not.toContain("## Reminder");
+    });
+  });
+
+  describe("CLI mode", () => {
+    it("uses action-oriented language for bragfile in CLI mode", () => {
+      const config = makeConfig({ features: { bragfile: true, contacts: false } });
+      const prompt = buildSystemPrompt(config, vaultPath, { mode: "cli" });
+
+      expect(prompt).toContain("Bragfile");
+      expect(prompt).not.toContain("brain_add_brag");
+      expect(prompt).toContain("02_areas/career/bragfile.md");
+    });
+
+    it("uses action-oriented language for contacts in CLI mode", () => {
+      const config = makeConfig({ features: { bragfile: false, contacts: true } });
+      const prompt = buildSystemPrompt(config, vaultPath, { mode: "cli" });
+
+      expect(prompt).toContain("Contacts");
+      expect(prompt).not.toContain("brain_query_contacts");
+      expect(prompt).toContain("03_resources/contacts.md");
+    });
+
+    it("uses CLI behavioral rules in CLI mode", () => {
+      const config = makeConfig();
+      const prompt = buildSystemPrompt(config, vaultPath, { mode: "cli" });
+
+      expect(prompt).toContain("built-in file editing");
+      expect(prompt).not.toContain("brain_* tools");
+    });
+
+    it("defaults to pi mode when mode not specified", () => {
+      const config = makeConfig();
+      const prompt = buildSystemPrompt(config, vaultPath);
+
+      expect(prompt).toContain("brain_* tools");
     });
   });
 });

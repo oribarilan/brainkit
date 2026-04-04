@@ -40,8 +40,10 @@ Works with Claude Code, Copilot, OpenCode, Codex, and more. Same vault and skill
 > **Note**: CLI mode is in early development. The core experience should works, but for the full and tested behavior you should use the pi agent.
 
 ```bash
-npx brain-kit
+npx @oribish/brainkit
 ```
+
+[![npm version](https://img.shields.io/npm/v/@oribish/brainkit)](https://www.npmjs.com/package/@oribish/brainkit)
 
 ## What is this?
 

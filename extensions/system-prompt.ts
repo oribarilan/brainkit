@@ -31,7 +31,15 @@ export function detectProjectContext(vaultPath: string, cwd: string): { name: st
 // System prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd?: string): string {
+export type PromptMode = "pi" | "cli";
+
+export function buildSystemPrompt(
+  config: BrainkitConfig,
+  vaultPath: string,
+  options?: { cwd?: string; mode?: PromptMode },
+): string {
+  const cwd = options?.cwd;
+  const mode = options?.mode ?? "pi";
   const sections: string[] = [];
 
   // ── 1. Identity ──────────────────────────────────────────────────────
@@ -64,23 +72,41 @@ export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd
   const keyFilesSections: string[] = [];
 
   if (config.features.bragfile) {
-    keyFilesSections.push(
-      [
-        "### Bragfile — `02_areas/career/bragfile.md`",
-        "A running log of accomplishments. Use the `brain_add_brag` tool to add entries.",
-        "Append only. Never overwrite or reorganize existing entries.",
-      ].join("\n"),
-    );
+    if (mode === "pi") {
+      keyFilesSections.push(
+        [
+          "### Bragfile — `02_areas/career/bragfile.md`",
+          "A running log of accomplishments. Use the `brain_add_brag` tool to add entries.",
+          "Append only. Never overwrite or reorganize existing entries.",
+        ].join("\n"),
+      );
+    } else {
+      keyFilesSections.push(
+        [
+          "### Bragfile — `02_areas/career/bragfile.md`",
+          "Add entries to `02_areas/career/bragfile.md` in the format `- **YYYY-MM-DD**: description`. Organize by half-year (H1/H2) and month.",
+        ].join("\n"),
+      );
+    }
   }
 
   if (config.features.contacts) {
-    keyFilesSections.push(
-      [
-        "### Contacts — `03_resources/contacts.md`",
-        "People index. Use `brain_query_contacts` to search and `brain_add_contact` to add.",
-        "Cross-reference people mentioned in notes and projects.",
-      ].join("\n"),
-    );
+    if (mode === "pi") {
+      keyFilesSections.push(
+        [
+          "### Contacts — `03_resources/contacts.md`",
+          "People index. Use `brain_query_contacts` to search and `brain_add_contact` to add.",
+          "Cross-reference people mentioned in notes and projects.",
+        ].join("\n"),
+      );
+    } else {
+      keyFilesSections.push(
+        [
+          "### Contacts — `03_resources/contacts.md`",
+          "Add people to `03_resources/contacts.md` using H2 headings for names and bold field labels.",
+        ].join("\n"),
+      );
+    }
   }
 
   if (keyFilesSections.length > 0) {
@@ -109,16 +135,28 @@ export function buildSystemPrompt(config: BrainkitConfig, vaultPath: string, cwd
   }
 
   // ── 6. Behavioral rules (always included) ───────────────────────────
-  const behavioral = [
-    "## How to Work With This Vault",
-    "",
-    "- Use the brain_* tools to interact with the vault. They handle formatting and placement.",
-    "- Search the vault before answering — don't guess.",
-    "- Preserve existing structure and formatting when editing.",
-    "- Cite which file information came from when summarizing.",
-    "- Do not modify files in the archive directory unless explicitly asked.",
-    "- Never delete vault content — archive instead.",
-  ].join("\n");
+  const behavioral =
+    mode === "pi"
+      ? [
+          "## How to Work With This Vault",
+          "",
+          "- Use the brain_* tools to interact with the vault. They handle formatting and placement.",
+          "- Search the vault before answering — don't guess.",
+          "- Preserve existing structure and formatting when editing.",
+          "- Cite which file information came from when summarizing.",
+          "- Do not modify files in the archive directory unless explicitly asked.",
+          "- Never delete vault content — archive instead.",
+        ].join("\n")
+      : [
+          "## How to Work With This Vault",
+          "",
+          "- Use your built-in file editing to manage vault files. Follow the conventions and formats described in the installed skills.",
+          "- Search the vault before answering — don't guess.",
+          "- Preserve existing structure and formatting when editing.",
+          "- Cite which file information came from when summarizing.",
+          "- Do not modify files in the archive directory unless explicitly asked.",
+          "- Never delete vault content — archive instead.",
+        ].join("\n");
 
   sections.push(behavioral);
 

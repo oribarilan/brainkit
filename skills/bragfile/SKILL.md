@@ -41,7 +41,7 @@ Organized by half-year (H1/H2), then by month (reverse chronological). Each entr
 ## Rules
 
 - **Append only.** Never modify or reorganize existing entries.
-- Use the `brain_add_brag` tool — it handles section placement automatically.
+- Add entries in the correct half-year and month section, maintaining chronological order within each month.
 - Entries go in chronological order within each month.
 
 ## When to Suggest Capturing a Brag
