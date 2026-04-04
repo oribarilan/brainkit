@@ -12,9 +12,10 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { v
 const version = packageJson.version;
 
 async function ask(rl: readline.Interface, question: string, defaultValue?: string): Promise<string> {
-  const suffix = defaultValue ? ` (${defaultValue})` : "";
+  const suffix = defaultValue !== undefined && defaultValue !== "" ? ` (${defaultValue})` : "";
   const answer = await rl.question(`  ${question}${suffix}\n  > `);
-  return answer.trim() || defaultValue || "";
+  const trimmed = answer.trim();
+  return trimmed !== "" ? trimmed : (defaultValue ?? "");
 }
 
 export async function init(cwd: string): Promise<void> {
@@ -124,7 +125,7 @@ export async function init(cwd: string): Promise<void> {
     console.log("  [brainkit] Created brainkit.toml");
 
     // --- Install skills and AGENTS.md ---
-    await install(cwd);
+    install(cwd);
 
     console.log(`\n  [brainkit] Vault ready! Open this directory in your coding agent to get started.\n`);
   } finally {

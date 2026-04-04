@@ -18,6 +18,12 @@ extensions/         # TypeScript — tools, commands, UI, hooks
   system-prompt.ts  # Dynamic system prompt builder
   updater.ts        # Version checking, changelog display
   auto-commit.ts    # Debounced git auto-commit
+  bundled/          # Vendored pi extensions (plan-mode, permission-gate, questionnaire)
+cli/                # TypeScript — CLI entry point for npx @oribish/brainkit
+  index.ts          # Entry point, routes to init or update
+  init.ts           # Interactive setup prompts
+  install.ts        # Skill distribution, AGENTS.md generation
+  tsconfig.json     # CLI build config (compiles to dist/)
 skills/             # Markdown — domain knowledge for the agent
   brainkit/         # Root skill (conventions, setup flow, tools overview)
   para/             # PARA method
@@ -41,6 +47,7 @@ just test-watch # run tests in watch mode
 just lint       # eslint + typecheck
 just format     # format with prettier
 just check      # lint + format check + test (run before committing)
+just build-cli  # compile CLI to dist/ for npm publishing
 ```
 
 ### Running
@@ -49,6 +56,13 @@ This is a pi extension, not a standalone app:
 
 ```bash
 just dev        # recommended — runs pi -e .
+```
+
+### CLI (for npm)
+
+```bash
+just build-cli    # compile TypeScript to dist/
+node dist/cli/index.js --help  # test locally
 ```
 
 ### Testing
@@ -147,3 +161,7 @@ Pi packages (`@mariozechner/pi-coding-agent`, `@mariozechner/pi-tui`, `@mariozec
 ### Architecture rule
 
 Commands are thin wrappers that trigger the agent via `pi.sendUserMessage()`. All logic lives in tools and skills. See `specs/07-decisions.md` decision #18.
+
+### Bundled extensions
+
+Vendored copies of pi ecosystem extensions in `extensions/bundled/`. These are loaded automatically as part of the pi package. Excluded from strict typecheck and eslint (vendored code). Each file starts with an `// Origin:` comment linking to the upstream source.

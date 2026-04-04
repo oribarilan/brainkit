@@ -19,6 +19,9 @@
     "extensions/",
     "skills/"
   ],
+  "scripts": {
+    "prepack": "npx tsc --project cli/tsconfig.json"
+  },
   "pi": {
     "extensions": [
       "./extensions/index.ts",
@@ -38,6 +41,20 @@
     "@mariozechner/pi-coding-agent": "*",
     "@mariozechner/pi-tui": "*",
     "@sinclair/typebox": "*"
+  },
+  "peerDependenciesMeta": {
+    "@mariozechner/pi-ai": {
+      "optional": true
+    },
+    "@mariozechner/pi-coding-agent": {
+      "optional": true
+    },
+    "@mariozechner/pi-tui": {
+      "optional": true
+    },
+    "@sinclair/typebox": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

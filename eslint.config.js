@@ -33,4 +33,10 @@ export default tseslint.config(
   {
     ignores: ["node_modules/", "*.js", "*.cjs", "eslint.config.js", "vitest.config.ts", "extensions/bundled/"],
   },
+  {
+    files: ["cli/**/*.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
 );

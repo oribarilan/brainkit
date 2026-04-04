@@ -196,7 +196,7 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 
 ### 22. Pi-first with CLI fallback (supersedes #1)
 
-**Decision**: Support two modes — pi extension (recommended, full experience) and CLI (`npx brainkit`) that distributes skills to any coding agent. Pi remains the primary target.
+**Decision**: Support two modes — pi extension (recommended, full experience) and CLI (`npx @oribish/brainkit`) that distributes skills to any coding agent. Pi remains the primary target.
 
 **Reasoning**: Decision #1 rejected the hybrid approach "for v1" due to maintenance cost. With the skills-first architecture now stable (Decision #18), adding CLI distribution is low-cost: skills are the same files, the CLI just copies them into provider directories and generates an AGENTS.md. The core value (organized vault + agent that understands conventions) works without typed tools — tools add reliability and polish, not fundamental capability. Locking users into pi excluded the majority of developers who use other agents.
 

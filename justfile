@@ -19,8 +19,9 @@ test-watch:
 
 # lint with eslint + typecheck with tsc
 lint:
-    npx eslint extensions/
+    npx eslint extensions/ cli/
     npx tsc --noEmit
+    npx tsc --project cli/tsconfig.json --noEmit
 
 # format with prettier
 format:

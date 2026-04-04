@@ -518,7 +518,7 @@ export function runHealthChecks(vaultPath: string, config: BrainkitConfig): Heal
     });
   }
 
-  const allowedRootEntries = new Set([...Object.values(PARA), KEY_FILES.config, "README.md"]);
+  const allowedRootEntries = new Set([...Object.values(PARA), KEY_FILES.config, "README.md", "AGENTS.md"]);
 
   try {
     const rootEntries = fs.readdirSync(vaultPath);

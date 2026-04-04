@@ -156,30 +156,46 @@ function formatDirList(targetDirs: string[]): string {
   return uniqueParents.map((d) => `${d}/`).join(" and ");
 }
 
-async function installSkillsAndAgentsMd(cwd: string, config: BrainkitConfig): Promise<void> {
+function installSkillsAndAgentsMd(cwd: string, config: BrainkitConfig): void {
   const targetDirs = getTargetDirs(config);
   const skillsSourceDir = resolveSkillsSourceDir();
 
-  // Step 1: Install skills to each target directory
+  // Read previous version before overwriting
+  let previousVersion: string | null = null;
+  const firstDir = targetDirs[0];
+  if (firstDir !== undefined) {
+    const versionFile = path.join(cwd, firstDir, ".brainkit-version");
+    try {
+      previousVersion = fs.readFileSync(versionFile, "utf-8").trim();
+    } catch {
+      // No previous installation
+    }
+  }
+
+  // Install skills
   for (const dir of targetDirs) {
     installSkillsToDir(cwd, dir, skillsSourceDir);
   }
 
-  // Step 2: Generate AGENTS.md
+  // Generate AGENTS.md
   const agentsMd = buildSystemPrompt(config, cwd, { mode: "cli" });
   fs.writeFileSync(path.join(cwd, "AGENTS.md"), agentsMd, "utf-8");
 
-  // Step 3: Update .gitignore
+  // Update .gitignore
   updateGitignore(cwd, targetDirs);
 
-  // Step 4: Print status
-  console.log(`  [brainkit] Installed skills to ${formatDirList(targetDirs)} (v${version})`);
+  // Print status with version comparison
+  if (previousVersion !== null && previousVersion !== version) {
+    console.log(`  [brainkit] Updated skills from ${previousVersion} to ${version} in ${formatDirList(targetDirs)}`);
+  } else {
+    console.log(`  [brainkit] Installed skills to ${formatDirList(targetDirs)} (v${version})`);
+  }
   console.log("  [brainkit] Generated AGENTS.md");
 }
 
-export async function install(cwd: string): Promise<void> {
+export function install(cwd: string): void {
   const config = readVaultConfig(cwd);
-  await installSkillsAndAgentsMd(cwd, config);
+  installSkillsAndAgentsMd(cwd, config);
 }
 
 export async function update(cwd: string): Promise<void> {
@@ -191,8 +207,7 @@ export async function update(cwd: string): Promise<void> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   try {
-    const suffix = " (Y)";
-    const answer = await rl.question(`  Continue? (Y/n)${suffix}\n  > `);
+    const answer = await rl.question(`  Continue? (Y/n)\n  > `);
     const response = answer.trim() || "Y";
 
     if (response.toLowerCase() === "n") {
@@ -201,7 +216,7 @@ export async function update(cwd: string): Promise<void> {
     }
 
     const config = readVaultConfig(cwd);
-    await installSkillsAndAgentsMd(cwd, config);
+    installSkillsAndAgentsMd(cwd, config);
 
     console.log(`\n  [brainkit] Done! Skills and AGENTS.md are up to date.\n`);
   } finally {

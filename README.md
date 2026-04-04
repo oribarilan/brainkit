@@ -37,7 +37,7 @@ Update anytime with `pi update`. Brainkit tells you when a new version is availa
 
 Works with Claude Code, Copilot, OpenCode, Codex, and more. Same vault and skills, without pi-specific extras.
 
-> **Note**: CLI mode is in early development. The core experience should works, but for the full and tested behavior you should use the pi agent.
+> **Note**: CLI mode is in early development. The core experience should work, but for the full and tested behavior you should use the pi agent.
 
 ```bash
 npx @oribish/brainkit

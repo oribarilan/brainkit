@@ -187,7 +187,7 @@ Pi's typed tools are registered separately in `tools.ts` — they match the acti
 - CLI agents read the skill, understand the convention, and use built-in file editing.
 - Pi agents read the same skill AND have typed tools available — the tools match what the skill describes, adding deterministic reliability.
 
-**Prerequisite**: The current `skills/brainkit/SKILL.md` references `brain_*` tools throughout. Before CLI ships, all skills must be updated to use action-oriented language per Decision #23. This is a separate task from CLI implementation.
+All skills have been updated to use action-oriented language per Decision #23.
 
 #### Why action-oriented?
 
@@ -312,13 +312,9 @@ The CLI imports from `extensions/vault.ts` for:
 
 No duplication of vault logic. `vault.ts` has no pi-specific imports — it only depends on Node.js builtins and `smol-toml`.
 
-Note: `vault.ts` currently has `readVaultConfig` but no `writeVaultConfig`. The CLI's init flow needs to create `brainkit.toml` (including the new `[agents]` table with `providers`), so a write function will be added to `vault.ts` during implementation. The `BrainkitConfig` interface will also need to be extended with the `agents` section.
+`vault.ts` exports both `readVaultConfig` and `writeVaultConfig`. The `BrainkitConfig` interface includes the optional `agents` section with `providers`.
 
-The CLI also imports from `extensions/system-prompt.ts` for:
-
-- `buildSystemPrompt` (with `mode: "cli"`)
-
-This function is already pi-agnostic (no pi imports). The `mode` parameter is added during CLI implementation.
+The CLI imports `buildSystemPrompt` from `extensions/system-prompt.ts` with `mode: 'cli'` to generate action-oriented AGENTS.md content.
 
 ### README changes
 
