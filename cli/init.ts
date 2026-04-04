@@ -1,15 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as readline from "node:readline/promises";
-import { fileURLToPath } from "node:url";
 
 import type { BrainkitConfig } from "../extensions/vault.js";
 import { writeVaultConfig, PARA } from "../extensions/vault.js";
 import { install } from "./install.js";
-
-const packageJsonPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "package.json");
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version: string };
-const version = packageJson.version;
+import { version } from "./version.js";
 
 async function ask(rl: readline.Interface, question: string, defaultValue?: string): Promise<string> {
   const suffix = defaultValue !== undefined && defaultValue !== "" ? ` (${defaultValue})` : "";

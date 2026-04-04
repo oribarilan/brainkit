@@ -6,10 +6,7 @@ import { fileURLToPath } from "node:url";
 import { readVaultConfig } from "../extensions/vault.js";
 import type { BrainkitConfig } from "../extensions/vault.js";
 import { buildSystemPrompt } from "../extensions/system-prompt.js";
-
-const packageJsonPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "package.json");
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version: string };
-const version: string = packageJson.version;
+import { version } from "./version.js";
 
 const PROVIDER_DIRS: Record<string, string> = {
   copilot: ".agents/skills/brainkit",
@@ -20,7 +17,7 @@ const PROVIDER_DIRS: Record<string, string> = {
 
 const REFERENCE_SKILLS = ["para", "bragfile", "contacts", "meeting-notes", "maintenance", "onboarding"] as const;
 
-function stripFrontmatter(content: string): string {
+export function stripFrontmatter(content: string): string {
   const match = content.match(/^---\n[\s\S]*?\n---\n*/);
   return match ? content.slice(match[0].length) : content;
 }
@@ -29,7 +26,7 @@ function resolveSkillsSourceDir(): string {
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "skills");
 }
 
-function getTargetDirs(config: BrainkitConfig): string[] {
+export function getTargetDirs(config: BrainkitConfig): string[] {
   const providers = config.agents?.providers ?? [];
   if (providers.length === 0) {
     return [".agents/skills/brainkit"];
@@ -82,7 +79,7 @@ See the reference files for detailed conventions:
 - [Onboarding](references/onboarding.md) — first-run setup guidance
 `;
 
-function installSkillsToDir(cwd: string, targetDir: string, skillsSourceDir: string): void {
+export function installSkillsToDir(cwd: string, targetDir: string, skillsSourceDir: string): void {
   const targetPath = path.join(cwd, targetDir);
   const refsPath = path.join(targetPath, "references");
 
@@ -108,7 +105,7 @@ function installSkillsToDir(cwd: string, targetDir: string, skillsSourceDir: str
   fs.writeFileSync(path.join(targetPath, ".brainkit-version"), version, "utf-8");
 }
 
-function updateGitignore(cwd: string, targetDirs: string[]): void {
+export function updateGitignore(cwd: string, targetDirs: string[]): void {
   const gitignorePath = path.join(cwd, ".gitignore");
 
   let content = "";
@@ -151,7 +148,7 @@ function updateGitignore(cwd: string, targetDirs: string[]): void {
   fs.writeFileSync(gitignorePath, content + addition, "utf-8");
 }
 
-function formatDirList(targetDirs: string[]): string {
+export function formatDirList(targetDirs: string[]): string {
   const uniqueParents = [...new Set(targetDirs.map((d) => d.split("/").slice(0, -1).join("/")))];
   return uniqueParents.map((d) => `${d}/`).join(" and ");
 }

@@ -838,4 +838,14 @@ describe("writeVaultConfig", () => {
     expect(readBack.user.name).toBe("Test User");
     expect(readBack.features.bragfile).toBe(true);
   });
+
+  it("preserves agents field in round-trip", () => {
+    const config: BrainkitConfig = {
+      ...makeConfig(),
+      agents: { providers: ["copilot", "claude-code"] },
+    };
+    writeVaultConfig(tempDir, config);
+    const readBack = readVaultConfig(tempDir);
+    expect(readBack.agents?.providers).toEqual(["copilot", "claude-code"]);
+  });
 });

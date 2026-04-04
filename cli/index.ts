@@ -2,14 +2,10 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { init } from "./init.js";
 import { update } from "./install.js";
-
-const packageJsonPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "package.json");
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version: string };
-const version = packageJson.version;
+import { version } from "./version.js";
 
 function printUsage(): void {
   console.log(`
