@@ -23,7 +23,7 @@ const Home = (props: { api: Api }) => {
 };
 
 const tui: TuiPlugin = async (api) => {
-  await api.theme.install("./brainkit.json");
+  await api.theme.install("./opencode/brainkit.json");
   api.theme.set("brainkit");
 
   // Disable built-in tips — we show our own
