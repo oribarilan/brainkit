@@ -5,9 +5,9 @@
 default:
     @just --list
 
-# start pi with the latest local brainkit extension
+# start opencode with the local brainkit plugin
 dev:
-    pi -e .
+    opencode
 
 # run tests
 test:
@@ -19,9 +19,10 @@ test-watch:
 
 # lint with eslint + typecheck with tsc
 lint:
-    npx eslint extensions/ cli/
+    npx eslint cli/ core/
     npx tsc --noEmit
     npx tsc --project cli/tsconfig.json --noEmit
+    npx tsc --project core/tsconfig.json --noEmit
 
 # format with prettier
 format:

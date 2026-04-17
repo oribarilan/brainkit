@@ -1,9 +1,11 @@
 {
   "name": "@oribish/brainkit",
   "version": "0.1.0",
-  "description": "Second brain extension for pi - capture, organize, and retrieve knowledge with PARA method",
+  "description": "Second brain plugin for OpenCode - capture, organize, and retrieve knowledge with PARA method",
   "keywords": [
-    "pi-package"
+    "opencode-plugin",
+    "second-brain",
+    "para-method"
   ],
   "type": "module",
   "license": "MIT",
@@ -14,45 +16,45 @@
   "bin": {
     "brainkit": "./dist/cli/index.js"
   },
+  "exports": {
+    "./server": {
+      "import": "./opencode/server.ts"
+    },
+    "./tui": {
+      "import": "./opencode/tui.tsx"
+    }
+  },
   "files": [
     "dist/",
-    "extensions/",
+    "opencode/",
     "skills/"
+  ],
+  "workspaces": [
+    "core"
   ],
   "scripts": {
     "prepack": "npx tsc --project cli/tsconfig.json"
   },
-  "pi": {
-    "extensions": [
-      "./extensions/index.ts",
-      "./extensions/bundled/plan-mode/index.ts",
-      "./extensions/bundled/permission-gate.ts",
-      "./extensions/bundled/questionnaire.ts"
-    ],
-    "skills": [
-      "./skills"
-    ]
-  },
   "dependencies": {
-    "smol-toml": "^1.3.1"
+    "@oribish/brainkit-core": "workspace:*"
   },
   "peerDependencies": {
-    "@mariozechner/pi-ai": "*",
-    "@mariozechner/pi-coding-agent": "*",
-    "@mariozechner/pi-tui": "*",
-    "@sinclair/typebox": "*"
+    "@opencode-ai/plugin": "*",
+    "@opentui/core": "*",
+    "@opentui/solid": "*",
+    "solid-js": "*"
   },
   "peerDependenciesMeta": {
-    "@mariozechner/pi-ai": {
+    "@opencode-ai/plugin": {
       "optional": true
     },
-    "@mariozechner/pi-coding-agent": {
+    "@opentui/core": {
       "optional": true
     },
-    "@mariozechner/pi-tui": {
+    "@opentui/solid": {
       "optional": true
     },
-    "@sinclair/typebox": {
+    "solid-js": {
       "optional": true
     }
   },

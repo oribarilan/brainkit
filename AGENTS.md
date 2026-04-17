@@ -2,30 +2,28 @@
 
 ## Project Overview
 
-Brainkit is a [pi](https://github.com/badlogic/pi-mono) coding agent extension that provides a persistent second brain. It's a structured markdown vault organized with the PARA method, with typed tools for deterministic operations and skills that teach the agent domain knowledge.
+Brainkit is an OpenCode plugin that provides a persistent second brain. It's a structured markdown vault organized with the PARA method, with skills that teach the agent domain knowledge and a TUI that keeps you connected to your vault.
 
-Design specs live in `specs/`. Read them before making architectural decisions.
+Design specs live in `specs/`. Feature definitions live in `docs/features.md`. Read them before making architectural decisions.
 
 ### Structure
 
 ```
-extensions/         # TypeScript — tools, commands, UI, hooks
-  index.ts          # Entry point, wires modules together
-  vault.ts          # Vault discovery, config, file operations
-  tools.ts          # Typed LLM tools (brain_*)
-  ui.ts             # Header, status bar, rotating hints
-  hooks.ts          # System prompt injection, auto-brag detection
+core/               # TypeScript — shared logic (@oribish/brainkit-core)
+  vault.ts          # Vault discovery, config, file operations, brag stats
   system-prompt.ts  # Dynamic system prompt builder
-  updater.ts        # Version checking, changelog display
-  auto-commit.ts    # Debounced git auto-commit
-  bundled/          # Vendored pi extensions (plan-mode, permission-gate, questionnaire)
+  types.ts          # Shared types (BrainkitConfig, etc.)
+opencode/           # TypeScript/TSX — OpenCode plugin
+  server.ts         # Server plugin: system prompt injection, hooks
+  tui.tsx           # TUI plugin: home logo, sidebar, tips, theme
+  side.tsx          # Sidebar component (vault stats)
+  tips.tsx          # Rotating tips component
+  brainkit.json     # Custom color theme
 cli/                # TypeScript — CLI entry point for npx @oribish/brainkit
-  index.ts          # Entry point, routes to init or update
-  init.ts           # Interactive setup prompts
-  install.ts        # Skill distribution, AGENTS.md generation
-  tsconfig.json     # CLI build config (compiles to dist/)
+  index.ts          # Entry point, routes to harness launcher
+  launch.ts         # Harness detection, config setup, spawn opencode
 skills/             # Markdown — domain knowledge for the agent
-  brainkit/         # Root skill (conventions, setup flow, tools overview)
+  brainkit/         # Root skill (conventions, setup flow, overview)
   para/             # PARA method
   bragfile/         # Bragfile feature
   contacts/         # Contacts feature
@@ -33,6 +31,7 @@ skills/             # Markdown — domain knowledge for the agent
   maintenance/      # Vault health and maintenance
   onboarding/       # First-run Q&A guidance
 specs/              # Design documents (vision, architecture, decisions)
+docs/               # Canonical feature definitions
 ```
 
 ### Development Commands
@@ -41,7 +40,7 @@ All actions use [just](https://just.systems/). Run `just` to list all available 
 
 ```bash
 just            # list all recipes
-just dev        # start pi with the latest local extension
+just dev        # start opencode with the local brainkit plugin
 just test       # run tests
 just test-watch # run tests in watch mode
 just lint       # eslint + typecheck
@@ -52,11 +51,13 @@ just build-cli  # compile CLI to dist/ for npm publishing
 
 ### Running
 
-This is a pi extension, not a standalone app:
+This is an OpenCode plugin. For local development:
 
 ```bash
-just dev        # recommended — runs pi -e .
+just dev        # recommended — runs opencode with local plugin loaded
 ```
+
+This uses `.opencode/opencode.json` and `.opencode/tui.json` to load the plugin from the repo root.
 
 ### CLI (for npm)
 
@@ -72,7 +73,7 @@ just test       # run once
 just test-watch # watch mode
 ```
 
-Tests live alongside source in `extensions/__tests__/`. Each test file maps to a module.
+Tests live in `__tests__/` directories alongside source. Each test file maps to a module.
 
 ---
 
@@ -80,7 +81,7 @@ Tests live alongside source in `extensions/__tests__/`. Each test file maps to a
 
 ### Plan Before You Code
 
-- Read relevant specs in `specs/` before touching architecture
+- Read relevant specs in `specs/` and `docs/features.md` before touching architecture
 - Break complex tasks into smaller steps
 - If requirements are unclear, ask first
 
@@ -90,17 +91,19 @@ Tests live alongside source in `extensions/__tests__/`. Each test file maps to a
 - Don't guess at user preferences or business logic
 - Clarify scope before making architectural decisions
 
-### Single Responsibility
+### Single Responsibility & Small Files
 
 - Each function does one thing
-- Each module has one concern (`vault.ts` = vault ops, `tools.ts` = tool registration, etc.)
+- Each module has one concern (`vault.ts` = vault ops, `server.ts` = server plugin, etc.)
 - If a file is doing two things, split it
+- Keep files under ~500 lines where possible
 
 ### DRY (Don't Repeat Yourself)
 
 - Extract shared logic into reusable functions
 - But don't over-abstract — wait for the pattern to appear three times before extracting
 - If duplicating code intentionally, explain why
+- Shared logic between CLI and plugin goes in `core/`
 
 ### KISS (Keep It Simple)
 
@@ -122,7 +125,7 @@ Tests live alongside source in `extensions/__tests__/`. Each test file maps to a
 - Never store secrets in code, logs, or error messages
 - Validate all inputs — tool parameters, file paths, config values
 - Path traversal protection on all vault file operations
-- Never expose vault content outside the extension context
+- Never expose vault content outside the plugin context
 - When in doubt, choose the more secure option
 
 ### Minimal Dependencies
@@ -131,37 +134,123 @@ Tests live alongside source in `extensions/__tests__/`. Each test file maps to a
 - Prefer Node.js built-ins (`node:fs`, `node:path`, `node:os`) over npm packages
 - Before adding a dependency, check if the functionality exists in the stdlib or current deps
 - **Adding a new dependency requires explicit user approval**
-- Current dependencies: `smol-toml` (TOML parsing). That's it.
+- Current runtime dependency: `smol-toml` (TOML parsing). That's it.
 
 ---
 
 ## Code Style
 
 - TypeScript, strict mode
-- ESM imports (`.js` extension for local imports — pi uses jiti)
+- ESM imports
+- `.js` extension for local imports in `core/` and `cli/` (Node/jiti resolution)
+- `.ts`/`.tsx` extensions for imports in `opencode/` (bun resolution)
 - `import type` for type-only imports
 - No `any` unless truly unavoidable
 - Naming: `camelCase` for functions/variables, `PascalCase` for types/interfaces, `UPPER_SNAKE` for constants
 
 ---
 
-## Pi Extension API
+## Two-Package Architecture
 
-Pi packages (`@mariozechner/pi-coding-agent`, `@mariozechner/pi-tui`, `@mariozechner/pi-ai`, `@sinclair/typebox`) are peer dependencies provided by the pi runtime. Do not install or bundle them.
+The repo publishes two npm packages:
 
-### Key patterns
+| Package                  | Directory | What it contains                                 |
+| ------------------------ | --------- | ------------------------------------------------ |
+| `@oribish/brainkit-core` | `core/`   | Vault ops, system prompt, types. No UI deps.     |
+| `@oribish/brainkit`      | root      | CLI + OpenCode plugin + skills. Depends on core. |
 
-- Tools: `pi.registerTool({ name, label, description, parameters, execute, renderCall, renderResult })`
-- Commands: `pi.registerCommand("name", { description, handler })`
-- Events: `pi.on("event_name", async (event, ctx) => { ... })`
-- Status bar: `ctx.ui.setStatus("id", themedString)`
-- Themes: `theme.fg("color", text)`, `theme.bold(text)`
-- Tool results: `{ content: [{ type: "text", text: "..." }], details: {} }`
+`@oribish/brainkit-core` has zero peer dependencies. `@oribish/brainkit` has optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
 
-### Architecture rule
+Root `package.json` uses `"workspaces": ["core"]`. Publishing order: core first, then brainkit.
 
-Commands are thin wrappers that trigger the agent via `pi.sendUserMessage()`. All logic lives in tools and skills. See `specs/07-decisions.md` decision #18.
+---
 
-### Bundled extensions
+## OpenCode Plugin API
 
-Vendored copies of pi ecosystem extensions in `extensions/bundled/`. These are loaded automatically as part of the pi package. Excluded from strict typecheck and eslint (vendored code). Each file starts with an `// Origin:` comment linking to the upstream source.
+OpenCode plugins export a server function and/or TUI function. The package exports these via:
+
+```json
+{
+  "exports": {
+    "./server": { "import": "./opencode/server.ts" },
+    "./tui": { "import": "./opencode/tui.tsx" }
+  }
+}
+```
+
+### Server plugin patterns
+
+```typescript
+import type { ServerPlugin } from "@opencode-ai/plugin/server"
+
+export default ((api) => {
+  // System prompt injection
+  api.hook("experimental.chat.system.transform", (system) => {
+    return system + "\n" + buildSystemPrompt()
+  })
+
+  // Event handling
+  api.event("session.idle", async (event) => { ... })
+
+  // Compaction hook
+  api.hook("experimental.session.compacting", (summary) => {
+    return summary + "\n" + condensedVaultContext()
+  })
+}) satisfies ServerPlugin
+```
+
+### TUI plugin patterns
+
+```tsx
+/** @jsxImportSource @opentui/solid */
+import type { TuiPlugin } from "@opencode-ai/plugin/tui"
+
+export default ((api) => {
+  // Home screen slots
+  api.slot("home_logo", () => <BrainAsciiArt />)
+  api.slot("home_bottom", () => <RotatingTips />)
+  api.slot("sidebar_content", () => <VaultStats />)
+
+  // Theme
+  api.theme.register("brainkit", brainkitTheme)
+
+  // Commands
+  api.command({ title: "/doctor", slash: { name: "doctor" }, onSelect() { ... } })
+}) satisfies TuiPlugin
+```
+
+### Key differences from a standalone app
+
+- OpenCode loads `.ts`/`.tsx` files directly via bun — no build step for the plugin
+- The TUI uses solid-js with JSX (`@opentui/solid`)
+- `opencode/tsconfig.json` exists for type-checking only (`jsx: preserve`)
+- Server plugins have full filesystem/process access (can run git, read files, etc.)
+- Reference implementation: `.reference/oc-plugin-vault-tec/` (gitignored, clone from GitHub if needed)
+
+---
+
+## CLI Architecture
+
+The `brainkit` CLI (`cli/index.ts`) is a thin launcher:
+
+1. **Harness aliases** (checked first): `oc`, `opencode` → launch OpenCode with plugin
+2. **Auto-detect** (bare `brainkit`): find OpenCode on `$PATH`, launch it
+
+There are no subcommands (no init, update, etc.) — vault setup and all operations happen inside the harness, guided by the plugin's system prompt and skills.
+
+The launcher (`cli/launch.ts`) creates config files at `~/.config/brainkit/` and spawns `opencode` with `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars set. OpenCode merges these with the user's existing config.
+
+---
+
+## Vault Operations
+
+All vault logic lives in `core/`. Key patterns:
+
+- `readVaultConfig()` — reads `~/.config/brainkit/config.toml`
+- `readBragfile()` / `appendBragEntry()` — bragfile operations
+- `readContacts()` / `searchContacts()` / `addContact()` — contact operations
+- `buildSystemPrompt()` — constructs the system prompt from vault state
+- `containsUserAccomplishment()` — detects accomplishment keywords in text
+- `runHealthChecks()` — vault doctor diagnostics
+
+All file operations validate paths are within the vault boundary (path traversal protection). Current implementation uses synchronous fs — flagged as tech debt for async migration.

@@ -1,28 +1,27 @@
 #!/usr/bin/env node
 
-import * as fs from "node:fs";
-import * as path from "node:path";
-
-import { init } from "./init.js";
-import { update } from "./install.js";
 import { version } from "./version.js";
+import { isHarnessAlias, launchHarness, detectAndLaunch } from "./launch.js";
 
 function printUsage(): void {
   console.log(`
   brainkit v${version}
 
-  Usage: npx @oribish/brainkit [options]
+  Usage:
+    brainkit                     Auto-detect harness and launch
+    brainkit oc [args...]        Launch with OpenCode
+    brainkit opencode [args...]  Launch with OpenCode
 
   Options:
     --version    Print version and exit
     --help       Show this help message
 
-  If no brainkit.toml exists in the current directory, starts interactive setup.
-  If brainkit.toml exists, updates installed skills and AGENTS.md.
+  All arguments after the harness alias are passed through.
+  Example: brainkit oc --model anthropic/claude-sonnet-4-5
 `);
 }
 
-async function main(): Promise<void> {
+function main(): void {
   const args = process.argv.slice(2);
 
   if (args.includes("--version")) {
@@ -35,14 +34,22 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  const cwd = process.cwd();
-  const configPath = path.join(cwd, "brainkit.toml");
+  const firstArg = args[0];
 
-  if (fs.existsSync(configPath)) {
-    await update(cwd);
-  } else {
-    await init(cwd);
+  // Harness alias — launch explicitly
+  if (firstArg !== undefined && isHarnessAlias(firstArg)) {
+    launchHarness(firstArg, args.slice(1));
+    return;
   }
+
+  // No args — auto-detect and launch
+  if (firstArg === undefined) {
+    detectAndLaunch([]);
+    return;
+  }
+
+  // Unknown argument — pass everything through to auto-detected harness
+  detectAndLaunch(args);
 }
 
 process.on("SIGINT", () => {
@@ -50,7 +57,4 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-main().catch((err: unknown) => {
-  console.error(`  [brainkit] Error: ${err instanceof Error ? err.message : String(err)}`);
-  process.exit(1);
-});
+main();

@@ -15,9 +15,11 @@
     "declaration": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "jsx": "preserve",
+    "jsxImportSource": "@opentui/solid",
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": ["core/**/*.ts"],
+  "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules"]
 }

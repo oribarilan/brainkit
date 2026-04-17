@@ -20,6 +20,6 @@
     "types": ["node"],
     "lib": ["ES2022"]
   },
-  "include": ["./**/*.ts", "../extensions/vault.ts", "../extensions/system-prompt.ts"],
+  "include": ["./**/*.ts"],
   "exclude": ["../node_modules"]
 }

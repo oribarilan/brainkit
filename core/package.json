@@ -1,0 +1,21 @@
+{
+  "name": "@oribish/brainkit-core",
+  "version": "0.1.0",
+  "description": "Core vault operations for brainkit",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./index.ts"
+    }
+  },
+  "files": [
+    "*.ts"
+  ],
+  "dependencies": {
+    "smol-toml": "^1.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0"
+  }
+}
