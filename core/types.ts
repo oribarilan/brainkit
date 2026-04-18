@@ -1,24 +1,32 @@
 export interface BrainkitGlobalConfig {
-  vaultPath: string;
-  lastSeenVersion?: string;
+  version: number;
+  vault_path: string;
 }
 
 export interface BrainkitConfig {
-  brainkit: { version: string };
+  version: number;
   user: {
     name: string;
     role: string;
-    expertise: string[];
-    tone: string;
-    scope: "professional" | "personal" | "both";
-    context?: string;
-    rules?: string[];
+    expertise?: string[];
+    tone?: string;
+    scope?: "professional" | "personal" | "both";
+    work?: {
+      description?: string;
+    };
+    personal?: {
+      description?: string;
+    };
+    customization?: {
+      context?: string;
+      rules?: string[];
+      onboarding_complete?: boolean;
+    };
   };
-  features: {
-    bragfile: boolean;
-    contacts: boolean;
+  features?: {
+    bragfile?: boolean;
+    contacts?: boolean;
   };
-  agents?: { providers?: string[] };
 }
 
 export interface BragEntry {

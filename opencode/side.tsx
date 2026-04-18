@@ -21,14 +21,16 @@ export const Sidebar = (props: { api: Api }) => {
     try {
       const globalConfig = readGlobalConfig();
       if (!globalConfig) return null;
-      const vaultConfig = readVaultConfig(globalConfig.vaultPath);
+      const vaultConfig = readVaultConfig(globalConfig.vault_path);
       if (!vaultConfig) return null;
 
-      const stats = vaultConfig.features.bragfile ? getBragStats(globalConfig.vaultPath) : null;
+      const bragEnabled = vaultConfig.features?.bragfile !== false;
+      const contactsEnabled = vaultConfig.features?.contacts !== false;
+      const stats = bragEnabled ? getBragStats(globalConfig.vault_path) : null;
       let contactCount = 0;
-      if (vaultConfig.features.contacts) {
+      if (contactsEnabled) {
         try {
-          const raw = readContacts(globalConfig.vaultPath);
+          const raw = readContacts(globalConfig.vault_path);
           const contacts = parseContacts(raw);
           contactCount = contacts.length;
         } catch {
@@ -38,8 +40,8 @@ export const Sidebar = (props: { api: Api }) => {
 
       return {
         name: vaultConfig.user.name,
-        path: globalConfig.vaultPath,
-        features: vaultConfig.features,
+        path: globalConfig.vault_path,
+        features: { bragfile: bragEnabled, contacts: contactsEnabled },
         bragStats: stats,
         contactCount,
       };

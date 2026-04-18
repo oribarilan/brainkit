@@ -22,6 +22,25 @@ const Home = (props: { api: Api }) => {
   );
 };
 
+const brainkitPlaceholders = {
+  normal: [
+    "Tell me about your day...",
+    "What did you accomplish this week?",
+    "Add a brag entry for shipping the new API",
+    "Search my vault for meeting notes with Sarah",
+    "Who's on the platform team?",
+    "Create meeting notes from today's standup",
+    "What's in my bragfile this quarter?",
+    "Help me organize my project notes",
+  ],
+  shell: [
+    "grep -r 'action item' ~/second-brain/01_projects/",
+    "cat ~/second-brain/02_areas/career/bragfile.md",
+    "find ~/second-brain -name '*.md' -mtime -7",
+    "wc -l ~/second-brain/03_resources/contacts.md",
+  ],
+};
+
 const tui: TuiPlugin = async (api) => {
   await api.theme.install("./opencode/brainkit.json");
   api.theme.set("brainkit");
@@ -36,6 +55,31 @@ const tui: TuiPlugin = async (api) => {
     slots: {
       home_logo() {
         return <Home api={api} />;
+      },
+      home_prompt(ctx, value) {
+        if (!("Prompt" in api.ui) || !("Slot" in api.ui)) return null;
+        const Prompt = api.ui.Prompt;
+        const Slot = api.ui.Slot;
+        const theme = ctx.theme.current;
+        const Hint = (
+          <box flexShrink={0} flexDirection="row" gap={1}>
+            <text fg={theme.textMuted}>
+              <span style={{ fg: theme.primary }}>brainkit</span>
+            </text>
+          </box>
+        );
+        return (
+          <Prompt
+            workspaceID={value.workspace_id}
+            hint={Hint}
+            right={
+              <box flexDirection="row" gap={1}>
+                <Slot name="home_prompt_right" workspace_id={value.workspace_id} />
+              </box>
+            }
+            placeholders={brainkitPlaceholders}
+          />
+        );
       },
     },
   });

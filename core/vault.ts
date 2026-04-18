@@ -44,14 +44,14 @@ export const KEY_FILES = {
 // ---------------------------------------------------------------------------
 
 function getGlobalConfigPath(): string {
-  return path.join(os.homedir(), ".config", "brainkit", "config.json");
+  return path.join(os.homedir(), ".config", "brainkit", "config.toml");
 }
 
 export function readGlobalConfig(): BrainkitGlobalConfig | null {
   const configPath = getGlobalConfigPath();
   try {
     const raw = fs.readFileSync(configPath, "utf-8");
-    return JSON.parse(raw) as BrainkitGlobalConfig;
+    return parseToml(raw) as unknown as BrainkitGlobalConfig;
   } catch {
     return null;
   }
@@ -61,7 +61,7 @@ export function writeGlobalConfig(config: BrainkitGlobalConfig): void {
   const configPath = getGlobalConfigPath();
   const dir = path.dirname(configPath);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
+  fs.writeFileSync(configPath, stringifyToml(config as unknown as Record<string, unknown>) + "\n", "utf-8");
 }
 
 // ---------------------------------------------------------------------------
@@ -344,13 +344,13 @@ export function isVaultFresh(vaultPath: string, config: BrainkitConfig): boolean
   let contactsEmpty = true;
   let noProjects = true;
 
-  if (config.features.bragfile) {
+  if (config.features?.bragfile === true) {
     const content = readBragfile(vaultPath);
     // "empty" means null, empty string, or just "# Bragfile\n" (the template)
     bragEmpty = content === null || content.trim() === "" || content.trim() === "# Bragfile";
   }
 
-  if (config.features.contacts) {
+  if (config.features?.contacts === true) {
     const content = readContacts(vaultPath);
     contactsEmpty = content === null || content.trim() === "" || content.trim() === "# Contacts";
   }
@@ -414,7 +414,7 @@ export function runHealthChecks(vaultPath: string, config: BrainkitConfig): Heal
     }
   }
 
-  if (config.features.bragfile) {
+  if (config.features?.bragfile === true) {
     const bragPath = path.resolve(vaultPath, KEY_FILES.bragfile);
     if (fs.existsSync(bragPath)) {
       results.push({
@@ -431,7 +431,7 @@ export function runHealthChecks(vaultPath: string, config: BrainkitConfig): Heal
     }
   }
 
-  if (config.features.contacts) {
+  if (config.features?.contacts === true) {
     const contactsPath = path.resolve(vaultPath, KEY_FILES.contacts);
     if (fs.existsSync(contactsPath)) {
       results.push({

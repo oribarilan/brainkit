@@ -246,7 +246,8 @@ The launcher (`cli/launch.ts`) creates config files at `~/.config/brainkit/` and
 
 All vault logic lives in `core/`. Key patterns:
 
-- `readVaultConfig()` — reads `~/.config/brainkit/config.toml`
+- `readGlobalConfig()` — reads `~/.config/brainkit/config.toml` (just `vault_path`)
+- `readVaultConfig()` — reads `brainkit.toml` from the vault (user info, features)
 - `readBragfile()` / `appendBragEntry()` — bragfile operations
 - `readContacts()` / `searchContacts()` / `addContact()` — contact operations
 - `buildSystemPrompt()` — constructs the system prompt from vault state

@@ -18,14 +18,9 @@ const server: Plugin = async () => {
       try {
         const globalConfig = readGlobalConfig();
         if (!globalConfig) return;
-        const vaultConfig = readVaultConfig(globalConfig.vaultPath);
+        const vaultConfig = readVaultConfig(globalConfig.vault_path);
         if (!vaultConfig) return;
-        const prompt = buildSystemPrompt({
-          mode: "cli",
-          globalConfig,
-          vaultConfig,
-        });
-        if (!prompt) return;
+        const prompt = buildSystemPrompt(vaultConfig, globalConfig.vault_path, { mode: "cli" });
         if (output.system.includes(prompt)) return;
         output.system.push(prompt);
       } catch {
@@ -37,19 +32,21 @@ const server: Plugin = async () => {
       try {
         const globalConfig = readGlobalConfig();
         if (!globalConfig) return;
-        const vaultConfig = readVaultConfig(globalConfig.vaultPath);
+        const vaultConfig = readVaultConfig(globalConfig.vault_path);
         if (!vaultConfig) return;
 
         const identity = [
           "## Brainkit Vault Context (Condensed)",
           `- User: ${vaultConfig.user.name} (${vaultConfig.user.role})`,
-          `- Vault: ${globalConfig.vaultPath}`,
-          `- Features: ${Object.entries(vaultConfig.features)
-            .filter(([, v]) => v)
-            .map(([k]) => k)
-            .join(", ")}`,
-          `- Tone: ${vaultConfig.user.tone}`,
-          `- Scope: ${vaultConfig.user.scope}`,
+          `- Vault: ${globalConfig.vault_path}`,
+          `- Features: ${
+            Object.entries(vaultConfig.features ?? {})
+              .filter(([, v]) => v)
+              .map(([k]) => k)
+              .join(", ") || "defaults"
+          }`,
+          `- Tone: ${vaultConfig.user.tone ?? "direct"}`,
+          `- Scope: ${vaultConfig.user.scope ?? "professional"}`,
         ].join("\n");
 
         output.system.push(identity);
@@ -85,7 +82,7 @@ const server: Plugin = async () => {
       try {
         const globalConfig = readGlobalConfig();
         if (globalConfig) {
-          scheduleAutoCommit(globalConfig.vaultPath);
+          scheduleAutoCommit(globalConfig.vault_path);
         }
       } catch {
         // Gracefully handle errors

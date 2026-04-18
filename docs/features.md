@@ -24,11 +24,30 @@ The vault is organized using the PARA method. This is always enabled — it is n
 
 ### Vault Config
 
-Global config at `~/.config/brainkit/config.toml`. Stores:
+Two config files:
 
-- `vault_path` — absolute path to the vault directory
-- `user` — name, role, expertise, scope, tone, context, custom rules
-- `features` — toggles for bragfile, contacts
+**Global** (`~/.config/brainkit/config.toml`) — minimal, just points to the vault:
+
+```toml
+vault_path = "/Users/you/second-brain"
+```
+
+**Vault** (`brainkit.toml` in vault root) — checked into git with the vault:
+
+```toml
+[user]
+name = "Your Name"
+role = "Software Engineer"
+expertise = ["TypeScript", "distributed systems"]
+tone = "direct"
+scope = "professional"
+
+[features]
+bragfile = true
+contacts = true
+```
+
+All preferences and user identity live in the vault so they're backed up with git. The global config is just a pointer — if you clone your vault on a new machine, you only need to set `vault_path`.
 
 ### Vault Discovery
 

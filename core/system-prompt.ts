@@ -44,13 +44,32 @@ export function buildSystemPrompt(
 
   // ── 1. Identity ──────────────────────────────────────────────────────
   const { user } = config;
+  const scope = user.scope ?? "professional";
+  const tone = user.tone ?? "direct";
+  const expertise = user.expertise ?? [];
+
   let identity = `## Second Brain — ${user.name}\n\n`;
   identity += `You have access to ${user.name}'s personal second brain vault at \`${vaultPath}\`.\n`;
-  identity += `${user.name} is a ${user.role} with expertise in ${user.expertise.join(", ")}.\n`;
-  identity += `This is a ${user.scope} vault.`;
+  identity += `${user.name} is a ${user.role}`;
+  if (expertise.length > 0) {
+    identity += ` with expertise in ${expertise.join(", ")}`;
+  }
+  identity += `.\nThis is a ${scope} vault.`;
 
-  if (user.context !== undefined && user.context !== "") {
-    identity += `\n\n${user.context}`;
+  if (user.work?.description !== undefined && user.work.description !== "") {
+    identity += `\n\n**Work context:** ${user.work.description}`;
+  }
+
+  if (
+    (scope === "personal" || scope === "both") &&
+    user.personal?.description !== undefined &&
+    user.personal.description !== ""
+  ) {
+    identity += `\n\n**Personal context:** ${user.personal.description}`;
+  }
+
+  if (user.customization?.context !== undefined && user.customization.context !== "") {
+    identity += `\n\n${user.customization.context}`;
   }
 
   sections.push(identity);
@@ -71,7 +90,7 @@ export function buildSystemPrompt(
   // ── 3. Key files (conditional on features) ──────────────────────────
   const keyFilesSections: string[] = [];
 
-  if (config.features.bragfile) {
+  if (config.features?.bragfile === true) {
     if (mode === "pi") {
       keyFilesSections.push(
         [
@@ -90,7 +109,7 @@ export function buildSystemPrompt(
     }
   }
 
-  if (config.features.contacts) {
+  if (config.features?.contacts === true) {
     if (mode === "pi") {
       keyFilesSections.push(
         [
@@ -122,15 +141,16 @@ export function buildSystemPrompt(
     "- `README.md` is the entry point for every directory",
     "- Meeting notes: `YYYY-MM-DD-topic.md`",
     "- Use **bold** for key names, decisions, action items, people",
-    `- ${user.tone} tone. Write like the vault owner would.`,
+    `- ${tone} tone. Write like the vault owner would.`,
     '- Use first person ("I", "my") — this is a personal vault',
   ].join("\n");
 
   sections.push(conventions);
 
   // ── 5. Custom rules ─────────────────────────────────────────────────
-  if (user.rules && user.rules.length > 0) {
-    const rulesLines = user.rules.map((rule) => `- ${rule}`);
+  const customRules = user.customization?.rules;
+  if (customRules && customRules.length > 0) {
+    const rulesLines = customRules.map((rule: string) => `- ${rule}`);
     sections.push("## Custom Rules\n\n" + rulesLines.join("\n"));
   }
 
@@ -176,7 +196,7 @@ export function buildSystemPrompt(
   }
 
   // ── 8. Bragfile staleness reminder ──────────────────────────────────
-  if (config.features.bragfile) {
+  if (config.features?.bragfile === true) {
     try {
       const stats = getBragStats(vaultPath);
       if (stats.lastEntryDate !== null) {
@@ -201,8 +221,10 @@ export function buildSystemPrompt(
   }
 
   // ── 9. Onboarding (fresh vault detection) ─────────────────────────
+  const onboardingComplete = config.user.customization?.onboarding_complete === true;
+
   try {
-    if (isVaultFresh(vaultPath, config)) {
+    if (!onboardingComplete && isVaultFresh(vaultPath, config)) {
       const onboarding = [
         "## Fresh Vault Detected",
         "",
@@ -215,6 +237,32 @@ export function buildSystemPrompt(
     }
   } catch {
     // If detection fails, skip — don't block the prompt
+  }
+
+  // ── 10. Incomplete profile nudge ──────────────────────────────────
+  if (!onboardingComplete) {
+    const missing: string[] = [];
+    if (expertise.length === 0) missing.push("expertise");
+    if (user.work?.description === undefined || user.work.description === "") missing.push("work context");
+    if (
+      (scope === "personal" || scope === "both") &&
+      (user.personal?.description === undefined || user.personal.description === "")
+    ) {
+      missing.push("personal context");
+    }
+
+    if (missing.length > 0) {
+      const nudge = [
+        "## Profile Incomplete",
+        "",
+        `The following fields are empty in brainkit.toml: ${missing.join(", ")}.`,
+        "If it comes up naturally in conversation, offer to fill them in.",
+        "Don't lead with this — wait for a relevant moment.",
+        "Once the user is satisfied with their profile, set `onboarding_complete = true` under `[user.customization]` in brainkit.toml.",
+      ].join("\n");
+
+      sections.push(nudge);
+    }
   }
 
   return sections.join("\n\n") + "\n";
