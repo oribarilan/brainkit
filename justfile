@@ -7,7 +7,7 @@ default:
 
 # start opencode with the local brainkit plugin
 dev:
-    opencode
+    OPENCODE_CONFIG={{justfile_directory()}}/.dev/opencode.json OPENCODE_TUI_CONFIG={{justfile_directory()}}/.dev/tui.json opencode
 
 # run tests
 test:
