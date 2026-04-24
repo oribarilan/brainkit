@@ -11,6 +11,8 @@ function printUsage(): void {
     brainkit                     Auto-detect harness and launch
     brainkit oc [args...]        Launch with OpenCode
     brainkit opencode [args...]  Launch with OpenCode
+    brainkit copilot [args...]   Launch with Copilot CLI
+    brainkit cp [args...]        Launch with Copilot CLI
 
   Options:
     --version    Print version and exit
@@ -18,6 +20,7 @@ function printUsage(): void {
 
   All arguments after the harness alias are passed through.
   Example: brainkit oc --model anthropic/claude-sonnet-4-5
+  Example: brainkit copilot --model gpt-5.2
 `);
 }
 

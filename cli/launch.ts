@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { execFileSync, spawn } from "node:child_process";
+import { launchCopilot } from "./copilot.js";
 
 // ---------------------------------------------------------------------------
 // Harness definitions
@@ -78,6 +79,12 @@ const HARNESSES: Harness[] = [
     aliases: ["oc", "opencode"],
     launch: launchOpenCode,
   },
+  {
+    name: "Copilot CLI",
+    binaries: ["copilot"],
+    aliases: ["copilot", "cp"],
+    launch: launchCopilot,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -109,6 +116,7 @@ export function detectAndLaunch(args: string[]): void {
   if (available.length === 0) {
     console.error("  [brainkit] No supported coding harness found.");
     console.error("  [brainkit] Install OpenCode: https://opencode.ai");
+    console.error("  [brainkit] Install Copilot CLI: https://github.com/github/copilot-cli");
     process.exit(1);
   }
 
