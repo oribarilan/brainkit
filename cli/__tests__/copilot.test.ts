@@ -66,8 +66,8 @@ describe("generateCopilotSettings", () => {
     expect(fs.existsSync(settingsPath)).toBe(true);
 
     const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as Record<string, unknown>;
-    expect(settings.companyAnnouncements).toBeDefined();
-    expect(Array.isArray(settings.companyAnnouncements)).toBe(true);
+    expect(settings["companyAnnouncements"]).toBeDefined();
+    expect(Array.isArray(settings["companyAnnouncements"])).toBe(true);
   });
 
   it("includes statusLine with script path", () => {
@@ -75,8 +75,8 @@ describe("generateCopilotSettings", () => {
 
     const settingsPath = path.join(vaultDir, ".github", "copilot", "settings.json");
     const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as Record<string, unknown>;
-    const statusLine = settings.statusLine as Record<string, unknown>;
-    expect(statusLine.command).toContain("/path/to/copilot-status.js");
+    const statusLine = settings["statusLine"] as Record<string, unknown>;
+    expect(statusLine["command"]).toContain("/path/to/copilot-status.js");
   });
 });
 
