@@ -1,0 +1,64 @@
+# Vault Doctor
+
+The doctor is a diagnostic tool that checks vault health and fixes structural problems. The user runs `/doctor`, and the agent inspects the vault for missing directories, misconfigured files, naming violations, and security issues. It fixes what it can automatically, then reports everything it found.
+
+## Behavior
+
+The doctor runs in two phases: fix first, then report. The fix phase handles structural scaffolding silently. The report phase is informational, listing each check with a pass, warning, or error status.
+
+### Fix phase
+
+The agent creates missing structure without asking, guided by the maintenance skill:
+
+- Missing PARA directories (`01_projects/`, `02_areas/`, `03_resources/`, `04_archive/`) are created.
+- If `features.bragfile` is enabled and `02_areas/career/bragfile.md` doesn't exist, it's created with a `# Bragfile` heading.
+- If `features.contacts` is enabled and `03_resources/contacts.md` doesn't exist, it's created with a `# Contacts` heading.
+
+The fix phase only handles structural scaffolding — things that have exactly one correct answer. It won't rename files, move content, or change config values. In OpenCode, this is agent-driven (the agent reads the skill and uses built-in file tools), not a deterministic function call.
+
+### Report phase
+
+After fixing, the doctor runs these checks and reports results:
+
+**Config validity.** Attempts to parse `brainkit.toml`. If it fails, reports the parse error. This catches syntax mistakes, invalid TOML, or corrupted files.
+
+**PARA directory structure.** Verifies all four directories exist: `01_projects/`, `02_areas/`, `03_resources/`, `04_archive/`. After the fix phase, these should always pass — but the check is still reported so the user sees confirmation.
+
+**Key files existence.** Checks for `bragfile.md` and `contacts.md`, but only when the corresponding feature is enabled in config (`features.bragfile` and `features.contacts`). If a feature is disabled, its file check is skipped entirely, not reported as a warning.
+
+**Naming convention compliance.** Scans all entries (files and directories) inside the four PARA directories. Each entry's name — with file extension stripped — is checked against the kebab-case pattern: `^[a-z0-9]+(-[a-z0-9]+)*$`. Dotfiles (entries starting with `.`) are skipped. `README.md` is explicitly allowed as an exception to the lowercase rule, though its name sans extension (`README`) would fail the regex. The implementation checks at the first level inside each PARA directory, not recursively.
+
+If any non-kebab-case entries are found, the doctor reports them as a warning with the full list (e.g., `01_projects/My Project, 03_resources/API_Notes.md`). It does not rename them — that requires user confirmation. The agent should suggest renames and wait for approval.
+
+**Orphaned root files.** Lists any files or directories in the vault root that aren't part of the expected set. The expected entries are: the four PARA directories, `brainkit.toml`, `README.md`, `AGENTS.md`, and anything starting with `.` (dotfiles like `.git/`, `.gitignore`). Anything else is flagged as orphaned. The agent suggests moving orphaned files to the appropriate PARA category but doesn't move them automatically.
+
+**GitHub repo privacy.** If the vault is a git repo with a GitHub remote, the doctor runs `gh repo view <owner/repo> --json isPrivate` to check visibility. A public vault is reported as an error — the vault contains personal and professional information that shouldn't be world-readable. The error message includes the fix command: `gh repo edit <owner/repo> --visibility private`. If the vault isn't a git repo, has no remote, doesn't use GitHub, or `gh` isn't installed, this check is silently skipped.
+
+### Staleness detection
+
+Staleness checks aren't part of the automatic `/doctor` run. They apply when the user asks about cleanup or vault maintenance more broadly. The agent looks for:
+
+- Stale projects — directories in `01_projects/` where no file has been modified in roughly three months. The agent suggests asking the user whether the project should be archived.
+- Stale resources — entries in `03_resources/` that haven't been updated or referenced. Lower priority than stale projects, but worth mentioning during a cleanup pass.
+- Empty directories — PARA subdirectories that contain only a `README.md` and nothing else. The agent suggests removing or archiving them.
+
+Staleness is advisory. The agent always asks before archiving anything.
+
+### The "never delete" rule
+
+Nothing gets deleted from the vault, ever. If something needs to go, it moves to `04_archive/`. This applies to files, directories, stale projects, and orphaned content. The archive is the only valid destination for inactive content.
+
+### Post-update alignment
+
+After brainkit updates, new features may require new directories or files. Running `/doctor` picks this up: the fix phase creates any newly required structure, and the report phase confirms the vault is aligned with the current version.
+
+## Harness implementation
+
+| Capability | OpenCode | Copilot CLI |
+|---|---|---|
+| Triggering | `/doctor` slash command registered in TUI plugin (`tui.tsx`); submits "Run vault health checks using /doctor and report the results" to chat | User asks "check my vault health" — the maintenance skill guides the agent through the same checks |
+| Health check execution | Agent follows maintenance skill instructions, using built-in file tools to check structure, naming, and config. `runHealthChecks()` exists in `core/vault.ts` with equivalent checks but is not called by the OpenCode plugin. | Agent follows maintenance skill instructions using built-in tools |
+| Structural fixes | Agent creates missing directories and files using built-in file tools, guided by skill instructions | Same — agent creates missing structure using built-in tools |
+| GitHub privacy check | Agent runs `gh repo view` via shell to check repo visibility; `runHealthChecks()` in core has the same check via `execSync` but is not wired up in OpenCode | Agent runs `gh repo view` via shell, guided by skill instructions |
+| Naming suggestions | Agent identifies non-kebab-case entries and suggests renames; waits for user confirmation before changing anything | Same — agent follows skill guidance |
+| Staleness detection | Agent follows maintenance skill guidance; uses file modification times and directory contents to identify stale or empty entries | Same — agent follows skill guidance |

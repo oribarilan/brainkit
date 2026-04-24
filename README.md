@@ -2,7 +2,7 @@
 
 **An augmentation kit for your brain.**
 
-An opinionated second brain implementation, powered by [pi](https://github.com/badlogic/pi-mono) (and your own model of choice).
+An opinionated second brain, delivered as an [OpenCode](https://opencode.ai) plugin.
 
 ```
         _---~~(~~-_.
@@ -19,37 +19,34 @@ An opinionated second brain implementation, powered by [pi](https://github.com/b
 
 ## Install
 
-Requires [pi](https://github.com/badlogic/pi-mono) installed and configured with an LLM provider.
-
-```bash
-pi install git:github.com/oribarilan/brainkit
-```
-
-Or try it without installing:
-
-```bash
-pi -e git:github.com/oribarilan/brainkit
-```
-
-Update anytime with `pi update`. Brainkit tells you when a new version is available.
-
-### With any agent (experimental)
-
-Works with Claude Code, Copilot, OpenCode, Codex, and more. Same vault and skills, without pi-specific extras.
-
-> **Note**: CLI mode is in early development. The core experience should work, but for the full and tested behavior you should use the pi agent.
-
 ```bash
 npx @oribish/brainkit
 ```
 
+Installs the brainkit CLI and launches [OpenCode](https://opencode.ai) with the brainkit plugin loaded. Requires OpenCode on your `$PATH` and configured with an LLM provider.
+
+Or install globally:
+
+```bash
+npm install -g @oribish/brainkit
+brainkit
+```
+
 [![npm version](https://img.shields.io/npm/v/@oribish/brainkit)](https://www.npmjs.com/package/@oribish/brainkit)
+
+### With Copilot CLI
+
+```bash
+brainkit copilot
+```
+
+Requires [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed and authenticated. The brainkit launcher installs skills and hooks into your vault, then launches Copilot with full vault awareness.
 
 ## What is this?
 
 A "second brain" is a system for capturing and organizing everything you know (accomplishments, people, meeting notes, projects, ideas) so you can find it when you need it instead of keeping it all in your head.
 
-Brainkit is an opinionated agentic implementation of that idea. It's a structured markdown vault that follows the [PARA method](https://fortelabs.com/blog/para/), uses a bragfile, contacts.md and more. Delivered with an AI agent that actually understands it. You talk, things happen:
+Brainkit is an opinionated agentic implementation of that idea. It's a structured markdown vault that follows the [PARA method](https://fortelabs.com/blog/para/), with a bragfile, contacts index, and more. You talk, things happen:
 
 - _"I just shipped the API redesign"_ → adds it to your bragfile, in the right section
 - _"I had a meeting with Sarah about the migration"_ → creates meeting notes, cross-references Sarah from contacts, files it under the right project
@@ -57,64 +54,47 @@ Brainkit is an opinionated agentic implementation of that idea. It's a structure
 
 No commands, no formatting, no manual filing. The agent handles it.
 
-## Getting Started
+## Getting started
 
 ```bash
-pi
+brainkit
 ```
 
-Type `/setup` and the agent walks you through a getting-to-know-you conversation — your work, your personal life, your preferences. It creates a vault that matches your actual life, not an empty template.
+The agent walks you through a getting-to-know-you conversation on first run — your work, your personal life, your preferences. It creates a vault that matches your actual life, not an empty template.
 
 ## Features
 
-### PARA vault
+### [PARA vault](docs/para.md)
 
-Everything goes into four directories:
+Four directories. Projects for active work with deadlines, areas for ongoing responsibilities, resources for reference material, archive for everything else. The agent figures out where things go.
 
-- **`01_projects/`** — active efforts with a deadline (work and personal)
-- **`02_areas/`** — ongoing responsibilities (career, health, finances)
-- **`03_resources/`** — reference material and interests
-- **`04_archive/`** — done or no longer relevant
+### [Bragfile](docs/bragfile.md)
 
-### Bragfile
+A log of your accomplishments at `02_areas/career/bragfile.md`. Say "I shipped the API redesign" and the agent offers to add it. Goes quiet for two weeks? It'll mention that.
 
-A log of professional accomplishments at `02_areas/career/bragfile.md`. The agent recognizes accomplishments in conversation and offers to capture them. Entries are placed programmatically. Nudges you if it's been more than two weeks since your last brag log.
+### [Contacts](docs/contacts.md)
 
-### Contacts
+People index at `03_resources/contacts.md`. The agent checks if people are in your contacts when they come up and suggests adding new ones.
 
-A people index at `03_resources/contacts.md`: colleagues, family, doctors, anyone. The agent cross-references people when they come up in conversation and suggests adding new ones.
+### [Meeting notes](docs/meeting-notes.md)
 
-### Meeting notes
+Notes from any meeting, filed under the right PARA directory. Named `YYYY-MM-DD-topic.md`, with attendees, decisions, and action items. Works for standup syncs and doctor visits.
 
-Structured notes from any meeting: work, doctor visits, school conferences. Filed under the relevant PARA directory, named `YYYY-MM-DD-topic.md`, with attendees, decisions, and action items.
+### [Doctor](docs/doctor.md)
 
-### Vault health
+`/doctor` checks vault health: missing directories, naming violations, orphaned files, whether your GitHub repo is private. Fixes what it can, asks before renaming.
 
-`/doctor` fixes issues automatically: missing directories, naming violations, orphaned files. Checks that your GitHub repo is private. Detects stale projects that might need archiving. Never deletes, always archives.
+### [Auto-commit](docs/auto-commit.md)
 
-### Auto-commit
+Vault changes get git-committed after conversations. Debounced so rapid edits collapse into one commit.
 
-Vault changes are git-committed automatically after conversations. Debounced so rapid changes collapse into one commit. Skips silently if not a git repo.
+### [Onboarding](docs/onboarding.md)
 
-## Bundled Extensions
+First run is a conversation, not a form. The agent asks about your work, your life, your preferences, then builds a vault that actually matches your situation.
 
-Pi comes pretty basic, but it is composable. Extensions can be mixed and matched to build your ideal workflow. [You can even run Doom inside it](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent/examples/extensions/doom-overlay/). Brainkit ships with a curated set of companion extensions from the [pi ecosystem](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent/examples/extensions):
+### [TUI](docs/tui.md)
 
-- **Plan mode** — toggleable read-only exploration mode (`/plan` or `Ctrl+Alt+P`). The agent can search and read but can't modify anything, useful for understanding before changing.
-- **Permission gate** — prompts for confirmation before running potentially dangerous bash commands (`rm -rf`, `sudo`, `chmod 777`).
-- **Questionnaire** — structured tool for asking the user single or multiple-choice questions with a tab-based UI, used by the agent to clarify requirements and preferences.
-
-These are loaded automatically when you install brainkit. No extra setup needed.
-
-### Adding more extensions
-
-Pi extensions are composable. You can add any pi extension alongside brainkit:
-
-```bash
-pi install git:github.com/someone/cool-extension
-```
-
-Or drop a `.ts` file into `~/.pi/agent/extensions/` for local extensions. See the [pi extension docs](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md) for details.
+Custom terminal UI for OpenCode: ASCII art header, vault stats sidebar with bragfile staleness, rotating tips, and a rose-pink theme.
 
 ## License
 
