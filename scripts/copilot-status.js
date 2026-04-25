@@ -23,13 +23,13 @@ try {
   const globalConfig = readGlobalConfig();
   if (!globalConfig) process.exit(0);
 
-  const config = readVaultConfigSimple(globalConfig.vault_path);
+  const config = readVaultConfigSimple(globalConfig.brain_path);
   if (!config) process.exit(0);
 
   const parts = [`\u{1f9e0} ${config.user.name}'s vault`];
 
   if (config.features?.bragfile !== false) {
-    const stats = getBragStats(globalConfig.vault_path);
+    const stats = getBragStats(globalConfig.brain_path);
     const s = staleness(stats.lastEntryDate);
     const reset = "\x1b[0m";
     parts.push(`${stats.totalEntries} brags`);
@@ -38,7 +38,7 @@ try {
 
   if (config.features?.contacts !== false) {
     try {
-      const raw = readContacts(globalConfig.vault_path);
+      const raw = readContacts(globalConfig.brain_path);
       if (raw) {
         const contacts = parseContacts(raw);
         parts.push(`${contacts.length} contacts`);

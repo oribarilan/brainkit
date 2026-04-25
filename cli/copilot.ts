@@ -138,12 +138,12 @@ function writeAgentsMd(vaultPath: string, config: ReturnType<typeof readVaultCon
 
 export function launchCopilot(args: string[]): void {
   const globalConfig = readGlobalConfig();
-  if (globalConfig === null || !globalConfig.vault_path) {
+  if (globalConfig === null || !globalConfig.brain_path) {
     console.error("  [brainkit] No vault configured. Run brainkit with OpenCode first to set up your vault.");
     process.exit(1);
   }
 
-  const vaultPath = globalConfig.vault_path;
+  const vaultPath = globalConfig.brain_path;
   const config = readVaultConfigSimple(vaultPath);
 
   // Install skills
