@@ -39,7 +39,7 @@ Onboarding is a conversation, not a form. The agent asks one topic at a time, ad
 
 **Phase 5 — setup.** Based on everything discussed, the agent does all of the following:
 
-- Writes `brainkit.toml` at the vault root with name, role, expertise, tone, scope (set to `"both"` since onboarding covers personal and professional), enabled features, and any custom rules mentioned. The config includes a rich `context` field that summarizes everything learned in prose — work situation, team context, personal life, interests, responsibilities.
+- Writes `brainkit.toml` at the vault root with name, role, expertise, tone, enabled features, and any custom rules mentioned. The config includes a rich `context` field that summarizes everything learned in prose — work situation, team context, personal life, interests, responsibilities.
 - Creates the PARA directory structure (the four directories, each with a `README.md`).
 - Pre-creates directories based on the conversation: professional projects go into `01_projects/` with a `README.md`, personal areas (health, finances, etc.) go into `02_areas/`, personal projects also go into `01_projects/`, and interests go into `03_resources/`. Each gets a `README.md`.
 - If the user mentioned a recent accomplishment, offers to add it as the first brag entry.
@@ -54,7 +54,7 @@ If onboarding wasn't completed — `onboarding_complete` is not true — and cer
 
 - Empty `expertise` array
 - Missing or empty `work.description`
-- Missing or empty `personal.description` (only checked when scope is `"personal"` or `"both"`)
+- Missing or empty `personal.description`
 
 When any of these are empty, the system prompt gets a "Profile Incomplete" section listing the missing fields. The agent is instructed to fill them in when it comes up naturally in conversation — not to lead with it or make it the first thing it says. The nudge disappears once `onboarding_complete` is set to true, even if some fields remain empty. The user's choice to leave things blank is respected.
 

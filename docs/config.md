@@ -8,19 +8,35 @@ Brainkit uses two config files: a minimal global pointer and a vault-local confi
 
 **Path:** `~/.config/brainkit/config.toml`
 
-Points brainkit to the vault. This is the only file that's machine-specific and not checked into git.
+Points brainkit to the brain directory (which contains one or more vaults). This is the only file that's machine-specific and not checked into git.
 
 ```toml
-vault_path = "/Users/you/second-brain"
+version = 1
+brain_path = "/Users/you/brain"
 ```
 
-| Field        | Type   | Required | Description                          |
-| ------------ | ------ | -------- | ------------------------------------ |
-| `vault_path` | string | yes      | Absolute path to the vault directory |
+| Field        | Type   | Required | Description                                              |
+| ------------ | ------ | -------- | -------------------------------------------------------- |
+| `brain_path` | string | yes      | Absolute path to the brain directory containing vaults   |
 
 **Created by:** The agent during onboarding, or manually by the user.
 
 **Also at `~/.config/brainkit/`:** The CLI launcher writes `opencode.json` and `tui.json` here for OpenCode plugin loading. These are auto-generated and not user-editable.
+
+### `BRAINKIT_VAULT_PATH` environment variable
+
+Set by the CLI launcher after vault selection. Contains the absolute path to the selected vault (e.g., `/Users/you/brain/work`). Read by the OpenCode plugin at init to know which vault to operate on. Not set by the user — managed by the launcher.
+
+### `--vault` flag
+
+When the brain directory contains multiple vaults, use `--vault <name>` to select one:
+
+```bash
+brainkit --vault work
+brainkit oc --vault life
+```
+
+If omitted with a single vault, it auto-selects. With multiple vaults, an interactive prompt appears.
 
 ## Vault Config
 
@@ -36,7 +52,6 @@ name = "Ori"
 role = "Software Engineer"
 expertise = ["TypeScript", "distributed systems", "AI tooling"]
 tone = "direct"
-scope = "professional"
 
 [user.work]
 description = "Staff engineer at Acme Corp, a 500-person fintech startup. Stack: TypeScript, Go, PostgreSQL, AWS. Team of 8 backend engineers."
@@ -71,7 +86,6 @@ contacts = true
 | `role`      | string   | yes      | —                | Professional role/title.                                                                                  |
 | `expertise` | string[] | no       | `[]`             | Areas of expertise. Helps the agent tailor its responses.                                                 |
 | `tone`      | string   | no       | `"direct"`       | Preferred writing tone for vault content (direct, casual, concise, formal).                               |
-| `scope`     | string   | no       | `"professional"` | Vault focus: `"professional"`, `"personal"`, or `"both"`. Influences what the agent proactively suggests. |
 
 ### `[user.work]` — Professional Context
 
@@ -83,7 +97,7 @@ contacts = true
 
 | Field         | Type   | Required | Default | Description                                                                                                                          |
 | ------------- | ------ | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `description` | string | no       | —       | Free-text about the user's personal life — location, hobbies, family, interests. Only used when `scope` is `"personal"` or `"both"`. |
+| `description` | string | no       | —       | Free-text about the user's personal life — location, hobbies, family, interests. |
 
 ### `[user.customization]` — Behavioral Tweaks
 
@@ -140,7 +154,7 @@ git clone git@github.com:you/second-brain.git ~/second-brain
 
 # 2. Point brainkit at it (agent does this during first run, or manually)
 mkdir -p ~/.config/brainkit
-echo 'version = 1\nvault_path = "/Users/you/second-brain"' > ~/.config/brainkit/config.toml
+echo 'version = 1\nbrain_path = "/Users/you/brain"' > ~/.config/brainkit/config.toml
 
 # 3. Launch brainkit — everything works
 brainkit

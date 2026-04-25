@@ -10,3 +10,4 @@ Each feature is documented in its own page with behavior specs and per-harness i
 - [Onboarding](onboarding.md) — guided first-run setup
 - [Auto-commit](auto-commit.md) — automatic git commits of vault changes
 - [TUI](tui.md) — terminal UI for OpenCode (sidebar, tips, theme, branding)
+- **Multi-vault** — multiple independent vaults under one brain directory, selected at launch with `--vault`

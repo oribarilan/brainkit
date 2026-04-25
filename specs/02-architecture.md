@@ -150,10 +150,11 @@ Session compaction
 ### Global Config (`~/.config/brainkit/config.toml`)
 
 ```toml
-vault_path = "/Users/ori/brain"
+version = 1
+brain_path = "/Users/ori/brain"
 ```
 
-Set during onboarding (agent-guided, using the onboarding skill). Tells the plugin where the vault lives.
+Points to the brain directory containing one or more vaults. Each vault is a subdirectory with its own `brainkit.toml`. The CLI launcher discovers vaults, selects one (via `--vault` flag or interactive prompt), and sets `BRAINKIT_VAULT_PATH` for the plugin.
 
 ### Vault Config (`brainkit.toml`)
 
@@ -166,7 +167,7 @@ name = "Ori"
 role = "Senior Backend Engineer"
 expertise = ["distributed systems", "API design", "security"]
 tone = "direct and technical"
-scope = "professional"
+
 context = "Working on threat detection platform"
 rules = [
   "Always use bullet points over paragraphs",

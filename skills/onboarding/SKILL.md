@@ -51,7 +51,6 @@ Based on the conversation, do all of this:
 
 1. **Write brainkit.toml** at the vault root:
    - Set name, role, expertise, tone
-   - Set scope to "both" (since we're covering personal and professional)
    - Write a rich `context` field summarizing everything learned:
      ```
      context = """
@@ -62,7 +61,7 @@ Based on the conversation, do all of this:
    - Set features (all enabled by default)
    - Add any custom rules mentioned
 
-2. **Create the vault directory** at the configured path (if not already set)
+2. **Create the vault directory** under the brain directory (if not already created by the launcher)
 
 3. **Create PARA structure** (the four directories with README.md files)
 

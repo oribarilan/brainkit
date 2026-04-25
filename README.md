@@ -21,7 +21,7 @@ If you have something that fits brainkit's philosophy, contributions are welcome
 
 ## Philosophy
 
-**Personal use, for both life and work.** The vault doesn't separate professional and personal. Your career accomplishments live next to your grandmother's cake recipe, the contractor's phone number, your half marathon training plan. Same structure, same conventions.
+**Personal use, for both life and work.** A brain directory holds one or more vaults — you might have `work` and `life`, or just a single vault. Each vault is independent with its own config, contacts, and bragfile. Choose which vault to open at launch with `--vault`, or let brainkit auto-select when there's only one.
 
 **Everything goes in.** Food recipes, feedback from your manager, notes from a doctor appointment, architecture decisions from a sprint review. If it's worth remembering, it belongs in the vault. The whole point is that you actually use it, so it has to be low friction.
 
