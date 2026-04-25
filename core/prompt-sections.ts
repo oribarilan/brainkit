@@ -64,7 +64,6 @@ export function buildPreamble(ctx: SectionContext): string {
 
 export function buildIdentity(ctx: SectionContext): string {
   const { user } = ctx.config;
-  const scope = user.scope ?? "professional";
   const expertise = user.expertise ?? [];
 
   let identity = `## Second Brain — ${user.name}\n\n`;
@@ -73,17 +72,13 @@ export function buildIdentity(ctx: SectionContext): string {
   if (expertise.length > 0) {
     identity += ` with expertise in ${expertise.join(", ")}`;
   }
-  identity += `.\nThis is a ${scope} vault.`;
+  identity += `.`;
 
   if (user.work?.description !== undefined && user.work.description !== "") {
     identity += `\n\n**Work context:** ${user.work.description}`;
   }
 
-  if (
-    (scope === "personal" || scope === "both") &&
-    user.personal?.description !== undefined &&
-    user.personal.description !== ""
-  ) {
+  if (user.personal?.description !== undefined && user.personal.description !== "") {
     identity += `\n\n**Personal context:** ${user.personal.description}`;
   }
 
@@ -221,15 +216,11 @@ export function buildProfileNudge(ctx: SectionContext): string | null {
   if (onboardingComplete) return null;
 
   const { user } = ctx.config;
-  const scope = user.scope ?? "professional";
   const expertise = user.expertise ?? [];
   const missing: string[] = [];
   if (expertise.length === 0) missing.push("expertise");
   if (user.work?.description === undefined || user.work.description === "") missing.push("work context");
-  if (
-    (scope === "personal" || scope === "both") &&
-    (user.personal?.description === undefined || user.personal.description === "")
-  ) {
+  if (user.personal?.description === undefined || user.personal.description === "") {
     missing.push("personal context");
   }
 

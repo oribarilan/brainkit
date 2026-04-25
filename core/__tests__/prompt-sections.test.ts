@@ -25,7 +25,6 @@ function makeConfig(overrides?: Partial<BrainkitConfig>): BrainkitConfig {
       role: "Engineer",
       expertise: ["TypeScript", "APIs"],
       tone: "direct",
-      scope: "professional",
       ...overrides?.user,
     },
     features: {
@@ -79,19 +78,18 @@ describe("buildIdentity", () => {
     expect(result).toContain("Building widgets");
   });
 
-  it("excludes personal context when scope is professional", () => {
+  it("includes personal context when set", () => {
     const ctx = makeCtx({
       config: makeConfig({
         user: {
           name: "Test User",
           role: "Engineer",
-          scope: "professional",
           personal: { description: "Loves hiking" },
         },
       }),
     });
     const result = buildIdentity(ctx);
-    expect(result).not.toContain("Loves hiking");
+    expect(result).toContain("Loves hiking");
   });
 });
 

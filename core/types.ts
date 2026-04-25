@@ -10,7 +10,6 @@ export interface BrainkitConfig {
     role: string;
     expertise?: string[];
     tone?: string;
-    scope?: "professional" | "personal" | "both";
     work?: {
       description?: string;
     };
