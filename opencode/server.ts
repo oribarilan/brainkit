@@ -2,7 +2,7 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import {
   readGlobalConfig,
-  readVaultConfig,
+  readVaultConfigSimple,
   buildSystemPrompt,
   containsUserAccomplishment,
   scheduleAutoCommit,
@@ -18,7 +18,7 @@ const server: Plugin = async () => {
       try {
         const globalConfig = readGlobalConfig();
         if (!globalConfig) return;
-        const vaultConfig = readVaultConfig(globalConfig.vault_path);
+        const vaultConfig = readVaultConfigSimple(globalConfig.vault_path);
         if (!vaultConfig) return;
         const prompt = buildSystemPrompt(vaultConfig, globalConfig.vault_path, { mode: "cli" });
         if (output.system.includes(prompt)) return;
@@ -32,7 +32,7 @@ const server: Plugin = async () => {
       try {
         const globalConfig = readGlobalConfig();
         if (!globalConfig) return;
-        const vaultConfig = readVaultConfig(globalConfig.vault_path);
+        const vaultConfig = readVaultConfigSimple(globalConfig.vault_path);
         if (!vaultConfig) return;
 
         const identity = [

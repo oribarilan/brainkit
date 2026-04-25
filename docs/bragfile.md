@@ -65,10 +65,10 @@ The `getBragStats()` function parses the bragfile content using a regex that mat
 
 ## Harness implementation
 
-| Capability | OpenCode | Copilot CLI |
-|---|---|---|
-| Adding entries | Agent uses built-in file editing, guided by the bragfile skill for format and placement rules | Agent uses built-in file editing, guided by bragfile skill in `.agents/skills/brainkit/references/bragfile.md` |
-| Entry formatting | Agent follows skill conventions (date format, half-year/month sections, quality criteria) | Same — agent follows skill conventions |
-| Staleness reminders | System prompt injection via `experimental.chat.system.transform` — `buildBragReminder()` checks last entry date and adds reminder text if 14+ days stale | Static in AGENTS.md, generated at launch with current staleness data; not updated mid-session |
-| Auto-brag detection | `session.idle` event handler scans user messages for accomplishment keywords near "you"/"your"; shows toast via `api.tui.showToast()` | Not supported — the bragfile skill instructs the agent to offer capture when accomplishments come up in conversation |
-| Brag stats in sidebar | TUI sidebar component reads `getBragStats()` and shows total entries + staleness with color coding (green ≤7d, yellow ≤14d, red >14d) | `statusLine` script shows brag count + staleness in Copilot's footer bar with the same color thresholds |
+| Capability            | OpenCode                                                                                                                                                 | Copilot CLI                                                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Adding entries        | Agent uses built-in file editing, guided by the bragfile skill for format and placement rules                                                            | Agent uses built-in file editing, guided by bragfile skill in `.agents/skills/brainkit/references/bragfile.md`       |
+| Entry formatting      | Agent follows skill conventions (date format, half-year/month sections, quality criteria)                                                                | Same — agent follows skill conventions                                                                               |
+| Staleness reminders   | System prompt injection via `experimental.chat.system.transform` — `buildBragReminder()` checks last entry date and adds reminder text if 14+ days stale | Static in AGENTS.md, generated at launch with current staleness data; not updated mid-session                        |
+| Auto-brag detection   | `session.idle` event handler scans user messages for accomplishment keywords near "you"/"your"; shows toast via `api.tui.showToast()`                    | Not supported — the bragfile skill instructs the agent to offer capture when accomplishments come up in conversation |
+| Brag stats in sidebar | TUI sidebar component reads `getBragStats()` and shows total entries + staleness with color coding (green ≤7d, yellow ≤14d, red >14d)                    | `statusLine` script shows brag count + staleness in Copilot's footer bar with the same color thresholds              |

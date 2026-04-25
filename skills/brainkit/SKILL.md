@@ -35,8 +35,7 @@ When a user runs /setup or asks to set up their vault:
 Example brainkit.toml:
 
 ```toml
-[brainkit]
-version = "0.1.0"
+version = 1
 
 [user]
 name = "Ori"

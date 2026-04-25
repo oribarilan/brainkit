@@ -12,6 +12,8 @@ import type {
   Contact,
   HealthCheckResult,
 } from "./types.js";
+import { migrateConfig } from "./migrations.js";
+import type { Migration } from "./migrations.js";
 
 export type {
   BrainkitGlobalConfig,
@@ -21,6 +23,8 @@ export type {
   Contact,
   HealthCheckResult,
 } from "./types.js";
+
+export type { Migration } from "./migrations.js";
 
 // ---------------------------------------------------------------------------
 // Vault structure constants
@@ -68,11 +72,31 @@ export function writeGlobalConfig(config: BrainkitGlobalConfig): void {
 // Vault config (brainkit.toml)
 // ---------------------------------------------------------------------------
 
-export function readVaultConfig(vaultPath: string): BrainkitConfig {
+export function readVaultConfig(vaultPath: string): {
+  config: BrainkitConfig;
+  pendingBreaking: Migration[];
+} {
   const configPath = path.resolve(vaultPath, KEY_FILES.config);
   const raw = fs.readFileSync(configPath, "utf-8");
-  const parsed = parseToml(raw);
-  return parsed as unknown as BrainkitConfig;
+  const parsed = parseToml(raw) as Record<string, unknown>;
+
+  const { config, applied, pendingBreaking } = migrateConfig(parsed);
+
+  // Write back if non-breaking migrations were applied
+  if (applied.length > 0) {
+    const toml = stringifyToml(config);
+    fs.writeFileSync(configPath, toml + "\n", "utf-8");
+  }
+
+  return {
+    config: config as unknown as BrainkitConfig,
+    pendingBreaking,
+  };
+}
+
+/** Reads vault config, ignoring pending migrations. Use when you don't need migration info. */
+export function readVaultConfigSimple(vaultPath: string): BrainkitConfig {
+  return readVaultConfig(vaultPath).config;
 }
 
 export function writeVaultConfig(vaultPath: string, config: BrainkitConfig): void {
@@ -333,6 +357,45 @@ export function addContact(vaultPath: string, contact: Contact): void {
 // ---------------------------------------------------------------------------
 // Vault freshness detection
 // ---------------------------------------------------------------------------
+
+/** Vault state for onboarding flow detection. */
+export type VaultState = { kind: "configured" } | { kind: "fresh" } | { kind: "existing" };
+
+/** Detects whether the vault is configured, fresh, or has existing content. */
+export function detectVaultState(vaultPath: string): VaultState {
+  const configPath = path.resolve(vaultPath, KEY_FILES.config);
+
+  if (fs.existsSync(configPath)) {
+    return { kind: "configured" };
+  }
+
+  let mdFileCount = 0;
+  let hasContentDirs = false;
+
+  try {
+    const entries = fs.readdirSync(vaultPath);
+    for (const entry of entries) {
+      if (entry.startsWith(".")) continue;
+      const fullPath = path.resolve(vaultPath, entry);
+      const stat = fs.statSync(fullPath);
+
+      if (stat.isFile() && entry.endsWith(".md")) {
+        mdFileCount++;
+      } else if (stat.isDirectory()) {
+        const subEntries = fs.readdirSync(fullPath).filter((e: string) => !e.startsWith("."));
+        if (subEntries.length > 0) hasContentDirs = true;
+      }
+    }
+  } catch {
+    return { kind: "fresh" };
+  }
+
+  if (mdFileCount >= 3 || hasContentDirs) {
+    return { kind: "existing" };
+  }
+
+  return { kind: "fresh" };
+}
 
 export function isVaultFresh(vaultPath: string, config: BrainkitConfig): boolean {
   // A vault is "fresh" if all of these are true:

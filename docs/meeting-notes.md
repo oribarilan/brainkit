@@ -71,9 +71,9 @@ If the user's request is vague — "capture notes from my meeting" — the agent
 
 ## Harness implementation
 
-| Capability | OpenCode | Copilot CLI |
-|---|---|---|
-| File creation | Agent creates the markdown file in the correct PARA directory using built-in file tools | Same — agent creates files using built-in tools |
-| Placement decision | Agent applies meeting-notes skill knowledge to pick the right PARA directory; system prompt injects current vault structure and, if the user's working directory matches a project, that project's context | Agent applies skill knowledge; AGENTS.md provides vault structure (static at launch) |
-| Contact cross-referencing | Agent checks `03_resources/contacts.md` when attendees are mentioned, bolding names consistently and optionally offering to add new contacts | Same — agent follows contacts skill instructions |
-| Template formatting | Agent follows the template defined in the meeting-notes skill; there is no typed tool for this — the agent writes the file directly, relying on skill guidance for structure | Same — agent follows skill template |
+| Capability                | OpenCode                                                                                                                                                                                                   | Copilot CLI                                                                          |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| File creation             | Agent creates the markdown file in the correct PARA directory using built-in file tools                                                                                                                    | Same — agent creates files using built-in tools                                      |
+| Placement decision        | Agent applies meeting-notes skill knowledge to pick the right PARA directory; system prompt injects current vault structure and, if the user's working directory matches a project, that project's context | Agent applies skill knowledge; AGENTS.md provides vault structure (static at launch) |
+| Contact cross-referencing | Agent checks `03_resources/contacts.md` when attendees are mentioned, bolding names consistently and optionally offering to add new contacts                                                               | Same — agent follows contacts skill instructions                                     |
+| Template formatting       | Agent follows the template defined in the meeting-notes skill; there is no typed tool for this — the agent writes the file directly, relying on skill guidance for structure                               | Same — agent follows skill template                                                  |

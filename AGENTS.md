@@ -6,15 +6,30 @@ Brainkit is an OpenCode plugin that provides a persistent second brain. It's a s
 
 Design specs live in `specs/`. Feature definitions live in `docs/features.md`. Read them before making architectural decisions.
 
+### Dev-Side vs Client-Side
+
+This repo contains two kinds of agentic files — it's important to know which is which:
+
+- **Dev-side**: Files that guide AI agents working on brainkit's own codebase. These shape how _you_ (the agent helping the developer) behave when contributing to this repo.
+  - `AGENTS.md` (this file)
+  - `.opencode/` (dev OpenCode config)
+
+- **Client-side**: Files that brainkit delivers to its users at runtime. These shape how the agent behaves inside a user's OpenCode session when brainkit is installed as a plugin.
+  - `skills/` (domain knowledge injected into the user's agent)
+  - `core/system-prompt.ts` (builds the system prompt for the user's session)
+  - `opencode/server.ts` (hooks that inject client-side behavior)
+
+When editing client-side files, you're changing the experience for brainkit's end users, not your own behavior. When editing dev-side files, you're changing how agents work on this repo.
+
 ### Structure
 
 ```
 core/               # TypeScript — shared logic (@oribish/brainkit-core)
   vault.ts          # Vault discovery, config, file operations, brag stats
-  system-prompt.ts  # Dynamic system prompt builder
+  system-prompt.ts  # Dynamic system prompt builder (client-side)
   types.ts          # Shared types (BrainkitConfig, etc.)
 opencode/           # TypeScript/TSX — OpenCode plugin
-  server.ts         # Server plugin: system prompt injection, hooks
+  server.ts         # Server plugin: system prompt injection, hooks (client-side)
   tui.tsx           # TUI plugin: home logo, sidebar, tips, theme
   side.tsx          # Sidebar component (vault stats)
   tips.tsx          # Rotating tips component
@@ -22,7 +37,7 @@ opencode/           # TypeScript/TSX — OpenCode plugin
 cli/                # TypeScript — CLI entry point for npx @oribish/brainkit
   index.ts          # Entry point, routes to harness launcher
   launch.ts         # Harness detection, config setup, spawn opencode
-skills/             # Markdown — domain knowledge for the agent
+skills/             # Markdown — client-side domain knowledge for the user's agent
   brainkit/         # Root skill (conventions, setup flow, overview)
   para/             # PARA method
   bragfile/         # Bragfile feature
@@ -236,7 +251,7 @@ The `brainkit` CLI (`cli/index.ts`) is a thin launcher:
 1. **Harness aliases** (checked first): `oc`, `opencode` → launch OpenCode with plugin
 2. **Auto-detect** (bare `brainkit`): find OpenCode on `$PATH`, launch it
 
-There are no subcommands (no init, update, etc.) — vault setup and all operations happen inside the harness, guided by the plugin's system prompt and skills.
+There are no subcommands (no init, update, etc.) — vault setup and all operations happen inside the harness, guided by the plugin's client-side system prompt and skills.
 
 The launcher (`cli/launch.ts`) creates config files at `~/.config/brainkit/` and spawns `opencode` with `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars set. OpenCode merges these with the user's existing config.
 

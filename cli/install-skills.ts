@@ -48,9 +48,7 @@ function stripFrontmatter(content: string): string {
 }
 
 function buildReferenceLinksSection(): string {
-  const links = REFERENCE_SKILLS.map(
-    (s) => `- [${s.label}](references/${s.name})`,
-  );
+  const links = REFERENCE_SKILLS.map((s) => `- [${s.label}](references/${s.name})`);
   return "\n\n## Reference skills\n\n" + links.join("\n") + "\n";
 }
 
@@ -80,10 +78,7 @@ export function installSkills(options: InstallSkillsOptions): InstallSkillsResul
   fs.mkdirSync(refsDir, { recursive: true });
 
   // Transform and write root skill
-  const rootSource = fs.readFileSync(
-    path.join(skillsSourceDir, "brainkit", "SKILL.md"),
-    "utf-8",
-  );
+  const rootSource = fs.readFileSync(path.join(skillsSourceDir, "brainkit", "SKILL.md"), "utf-8");
   fs.writeFileSync(path.join(targetDir, "SKILL.md"), transformRootSkill(rootSource), "utf-8");
 
   // Copy sub-skills with frontmatter stripped

@@ -1,269 +1,46 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
+export { detectProjectContext } from "./prompt-sections.js";
+export type { PromptMode } from "./prompt-sections.js";
 
-import { isVaultFresh, getBragStats } from "./vault.js";
 import type { BrainkitConfig } from "./types.js";
-
-// ---------------------------------------------------------------------------
-// Project context detection
-// ---------------------------------------------------------------------------
-
-export function detectProjectContext(vaultPath: string, cwd: string): { name: string; readmePath: string } | null {
-  const cwdBasename = path.basename(cwd);
-  const projectsDir = path.resolve(vaultPath, "01_projects");
-
-  try {
-    const entries = fs.readdirSync(projectsDir);
-    for (const entry of entries) {
-      if (entry === cwdBasename) {
-        const readmePath = path.join("01_projects", entry, "README.md");
-        return { name: entry, readmePath };
-      }
-    }
-  } catch {
-    // 01_projects doesn't exist or isn't readable
-  }
-
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// System prompt builder
-// ---------------------------------------------------------------------------
-
-export type PromptMode = "pi" | "cli";
+import type { SectionContext, PromptMode } from "./prompt-sections.js";
+import {
+  joinSections,
+  buildPreamble,
+  buildIdentity,
+  buildVaultStructure,
+  buildKeyFiles,
+  buildConventions,
+  buildCustomRules,
+  buildBehavioralRules,
+  buildProjectContext,
+  buildBragReminder,
+  buildOnboarding,
+  buildProfileNudge,
+} from "./prompt-sections.js";
 
 export function buildSystemPrompt(
   config: BrainkitConfig,
   vaultPath: string,
   options?: { cwd?: string; mode?: PromptMode },
 ): string {
-  const cwd = options?.cwd;
-  const mode = options?.mode ?? "pi";
-  const sections: string[] = [];
+  const ctx: SectionContext = {
+    config,
+    vaultPath,
+    mode: options?.mode ?? "cli",
+    cwd: options?.cwd,
+  };
 
-  // ── 1. Identity ──────────────────────────────────────────────────────
-  const { user } = config;
-  const scope = user.scope ?? "professional";
-  const tone = user.tone ?? "direct";
-  const expertise = user.expertise ?? [];
-
-  let identity = `## Second Brain — ${user.name}\n\n`;
-  identity += `You have access to ${user.name}'s personal second brain vault at \`${vaultPath}\`.\n`;
-  identity += `${user.name} is a ${user.role}`;
-  if (expertise.length > 0) {
-    identity += ` with expertise in ${expertise.join(", ")}`;
-  }
-  identity += `.\nThis is a ${scope} vault.`;
-
-  if (user.work?.description !== undefined && user.work.description !== "") {
-    identity += `\n\n**Work context:** ${user.work.description}`;
-  }
-
-  if (
-    (scope === "personal" || scope === "both") &&
-    user.personal?.description !== undefined &&
-    user.personal.description !== ""
-  ) {
-    identity += `\n\n**Personal context:** ${user.personal.description}`;
-  }
-
-  if (user.customization?.context !== undefined && user.customization.context !== "") {
-    identity += `\n\n${user.customization.context}`;
-  }
-
-  sections.push(identity);
-
-  // ── 2. Vault structure ──────────────────────────────────────────────
-  const structure = [
-    "## Vault Structure (PARA Method)",
-    "",
-    "The vault follows the PARA method:",
-    "- `01_projects/` — Active, short-term efforts with a goal and deadline",
-    "- `02_areas/` — Ongoing responsibilities maintained over time",
-    "- `03_resources/` — Topics of interest or useful reference material",
-    "- `04_archive/` — Inactive items from the above three categories",
-  ].join("\n");
-
-  sections.push(structure);
-
-  // ── 3. Key files (conditional on features) ──────────────────────────
-  const keyFilesSections: string[] = [];
-
-  if (config.features?.bragfile === true) {
-    if (mode === "pi") {
-      keyFilesSections.push(
-        [
-          "### Bragfile — `02_areas/career/bragfile.md`",
-          "A running log of accomplishments. Use the `brain_add_brag` tool to add entries.",
-          "Append only. Never overwrite or reorganize existing entries.",
-        ].join("\n"),
-      );
-    } else {
-      keyFilesSections.push(
-        [
-          "### Bragfile — `02_areas/career/bragfile.md`",
-          "Add entries to `02_areas/career/bragfile.md` in the format `- **YYYY-MM-DD**: description`. Organize by half-year (H1/H2) and month.",
-        ].join("\n"),
-      );
-    }
-  }
-
-  if (config.features?.contacts === true) {
-    if (mode === "pi") {
-      keyFilesSections.push(
-        [
-          "### Contacts — `03_resources/contacts.md`",
-          "People index. Use `brain_query_contacts` to search and `brain_add_contact` to add.",
-          "Cross-reference people mentioned in notes and projects.",
-        ].join("\n"),
-      );
-    } else {
-      keyFilesSections.push(
-        [
-          "### Contacts — `03_resources/contacts.md`",
-          "Add people to `03_resources/contacts.md` using H2 headings for names and bold field labels.",
-        ].join("\n"),
-      );
-    }
-  }
-
-  if (keyFilesSections.length > 0) {
-    sections.push("## Key Files\n\n" + keyFilesSections.join("\n\n"));
-  }
-
-  // ── 4. Conventions ──────────────────────────────────────────────────
-  const conventions = [
-    "## Conventions",
-    "",
-    "- Directory names: lowercase with hyphens (e.g., `my-project/`)",
-    "- File names: lowercase with hyphens (e.g., `meeting-notes.md`)",
-    "- `README.md` is the entry point for every directory",
-    "- Meeting notes: `YYYY-MM-DD-topic.md`",
-    "- Use **bold** for key names, decisions, action items, people",
-    `- ${tone} tone. Write like the vault owner would.`,
-    '- Use first person ("I", "my") — this is a personal vault',
-  ].join("\n");
-
-  sections.push(conventions);
-
-  // ── 5. Custom rules ─────────────────────────────────────────────────
-  const customRules = user.customization?.rules;
-  if (customRules && customRules.length > 0) {
-    const rulesLines = customRules.map((rule: string) => `- ${rule}`);
-    sections.push("## Custom Rules\n\n" + rulesLines.join("\n"));
-  }
-
-  // ── 6. Behavioral rules (always included) ───────────────────────────
-  const behavioral =
-    mode === "pi"
-      ? [
-          "## How to Work With This Vault",
-          "",
-          "- Use the brain_* tools to interact with the vault. They handle formatting and placement.",
-          "- Search the vault before answering — don't guess.",
-          "- Preserve existing structure and formatting when editing.",
-          "- Cite which file information came from when summarizing.",
-          "- Do not modify files in the archive directory unless explicitly asked.",
-          "- Never delete vault content — archive instead.",
-        ].join("\n")
-      : [
-          "## How to Work With This Vault",
-          "",
-          "- Use your built-in file editing to manage vault files. Follow the conventions and formats described in the installed skills.",
-          "- Search the vault before answering — don't guess.",
-          "- Preserve existing structure and formatting when editing.",
-          "- Cite which file information came from when summarizing.",
-          "- Do not modify files in the archive directory unless explicitly asked.",
-          "- Never delete vault content — archive instead.",
-        ].join("\n");
-
-  sections.push(behavioral);
-
-  // ── 7. Project context (smart detection) ────────────────────────────
-  if (cwd !== undefined && cwd !== "") {
-    const project = detectProjectContext(vaultPath, cwd);
-    if (project) {
-      const projectContext = [
-        "## Current Project Context",
-        "",
-        `You are currently working in a directory that matches the vault project \`${project.name}\`.`,
-        `The project README is at \`${project.readmePath}\`.`,
-      ].join("\n");
-
-      sections.push(projectContext);
-    }
-  }
-
-  // ── 8. Bragfile staleness reminder ──────────────────────────────────
-  if (config.features?.bragfile === true) {
-    try {
-      const stats = getBragStats(vaultPath);
-      if (stats.lastEntryDate !== null) {
-        const last = new Date(stats.lastEntryDate + "T00:00:00");
-        const now = new Date();
-        const daysSince = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSince >= 14) {
-          const reminder = [
-            "## Reminder",
-            "",
-            `Your bragfile hasn't been updated in ${String(daysSince)} days (last entry: ${stats.lastEntryDate}).`,
-            "If anything noteworthy happened recently, gently suggest capturing it.",
-            "Don't be pushy — mention it once, naturally.",
-          ].join("\n");
-
-          sections.push(reminder);
-        }
-      }
-    } catch {
-      // If stats fail, skip — don't block the prompt
-    }
-  }
-
-  // ── 9. Onboarding (fresh vault detection) ─────────────────────────
-  const onboardingComplete = config.user.customization?.onboarding_complete === true;
-
-  try {
-    if (!onboardingComplete && isVaultFresh(vaultPath, config)) {
-      const onboarding = [
-        "## Fresh Vault Detected",
-        "",
-        "This vault was just set up and has no content yet.",
-        "Guide the user through their first entries using the onboarding skill.",
-        "Be conversational and welcoming, not a checklist.",
-      ].join("\n");
-
-      sections.push(onboarding);
-    }
-  } catch {
-    // If detection fails, skip — don't block the prompt
-  }
-
-  // ── 10. Incomplete profile nudge ──────────────────────────────────
-  if (!onboardingComplete) {
-    const missing: string[] = [];
-    if (expertise.length === 0) missing.push("expertise");
-    if (user.work?.description === undefined || user.work.description === "") missing.push("work context");
-    if (
-      (scope === "personal" || scope === "both") &&
-      (user.personal?.description === undefined || user.personal.description === "")
-    ) {
-      missing.push("personal context");
-    }
-
-    if (missing.length > 0) {
-      const nudge = [
-        "## Profile Incomplete",
-        "",
-        `The following fields are empty in brainkit.toml: ${missing.join(", ")}.`,
-        "If it comes up naturally in conversation, offer to fill them in.",
-        "Don't lead with this — wait for a relevant moment.",
-        "Once the user is satisfied with their profile, set `onboarding_complete = true` under `[user.customization]` in brainkit.toml.",
-      ].join("\n");
-
-      sections.push(nudge);
-    }
-  }
-
-  return sections.join("\n\n") + "\n";
+  return joinSections([
+    buildPreamble(ctx),
+    buildIdentity(ctx),
+    buildVaultStructure(),
+    buildKeyFiles(ctx),
+    buildConventions(ctx),
+    buildCustomRules(ctx),
+    buildBehavioralRules(ctx),
+    buildProjectContext(ctx),
+    buildBragReminder(ctx),
+    buildOnboarding(ctx),
+    buildProfileNudge(ctx),
+  ]);
 }

@@ -2,7 +2,13 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin } from "@opencode-ai/plugin/tui";
 import { createMemo } from "solid-js";
-import { readGlobalConfig, readVaultConfig, getBragStats, readContacts, parseContacts } from "@oribish/brainkit-core";
+import {
+  readGlobalConfig,
+  readVaultConfigSimple,
+  getBragStats,
+  readContacts,
+  parseContacts,
+} from "@oribish/brainkit-core";
 
 type Api = Parameters<import("@opencode-ai/plugin/tui").TuiPlugin>[0];
 
@@ -21,7 +27,7 @@ export const Sidebar = (props: { api: Api }) => {
     try {
       const globalConfig = readGlobalConfig();
       if (!globalConfig) return null;
-      const vaultConfig = readVaultConfig(globalConfig.vault_path);
+      const vaultConfig = readVaultConfigSimple(globalConfig.vault_path);
       if (!vaultConfig) return null;
 
       const bragEnabled = vaultConfig.features?.bragfile !== false;

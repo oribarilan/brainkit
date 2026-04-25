@@ -4,20 +4,20 @@
 
 1. Clone the repo
 2. Install dependencies: `npm install`
-3. Symlink for local development: `pi install /path/to/brainkit`
-4. Run `just` to see all available commands
+3. Run `just` to see all available commands
 
 ## Development
 
 ```bash
-just dev        # start pi with the latest local extension
+just dev        # start opencode with the local brainkit plugin
 just test       # run tests
+just test-watch # run tests in watch mode
 just lint       # eslint + typecheck
 just format     # format with prettier
 just check      # lint + format check + test (run before committing)
 ```
 
-## Pull Requests
+## Pull requests
 
 1. Fork the repo and create a feature branch from `main`
 2. Make your changes
@@ -28,12 +28,12 @@ just check      # lint + format check + test (run before committing)
 ### PR checklist
 
 - [ ] `just check` passes (lint + format + tests)
-- [ ] New tools/commands have tests
+- [ ] New features have tests
 - [ ] Skills are updated if behavior changes
 - [ ] CHANGELOG.md is updated with a new entry under `## [Unreleased]`
 - [ ] No new dependencies added without discussion (see below)
 
-## Adding Dependencies
+## Adding dependencies
 
 Runtime dependencies require explicit approval — open an issue first explaining why the dependency is needed and what alternatives were considered. Prefer Node.js built-ins (`node:fs`, `node:path`, `node:os`) over npm packages.
 
@@ -41,51 +41,49 @@ Dev dependencies (testing, linting, formatting) have a lower bar but should stil
 
 Current runtime dependencies: `smol-toml`. That's it.
 
-## Deploy Flow
+## Deploy flow
 
-### Pi extension (primary)
+### npm (`npx @oribish/brainkit`)
 
-There is no build step. Brainkit is distributed as source via git — pi loads TypeScript directly using jiti.
+Two packages are published to npm from this repo:
 
-1. Changes merged to `main` are immediately available to users who run `pi update`
-2. For versioned releases, bump `version` in `package.json`, update `CHANGELOG.md`, and tag:
+1. `@oribish/brainkit-core` — shared vault logic, system prompt, types
+2. `@oribish/brainkit` — CLI + OpenCode plugin + skills
+
+Publishing order: core first, then brainkit. This is currently manual (not in CI/CD).
+
+1. Run all checks: `just check`
+2. Build the CLI: `just build-cli`
+3. Bump `version` in both `package.json` files and update `CHANGELOG.md`
+4. Publish core: `npm publish --access=public` from `core/`
+5. Publish brainkit: `npm publish --access=public` from root
+6. Tag and push:
    ```bash
    git tag v0.2.0
    git push origin v0.2.0
    ```
-3. Users on `pi install git:github.com/oribarilan/brainkit` (no ref) track `main`
-4. Users on `pi install git:github.com/oribarilan/brainkit@v0.2.0` are pinned
 
-### CLI (`npx @oribish/brainkit`)
+The CLI compiles `cli/` and shared modules from `core/` to `dist/` via `tsc`. The `dist/` directory is gitignored but included in the npm package via the `files` field in `package.json`.
 
-The CLI is published to npm as `@oribish/brainkit`. This is currently a manual process (not in CI/CD).
-
-1. Run all checks: `just check`
-2. Build the CLI: `just build-cli`
-3. Bump `version` in `package.json` and update `CHANGELOG.md`
-4. Publish to npm:
-   ```bash
-   npm publish --access=public
-   ```
-5. Tag and push as described above
-
-The CLI compiles `cli/` and shared modules from `extensions/` to `dist/` via `tsc`. The `dist/` directory is gitignored but included in the npm package via the `files` field in `package.json`.
-
-## Project Structure
+## Project structure
 
 ```
-extensions/         # TypeScript — tools, commands, UI, hooks
+core/               # TypeScript — shared logic (@oribish/brainkit-core)
+opencode/           # TypeScript/TSX — OpenCode plugin (server + TUI)
+cli/                # TypeScript — CLI entry point
 skills/             # Markdown — domain knowledge for the agent
 specs/              # Design documents — read before architectural changes
+docs/               # Feature documentation
 ```
 
 See `AGENTS.md` for detailed structure and coding principles.
 
 ## Conventions
 
-- TypeScript, strict mode, ESM imports with `.js` extension
+- TypeScript, strict mode, ESM imports
+- `.js` extension for local imports in `core/` and `cli/` (Node/jiti resolution)
+- `.ts`/`.tsx` extensions for imports in `opencode/` (bun resolution)
 - `import type` for type-only imports
 - `camelCase` for functions/variables, `PascalCase` for types, `UPPER_SNAKE` for constants
 - No `any` unless truly unavoidable
-- Commands are thin wrappers — logic lives in tools and skills
 - Read `specs/` before making architectural decisions

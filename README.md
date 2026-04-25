@@ -2,8 +2,6 @@
 
 **An augmentation kit for your brain.**
 
-An opinionated second brain, delivered as an [OpenCode](https://opencode.ai) plugin.
-
 ```
         _---~~(~~-_.
       _{        )   )
@@ -17,13 +15,56 @@ An opinionated second brain, delivered as an [OpenCode](https://opencode.ai) plu
                    { }
 ```
 
+I've been maintaining a second brain for over 10 years. Brainkit is the collection of my opinionated workflows and practices, packaged as a coding agent plugin. You can use it as-is if you like how I do things, pick a skill or two to add a specific workflow to your own setup, or just browse for ideas.
+
+If you have something that fits brainkit's philosophy, contributions are welcome. Open an issue first to talk through the problem you're solving before writing code.
+
+## Philosophy
+
+**Personal use, for both life and work.** The vault doesn't separate professional and personal. Your career accomplishments live next to your grandmother's cake recipe, the contractor's phone number, your half marathon training plan. Same structure, same conventions.
+
+**Everything goes in.** Food recipes, feedback from your manager, notes from a doctor appointment, architecture decisions from a sprint review. If it's worth remembering, it belongs in the vault. The whole point is that you actually use it, so it has to be low friction.
+
+**Common best practices over custom systems.** I prefer battle-tested conventions. [PARA](https://fortelabs.com/blog/para/) for file organization, a bragfile for tracking accomplishments, etc. Brainkit just wires them together and teaches an AI agent to maintain them.
+
+## What it does
+
+You talk to your coding agent, things happen in your vault:
+
+- _"I just shipped the API redesign"_ → adds it to your bragfile, in the right section
+- _"I had a meeting with Sarah about the migration"_ → creates meeting notes, cross-references Sarah from contacts, files it under the right project
+- _"Who was that engineer from the platform team?"_ → searches your contacts
+
+No commands, no formatting, no manual filing.
+
+## Features
+
+- [**PARA vault**](docs/para.md) — four directories: projects, areas, resources, archive. The agent figures out where things go.
+- [**Bragfile**](docs/bragfile.md) — a running log of professional accomplishments. The agent offers to capture them when you mention shipping something. Reminds you when it's been a while.
+- [**Contacts**](docs/contacts.md) — a people index. The agent cross-references people when they come up and suggests adding new ones.
+- [**Meeting notes**](docs/meeting-notes.md) — structured notes from any meeting, filed under the right PARA directory with attendees, decisions, and action items.
+- [**Onboarding**](docs/onboarding.md) — first run is a conversation that builds a vault matching your actual life, not an empty template.
+- [**Auto-commit**](docs/auto-commit.md) — vault changes get git-committed automatically after conversations.
+- [**Doctor**](docs/doctor.md) — checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.
+- [**TUI**](docs/tui.md) — custom terminal UI for OpenCode: vault stats sidebar, rotating tips, rose-pink theme.
+
 ## Install
+
+### OpenCode
 
 ```bash
 npx @oribish/brainkit
 ```
 
-Installs the brainkit CLI and launches [OpenCode](https://opencode.ai) with the brainkit plugin loaded. Requires OpenCode on your `$PATH` and configured with an LLM provider.
+Requires [OpenCode](https://opencode.ai) on your `$PATH`. The CLI launches OpenCode with the brainkit plugin loaded.
+
+### Copilot CLI
+
+```bash
+brainkit copilot
+```
+
+Requires [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed and authenticated. The launcher installs skills and hooks into your vault, then launches Copilot.
 
 Or install globally:
 
@@ -34,67 +75,13 @@ brainkit
 
 [![npm version](https://img.shields.io/npm/v/@oribish/brainkit)](https://www.npmjs.com/package/@oribish/brainkit)
 
-### With Copilot CLI
-
-```bash
-brainkit copilot
-```
-
-Requires [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed and authenticated. The brainkit launcher installs skills and hooks into your vault, then launches Copilot with full vault awareness.
-
-## What is this?
-
-A "second brain" is a system for capturing and organizing everything you know (accomplishments, people, meeting notes, projects, ideas) so you can find it when you need it instead of keeping it all in your head.
-
-Brainkit is an opinionated agentic implementation of that idea. It's a structured markdown vault that follows the [PARA method](https://fortelabs.com/blog/para/), with a bragfile, contacts index, and more. You talk, things happen:
-
-- _"I just shipped the API redesign"_ → adds it to your bragfile, in the right section
-- _"I had a meeting with Sarah about the migration"_ → creates meeting notes, cross-references Sarah from contacts, files it under the right project
-- _"Who was that engineer from the platform team?"_ → searches your contacts
-
-No commands, no formatting, no manual filing. The agent handles it.
-
 ## Getting started
 
 ```bash
 brainkit
 ```
 
-The agent walks you through a getting-to-know-you conversation on first run — your work, your personal life, your preferences. It creates a vault that matches your actual life, not an empty template.
-
-## Features
-
-### [PARA vault](docs/para.md)
-
-Four directories. Projects for active work with deadlines, areas for ongoing responsibilities, resources for reference material, archive for everything else. The agent figures out where things go.
-
-### [Bragfile](docs/bragfile.md)
-
-A log of your accomplishments at `02_areas/career/bragfile.md`. Say "I shipped the API redesign" and the agent offers to add it. Goes quiet for two weeks? It'll mention that.
-
-### [Contacts](docs/contacts.md)
-
-People index at `03_resources/contacts.md`. The agent checks if people are in your contacts when they come up and suggests adding new ones.
-
-### [Meeting notes](docs/meeting-notes.md)
-
-Notes from any meeting, filed under the right PARA directory. Named `YYYY-MM-DD-topic.md`, with attendees, decisions, and action items. Works for standup syncs and doctor visits.
-
-### [Doctor](docs/doctor.md)
-
-`/doctor` checks vault health: missing directories, naming violations, orphaned files, whether your GitHub repo is private. Fixes what it can, asks before renaming.
-
-### [Auto-commit](docs/auto-commit.md)
-
-Vault changes get git-committed after conversations. Debounced so rapid edits collapse into one commit.
-
-### [Onboarding](docs/onboarding.md)
-
-First run is a conversation, not a form. The agent asks about your work, your life, your preferences, then builds a vault that actually matches your situation.
-
-### [TUI](docs/tui.md)
-
-Custom terminal UI for OpenCode: ASCII art header, vault stats sidebar with bragfile staleness, rotating tips, and a rose-pink theme.
+The agent walks you through a getting-to-know-you conversation on first run, covering your work, your personal life, your preferences. It creates a vault that matches your actual situation.
 
 ## License
 

@@ -13,9 +13,7 @@ import {
 
 function staleness(lastEntryDate) {
   if (!lastEntryDate) return { text: "never", color: "\x1b[31m" }; // red
-  const days = Math.floor(
-    (Date.now() - new Date(lastEntryDate).getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const days = Math.floor((Date.now() - new Date(lastEntryDate).getTime()) / (1000 * 60 * 60 * 24));
   if (days <= 7) return { text: `${days}d ago`, color: "\x1b[32m" }; // green
   if (days <= 14) return { text: `${days}d ago`, color: "\x1b[33m" }; // yellow
   return { text: `${days}d ago`, color: "\x1b[31m" }; // red

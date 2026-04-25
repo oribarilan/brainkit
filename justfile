@@ -7,7 +7,15 @@ default:
 
 # start opencode with the local brainkit plugin
 dev:
+    just oc
+
+# launch opencode with the local brainkit plugin
+oc:
     OPENCODE_CONFIG={{justfile_directory()}}/.dev/opencode.json OPENCODE_TUI_CONFIG={{justfile_directory()}}/.dev/tui.json opencode
+
+# launch copilot with the local brainkit plugin (installs skills/hooks/AGENTS.md into vault, then spawns copilot)
+cp:
+    npx tsx cli/index.ts copilot
 
 # run tests
 test:

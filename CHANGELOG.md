@@ -3,17 +3,15 @@
 ## [Unreleased]
 
 ### Added
-- CLI mode (`npx @oribish/brainkit`) for non-pi agents (Claude Code, Copilot, OpenCode, Codex)
-- Skill distribution following the Agent Skills standard (`.agents/skills/`, `.claude/skills/`)
-- AGENTS.md generation for CLI users via `buildSystemPrompt` with `mode: "cli"`
+- OpenCode plugin: server (system prompt, compaction, brag detection, auto-commit) + TUI (sidebar, tips, theme, branding)
+- CLI launcher (`npx @oribish/brainkit`) — detects OpenCode, sets up plugin config, spawns it
+- Two-package architecture: `@oribish/brainkit-core` (vault ops, system prompt, types) + `@oribish/brainkit` (CLI + plugin + skills)
 - `writeVaultConfig` function for creating `brainkit.toml` programmatically
-- Interactive setup flow: name, role, expertise, scope, tone, coding agent selection
-- Bundled extensions: plan-mode, permission-gate, questionnaire
 - `just build-cli` recipe for compiling CLI to `dist/`
 
 ### Changed
 - `buildSystemPrompt` now accepts `{ cwd?, mode? }` options object instead of positional `cwd`
-- All skills rewritten to action-oriented language (no `brain_*` tool references) per Decision #23
+- All skills rewritten to action-oriented language (no tool name references)
 - Package renamed to `@oribish/brainkit` for npm publishing
 
 ## [0.1.0] - 2026-04-03

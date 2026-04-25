@@ -81,11 +81,7 @@ export function generateCopilotSettings(vaultPath: string, statusScriptPath: str
     },
   };
 
-  fs.writeFileSync(
-    path.join(settingsDir, "settings.json"),
-    JSON.stringify(settings, null, 2) + "\n",
-    "utf-8",
-  );
+  fs.writeFileSync(path.join(settingsDir, "settings.json"), JSON.stringify(settings, null, 2) + "\n", "utf-8");
 }
 
 // ---------------------------------------------------------------------------
@@ -120,11 +116,7 @@ export function installCopilotHooks(vaultPath: string): void {
   const scriptsDir = path.join(hooksDir, "scripts");
   fs.mkdirSync(scriptsDir, { recursive: true });
 
-  fs.writeFileSync(
-    path.join(hooksDir, "hooks.json"),
-    JSON.stringify(HOOKS_CONFIG, null, 2) + "\n",
-    "utf-8",
-  );
+  fs.writeFileSync(path.join(hooksDir, "hooks.json"), JSON.stringify(HOOKS_CONFIG, null, 2) + "\n", "utf-8");
 
   const scriptPath = path.join(scriptsDir, "auto-commit.sh");
   fs.writeFileSync(scriptPath, AUTO_COMMIT_SCRIPT, "utf-8");
