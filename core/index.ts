@@ -14,6 +14,7 @@ export {
   KEY_FILES,
   readGlobalConfig,
   writeGlobalConfig,
+  discoverVaults,
   readVaultConfig,
   readVaultConfigSimple,
   writeVaultConfig,

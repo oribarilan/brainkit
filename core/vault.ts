@@ -69,6 +69,37 @@ export function writeGlobalConfig(config: BrainkitGlobalConfig): void {
 }
 
 // ---------------------------------------------------------------------------
+// Vault discovery
+// ---------------------------------------------------------------------------
+
+export function discoverVaults(brainPath: string): string[] {
+  const stat = fs.statSync(brainPath); // throws if path doesn't exist
+  if (!stat.isDirectory()) {
+    throw new Error(`Brain path is not a directory: ${brainPath}`);
+  }
+
+  const entries = fs.readdirSync(brainPath);
+  const vaults: string[] = [];
+
+  for (const entry of entries) {
+    if (entry.startsWith(".")) continue;
+    const entryPath = path.join(brainPath, entry);
+    try {
+      const entryStat = fs.statSync(entryPath);
+      if (!entryStat.isDirectory()) continue;
+      const configPath = path.join(entryPath, "brainkit.toml");
+      if (fs.existsSync(configPath)) {
+        vaults.push(entry);
+      }
+    } catch {
+      // Skip entries we can't stat
+    }
+  }
+
+  return vaults.sort();
+}
+
+// ---------------------------------------------------------------------------
 // Vault config (brainkit.toml)
 // ---------------------------------------------------------------------------
 

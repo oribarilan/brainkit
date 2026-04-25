@@ -1,6 +1,6 @@
 export interface BrainkitGlobalConfig {
   version: number;
-  vault_path: string;
+  brain_path: string;
 }
 
 export interface BrainkitConfig {
