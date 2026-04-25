@@ -1,9 +1,9 @@
 // @ts-nocheck
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin } from "@opencode-ai/plugin/tui";
+import * as path from "node:path";
 import { createMemo } from "solid-js";
 import {
-  readGlobalConfig,
   readVaultConfigSimple,
   getBragStats,
   readContacts,
@@ -23,20 +23,22 @@ const staleness = (lastEntryDate: string | null): { label: string; color: string
 export const Sidebar = (props: { api: Api }) => {
   const theme = createMemo(() => props.api.theme.current);
 
+  const vaultPath = process.env.BRAINKIT_VAULT_PATH;
+
   const data = createMemo(() => {
+    if (!vaultPath) return null;
     try {
-      const globalConfig = readGlobalConfig();
-      if (!globalConfig) return null;
-      const vaultConfig = readVaultConfigSimple(globalConfig.vault_path);
+      const vaultConfig = readVaultConfigSimple(vaultPath);
       if (!vaultConfig) return null;
 
+      const vaultName = path.basename(vaultPath);
       const bragEnabled = vaultConfig.features?.bragfile !== false;
       const contactsEnabled = vaultConfig.features?.contacts !== false;
-      const stats = bragEnabled ? getBragStats(globalConfig.vault_path) : null;
+      const stats = bragEnabled ? getBragStats(vaultPath) : null;
       let contactCount = 0;
       if (contactsEnabled) {
         try {
-          const raw = readContacts(globalConfig.vault_path);
+          const raw = readContacts(vaultPath);
           const contacts = parseContacts(raw);
           contactCount = contacts.length;
         } catch {
@@ -46,7 +48,8 @@ export const Sidebar = (props: { api: Api }) => {
 
       return {
         name: vaultConfig.user.name,
-        path: globalConfig.vault_path,
+        vaultName,
+        path: vaultPath,
         features: { bragfile: bragEnabled, contacts: contactsEnabled },
         bragStats: stats,
         contactCount,
@@ -72,7 +75,7 @@ export const Sidebar = (props: { api: Api }) => {
               <text fg={theme().primary} bold>
                 🧠 {d.name}'s vault
               </text>
-              <text fg={theme().textMuted}>{d.path}</text>
+              <text fg={theme().textMuted}>{d.vaultName} — {d.path}</text>
             </box>
 
             {d.features.bragfile && d.bragStats && (
