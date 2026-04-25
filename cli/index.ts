@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { version } from "./version.js";
-import { isHarnessAlias, launchHarness, detectAndLaunch } from "./launch.js";
+import { isHarnessAlias, launchHarness, detectAndLaunch, parseVaultFlag, selectVault } from "./launch.js";
 
 function printUsage(): void {
   console.log(`
@@ -15,16 +15,18 @@ function printUsage(): void {
     brainkit cp [args...]        Launch with Copilot CLI
 
   Options:
-    --version    Print version and exit
-    --help       Show this help message
+    --vault <name>  Select which vault to open
+    --version       Print version and exit
+    --help          Show this help message
 
   All arguments after the harness alias are passed through.
   Example: brainkit oc --model anthropic/claude-sonnet-4-5
-  Example: brainkit copilot --model gpt-5.2
+  Example: brainkit --vault work
+  Example: brainkit oc --vault life
 `);
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.includes("--version")) {
@@ -37,22 +39,22 @@ function main(): void {
     process.exit(0);
   }
 
-  const firstArg = args[0];
+  // Parse --vault from args (before or after harness alias)
+  const { vault: vaultFlag, remaining } = parseVaultFlag(args);
+
+  // Select vault
+  const { vaultPath } = await selectVault(vaultFlag);
+
+  const firstArg = remaining[0];
 
   // Harness alias — launch explicitly
   if (firstArg !== undefined && isHarnessAlias(firstArg)) {
-    launchHarness(firstArg, args.slice(1));
+    launchHarness(firstArg, remaining.slice(1), vaultPath);
     return;
   }
 
-  // No args — auto-detect and launch
-  if (firstArg === undefined) {
-    detectAndLaunch([]);
-    return;
-  }
-
-  // Unknown argument — pass everything through to auto-detected harness
-  detectAndLaunch(args);
+  // No args or unknown — auto-detect and launch
+  detectAndLaunch(remaining, vaultPath);
 }
 
 process.on("SIGINT", () => {
@@ -60,4 +62,7 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-main();
+main().catch((err: unknown) => {
+  console.error(`  [brainkit] ${err instanceof Error ? err.message : String(err)}`);
+  process.exit(1);
+});
