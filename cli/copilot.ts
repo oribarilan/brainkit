@@ -1,8 +1,9 @@
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
-import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "../core/index.js";
+import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt, buildOnboardingPrompt } from "../core/index.js";
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
 import * as p from "@clack/prompts";
@@ -134,6 +135,29 @@ function writeAgentsMd(vaultPath: string, config: ReturnType<typeof readVaultCon
 }
 
 // ---------------------------------------------------------------------------
+// Onboarding workspace
+// ---------------------------------------------------------------------------
+
+export function ensureOnboardingWorkspace(configDir: string): string {
+  const onboardingDir = path.join(configDir, "onboarding");
+  fs.mkdirSync(onboardingDir, { recursive: true });
+
+  const prompt = buildOnboardingPrompt("copilot");
+  fs.writeFileSync(path.join(onboardingDir, "AGENTS.md"), prompt + "\n", "utf-8");
+
+  return onboardingDir;
+}
+
+export function cleanupOnboardingWorkspace(configDir: string): void {
+  const onboardingDir = path.join(configDir, "onboarding");
+  try {
+    fs.rmSync(onboardingDir, { recursive: true, force: true });
+  } catch {
+    // Best-effort cleanup
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Launch orchestrator
 // ---------------------------------------------------------------------------
 
@@ -143,11 +167,22 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
   if (vaultPath === undefined) {
     const globalConfig = readGlobalConfig();
     if (globalConfig === null || !globalConfig.brain_path) {
-      p.log.error("No vault configured. Run brainkit with OpenCode first to set up your vault.");
-      process.exit(1);
+      // No vault configured — launch onboarding
+      const configDir = path.join(os.homedir(), ".config", "brainkit");
+      const onboardingDir = ensureOnboardingWorkspace(configDir);
+
+      p.outro("Starting onboarding...");
+      const child = spawn("copilot", args, { stdio: "inherit", cwd: onboardingDir });
+      child.on("exit", (code) => process.exit(code ?? 0));
+      return;
     }
     vaultPath = globalConfig.brain_path;
   }
+
+  // Clean up onboarding workspace from a previous first run
+  const configDir = path.join(os.homedir(), ".config", "brainkit");
+  cleanupOnboardingWorkspace(configDir);
+
   const config = readVaultConfigSimple(vaultPath);
 
   // Install skills
