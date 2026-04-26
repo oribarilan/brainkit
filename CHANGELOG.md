@@ -2,8 +2,12 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-26
+
 ### Added
-- Harness auto-detection with remembered default — when multiple harnesses are installed, brainkit prompts you to pick a default and saves the choice to global config
+- Harness auto-detection with remembered default: when multiple harnesses are installed, brainkit prompts you to pick a default and saves the choice
+- Meeting note processing: extract action items, decisions, contacts, and accomplishments to where they belong, then archive the original note
+- "Store where you'll search for it" principle added to client-side vault rules
 
 ### Changed
 - Package renamed from `@oribish/brainkit` to `@2brain/brainkit`
