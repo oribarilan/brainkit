@@ -76,6 +76,7 @@ The prompt includes exact file format examples (`config.toml` and `brainkit.toml
 ### Transition Behavior
 
 After the agent writes `config.toml` and `brainkit.toml`, the next system prompt hook call:
+
 1. `resolveVaultPath()` finds the new config and returns the vault path
 2. `readVaultConfigSimple()` reads the new `brainkit.toml`
 3. `buildSystemPrompt()` generates the full brainkit prompt
@@ -86,41 +87,48 @@ No restart needed.
 ### Edge Cases
 
 **Partial onboarding -- config.toml written, brainkit.toml not yet:**
+
 - Next launch: CLI finds config, `discoverVaults()` returns `[]`, falls back to `vaultPath = brainPath`
 - Server plugin: `readVaultConfigSimple()` throws, falls into onboarding prompt again
 - User picks up where they left off
 
 **Partial onboarding -- nothing written:**
+
 - Next launch is identical to first launch. Clean slate.
 
 **Existing users:**
+
 - Zero impact. They have `config.toml` and `brainkit.toml` -- the onboarding path is never entered.
 
 **Multi-vault later:**
+
 - When a user asks to create a new vault, the onboarding skill guides that flow. New vault gets its own `brainkit.toml` under the same brain directory. `discoverVaults()` picks it up automatically.
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `cli/launch.ts` | `selectVault()` returns undefined paths instead of `process.exit(1)` |
-| `cli/index.ts` | Handle undefined `vaultPath`, pass through to harness |
-| `opencode/server.ts` | Per-call `resolveVaultPath()`; onboarding prompt when no vault |
-| `opencode/tips.tsx` | Add multi-vault tip |
+| File                 | Change                                                               |
+| -------------------- | -------------------------------------------------------------------- |
+| `cli/launch.ts`      | `selectVault()` returns undefined paths instead of `process.exit(1)` |
+| `cli/index.ts`       | Handle undefined `vaultPath`, pass through to harness                |
+| `opencode/server.ts` | Per-call `resolveVaultPath()`; onboarding prompt when no vault       |
+| `opencode/tips.tsx`  | Add multi-vault tip                                                  |
 
 **Unchanged:** core/, skills/, TUI theme/logo/sidebar, onboarding skill, "Fresh Vault Detected" path in prompt-sections.ts, compaction/idle hooks.
 
 ## Testing
 
 **New tests:**
+
 - `selectVault()` with no config returns undefined paths
 - Server plugin injects onboarding prompt when `resolveVaultPath()` returns undefined
 - Server plugin transitions to normal prompt after config files are created
 - Partial onboarding recovery (config.toml exists, no brainkit.toml)
 
 **Updated tests:**
+
 - Any tests asserting `process.exit` on missing config in `selectVault()`
 
 **Not tested:**
+
 - Conversational quality (agent behavior, not unit-testable)
 - TUI rendering (no meaningful changes)

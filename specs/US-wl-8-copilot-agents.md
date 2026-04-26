@@ -34,6 +34,7 @@ description: Work sub-vault only — focused work sessions, performance reviews
 ### Generation timing
 
 Agent files are generated during `installCopilotHooks()` (or equivalent setup function). They regenerate when:
+
 - Vault config changes
 - The CLI launcher runs setup
 

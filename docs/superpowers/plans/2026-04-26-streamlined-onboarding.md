@@ -15,6 +15,7 @@
 ### Task 1: Update `selectVault()` to return undefined instead of exiting
 
 **Files:**
+
 - Modify: `cli/launch.ts:150-155`
 - Modify: `cli/index.ts:46`
 - Test: `cli/__tests__/vault-selection.test.ts`
@@ -104,6 +105,7 @@ git commit -m "feat: selectVault returns undefined instead of exiting when no co
 ### Task 2: Server plugin — dynamic vault path resolution
 
 **Files:**
+
 - Modify: `opencode/server.ts:38-115`
 
 - [ ] **Step 1: Move `resolveVaultPath()` from init-time to per-call**
@@ -209,6 +211,7 @@ git commit -m "refactor: resolve vault path per-call instead of caching at init"
 ### Task 3: Server plugin — onboarding prompt injection
 
 **Files:**
+
 - Modify: `opencode/server.ts`
 
 - [ ] **Step 1: Add the onboarding prompt constant**
@@ -356,6 +359,7 @@ git commit -m "feat: inject onboarding prompt when no vault configured"
 ### Task 4: Add multi-vault tip
 
 **Files:**
+
 - Modify: `opencode/tips.tsx:6-15`
 
 - [ ] **Step 1: Add the multi-vault tip**
@@ -388,6 +392,7 @@ git commit -m "feat: add multi-vault tip to rotating tips"
 ### Task 5: Update existing tests for new selectVault behavior
 
 **Files:**
+
 - Test: `cli/__tests__/vault-selection.test.ts`
 
 - [ ] **Step 1: Verify no existing tests broke**

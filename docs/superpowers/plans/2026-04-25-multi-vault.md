@@ -17,34 +17,35 @@
 
 ## File Structure
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Modify | `core/types.ts` | Rename `vault_path` to `brain_path`, remove `scope` field |
-| Modify | `core/vault.ts` | Rename in `readGlobalConfig`/`writeGlobalConfig`, add `discoverVaults()` |
-| Modify | `core/index.ts` | Export `discoverVaults` |
-| Modify | `core/prompt-sections.ts` | Remove all `scope` references |
-| Modify | `core/__tests__/prompt-sections.test.ts` | Update scope-related tests |
-| Create | `core/__tests__/vault-discovery.test.ts` | Tests for `discoverVaults` and `readGlobalConfig` with `brain_path` |
-| Modify | `cli/index.ts` | Add `--vault` flag parsing |
-| Modify | `cli/launch.ts` | Vault discovery, selection, `BRAINKIT_VAULT_PATH` env var, readline prompt |
-| Create | `cli/__tests__/vault-selection.test.ts` | Tests for `--vault` flag parsing and vault selection logic |
-| Modify | `cli/copilot.ts` | Rename `vault_path` to `brain_path` |
-| Modify | `scripts/copilot-status.js` | Rename `vault_path` to `brain_path` |
-| Modify | `opencode/server.ts` | Use `BRAINKIT_VAULT_PATH` with closure caching and fallback |
-| Modify | `opencode/side.tsx` | Use `BRAINKIT_VAULT_PATH`, display vault name |
-| Modify | `docs/features.md` | Add multi-vault feature |
-| Modify | `docs/config.md` | Update global config, add env var and --vault docs |
-| Modify | `docs/onboarding.md` | Update to reflect vault creation flow, remove scope |
-| Modify | `README.md` | Update philosophy section, mention multi-vault |
-| Modify | `specs/02-architecture.md` | Update global config, data flow, vault structure |
-| Modify | `skills/onboarding/SKILL.md` | Remove scope reference from onboarding flow |
-| Modify | `AGENTS.md` | Update vault operations section |
+| Action | File                                     | Responsibility                                                             |
+| ------ | ---------------------------------------- | -------------------------------------------------------------------------- |
+| Modify | `core/types.ts`                          | Rename `vault_path` to `brain_path`, remove `scope` field                  |
+| Modify | `core/vault.ts`                          | Rename in `readGlobalConfig`/`writeGlobalConfig`, add `discoverVaults()`   |
+| Modify | `core/index.ts`                          | Export `discoverVaults`                                                    |
+| Modify | `core/prompt-sections.ts`                | Remove all `scope` references                                              |
+| Modify | `core/__tests__/prompt-sections.test.ts` | Update scope-related tests                                                 |
+| Create | `core/__tests__/vault-discovery.test.ts` | Tests for `discoverVaults` and `readGlobalConfig` with `brain_path`        |
+| Modify | `cli/index.ts`                           | Add `--vault` flag parsing                                                 |
+| Modify | `cli/launch.ts`                          | Vault discovery, selection, `BRAINKIT_VAULT_PATH` env var, readline prompt |
+| Create | `cli/__tests__/vault-selection.test.ts`  | Tests for `--vault` flag parsing and vault selection logic                 |
+| Modify | `cli/copilot.ts`                         | Rename `vault_path` to `brain_path`                                        |
+| Modify | `scripts/copilot-status.js`              | Rename `vault_path` to `brain_path`                                        |
+| Modify | `opencode/server.ts`                     | Use `BRAINKIT_VAULT_PATH` with closure caching and fallback                |
+| Modify | `opencode/side.tsx`                      | Use `BRAINKIT_VAULT_PATH`, display vault name                              |
+| Modify | `docs/features.md`                       | Add multi-vault feature                                                    |
+| Modify | `docs/config.md`                         | Update global config, add env var and --vault docs                         |
+| Modify | `docs/onboarding.md`                     | Update to reflect vault creation flow, remove scope                        |
+| Modify | `README.md`                              | Update philosophy section, mention multi-vault                             |
+| Modify | `specs/02-architecture.md`               | Update global config, data flow, vault structure                           |
+| Modify | `skills/onboarding/SKILL.md`             | Remove scope reference from onboarding flow                                |
+| Modify | `AGENTS.md`                              | Update vault operations section                                            |
 
 ---
 
 ## Task 1: Core — Rename `vault_path` to `brain_path` and add `discoverVaults`
 
 **Files:**
+
 - Modify: `core/types.ts:1-4`
 - Modify: `core/vault.ts:54-69`
 - Modify: `core/index.ts:12-33`
@@ -230,6 +231,7 @@ feat: add discoverVaults and rename vault_path to brain_path in global config
 ## Task 2: Rename `vault_path` in Copilot files
 
 **Files:**
+
 - Modify: `cli/copilot.ts:141,146`
 - Modify: `scripts/copilot-status.js:26,32,41`
 
@@ -290,6 +292,7 @@ refactor: rename vault_path to brain_path in Copilot launcher and status script
 ## Task 3: Remove `config.user.scope` from types and prompt sections
 
 **Files:**
+
 - Modify: `core/types.ts:13`
 - Modify: `core/prompt-sections.ts:67,76,82-83,224,229-231`
 - Modify: `core/__tests__/prompt-sections.test.ts:28,82-95`
@@ -337,6 +340,7 @@ export function buildIdentity(ctx: SectionContext): string {
 ```
 
 Key changes:
+
 - Removed `const scope = user.scope ?? "professional";`
 - Removed `This is a ${scope} vault.` line
 - Removed the `scope === "personal" || scope === "both"` guard on personal context — personal context is now always included if present
@@ -372,6 +376,7 @@ export function buildProfileNudge(ctx: SectionContext): string | null {
 ```
 
 Key changes:
+
 - Removed `const scope = user.scope ?? "professional";`
 - Removed the `scope === "personal" || scope === "both"` guard on personal context check — always check it now
 
@@ -405,19 +410,19 @@ function makeConfig(overrides?: Partial<BrainkitConfig>): BrainkitConfig {
 Replace the `"excludes personal context when scope is professional"` test (lines 82-95) with a test that validates the new behavior:
 
 ```typescript
-  it("includes personal context when set", () => {
-    const ctx = makeCtx({
-      config: makeConfig({
-        user: {
-          name: "Test User",
-          role: "Engineer",
-          personal: { description: "Loves hiking" },
-        },
-      }),
-    });
-    const result = buildIdentity(ctx);
-    expect(result).toContain("Loves hiking");
+it("includes personal context when set", () => {
+  const ctx = makeCtx({
+    config: makeConfig({
+      user: {
+        name: "Test User",
+        role: "Engineer",
+        personal: { description: "Loves hiking" },
+      },
+    }),
   });
+  const result = buildIdentity(ctx);
+  expect(result).toContain("Loves hiking");
+});
 ```
 
 - [ ] **Step 5: Run tests**
@@ -446,6 +451,7 @@ refactor: remove config.user.scope — vault scope is now determined by which va
 ## Task 4: CLI vault selection and `--vault` flag
 
 **Files:**
+
 - Modify: `cli/index.ts`
 - Modify: `cli/launch.ts`
 - Create: `cli/__tests__/vault-selection.test.ts`
@@ -790,6 +796,7 @@ feat: add --vault flag and vault selection to CLI launcher
 ## Task 5: Update OpenCode plugin to use `BRAINKIT_VAULT_PATH`
 
 **Files:**
+
 - Modify: `opencode/server.ts`
 - Modify: `opencode/side.tsx`
 
@@ -923,6 +930,7 @@ export default plugin;
 ```
 
 Key changes:
+
 - Added `resolveVaultPath()` with env var + fallback
 - Cached `vaultPath` once at plugin init
 - Removed per-hook `readGlobalConfig()` calls
@@ -939,12 +947,7 @@ Replace `opencode/side.tsx`:
 import type { TuiPlugin } from "@opencode-ai/plugin/tui";
 import * as path from "node:path";
 import { createMemo } from "solid-js";
-import {
-  readVaultConfigSimple,
-  getBragStats,
-  readContacts,
-  parseContacts,
-} from "@oribish/brainkit-core";
+import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "@oribish/brainkit-core";
 
 type Api = Parameters<import("@opencode-ai/plugin/tui").TuiPlugin>[0];
 
@@ -1011,7 +1014,9 @@ export const Sidebar = (props: { api: Api }) => {
               <text fg={theme().primary} bold>
                 🧠 {d.name}'s vault
               </text>
-              <text fg={theme().textMuted}>{d.vaultName} — {d.path}</text>
+              <text fg={theme().textMuted}>
+                {d.vaultName} — {d.path}
+              </text>
             </box>
 
             {d.features.bragfile && d.bragStats && (
@@ -1034,6 +1039,7 @@ export const Sidebar = (props: { api: Api }) => {
 ```
 
 Key changes:
+
 - Reads `BRAINKIT_VAULT_PATH` once at component scope
 - Removed `readGlobalConfig()` call — no longer needed
 - Shows vault name (`path.basename`) alongside full path
@@ -1055,6 +1061,7 @@ feat: use BRAINKIT_VAULT_PATH env var in OpenCode plugin with closure caching
 ## Task 6: Update documentation
 
 **Files:**
+
 - Modify: `docs/features.md`
 - Modify: `docs/config.md`
 - Modify: `docs/onboarding.md`
@@ -1075,7 +1082,7 @@ Add multi-vault after TUI:
 
 Replace the Global Config section (lines 8-23):
 
-```markdown
+````markdown
 ## Global Config
 
 **Path:** `~/.config/brainkit/config.toml`
@@ -1086,9 +1093,10 @@ Points brainkit to the brain directory (which contains one or more vaults). This
 version = 1
 brain_path = "/Users/you/brain"
 ```
+````
 
-| Field        | Type   | Required | Description                                           |
-| ------------ | ------ | -------- | ----------------------------------------------------- |
+| Field        | Type   | Required | Description                                            |
+| ------------ | ------ | -------- | ------------------------------------------------------ |
 | `brain_path` | string | yes      | Absolute path to the brain directory containing vaults |
 
 **Created by:** The agent during onboarding, or manually by the user.
@@ -1109,7 +1117,8 @@ brainkit oc --vault life
 ```
 
 If omitted with a single vault, it auto-selects. With multiple vaults, an interactive prompt appears.
-```
+
+````
 
 - [ ] **Step 3: Remove `scope` from `docs/config.md` vault config section**
 
@@ -1117,14 +1126,14 @@ In the `[user]` table (line 74), remove the `scope` row:
 
 ```markdown
 | `tone`      | string   | no       | `"direct"`       | Preferred writing tone for vault content (direct, casual, concise, formal).                               |
-```
+````
 
 (Remove the entire `scope` row that was between `tone` and `[user.work]`.)
 
 Also remove the scope reference from the `[user.personal]` description (line 86):
 
 ```markdown
-| `description` | string | no       | — | Free-text about the user's personal life — location, hobbies, family, interests. |
+| `description` | string | no | — | Free-text about the user's personal life — location, hobbies, family, interests. |
 ```
 
 - [ ] **Step 4: Update `docs/config.md` — portable vault section**
@@ -1151,6 +1160,7 @@ In the Profile nudge section (line 57), remove `(only checked when scope is "per
 In `skills/onboarding/SKILL.md`, update Phase 5 step 1 (line 52-63):
 
 Remove the scope line:
+
 ```
     - Set scope to "both" (since we're covering personal and professional)
 ```
@@ -1175,16 +1185,18 @@ Replace the philosophy paragraph about vault separation (line 24):
 
 Replace lines 150-156:
 
-```markdown
+````markdown
 ### Global Config (`~/.config/brainkit/config.toml`)
 
 ```toml
 version = 1
 brain_path = "/Users/ori/brain"
 ```
+````
 
 Points to the brain directory containing one or more vaults. Each vault is a subdirectory with its own `brainkit.toml`. The CLI launcher discovers vaults, selects one (via `--vault` flag or interactive prompt), and sets `BRAINKIT_VAULT_PATH` for the plugin.
-```
+
+````
 
 In the vault config example (lines 158-179), remove `scope = "professional"`.
 
@@ -1195,7 +1207,7 @@ In the Vault Operations section (near the end of AGENTS.md), update the first bu
 ```markdown
 - `readGlobalConfig()` — reads `~/.config/brainkit/config.toml` (just `brain_path`)
 - `discoverVaults()` — scans brain directory for vault subdirectories
-```
+````
 
 - [ ] **Step 11: Commit**
 

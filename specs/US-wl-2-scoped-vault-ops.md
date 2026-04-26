@@ -30,7 +30,7 @@ Contacts file path changes from `KEY_FILES.contacts` (`03_resources/contacts.md`
 ```typescript
 export const KEY_FILES = {
   bragfile: "02_areas/career/bragfile.md",
-  contacts: "contacts.md",  // was 03_resources/contacts.md
+  contacts: "contacts.md", // was 03_resources/contacts.md
   config: "brainkit.toml",
 } as const;
 ```
@@ -65,23 +65,27 @@ const allowedRootEntries = new Set([...SUB_VAULTS, KEY_FILES.config, "README.md"
 File: `core/__tests__/vault.test.ts`
 
 **Bragfile:**
+
 - `readBragfile(vaultPath)` reads from `work/02_areas/career/bragfile.md` by default
 - `readBragfile(vaultPath, "work")` reads from `work/02_areas/career/bragfile.md`
 - `appendBragEntry` writes to the correct scoped path
 
 **Contacts:**
+
 - `readContacts(vaultPath, "work")` reads `work/contacts.md`
 - `readContacts(vaultPath, "life")` reads `life/contacts.md`
 - `readContacts(vaultPath, "all")` reads both and concatenates
 - `addContact(vaultPath, contact, "work")` appends to `work/contacts.md`
 
 **Health checks:**
+
 - Valid dual-vault structure passes
 - Missing PARA dir in one sub-vault reported with sub-vault context
 - Unexpected file at vault root (e.g., stray `notes.md`) reported
 - `work/` has bragfile check, `life/` does not
 
 **Vault state:**
+
 - `isVaultFresh` returns true when both sub-vaults are empty
 - `isVaultFresh` returns false when either sub-vault has content
 

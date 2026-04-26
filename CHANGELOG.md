@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-26
+
 ### Added
 - OpenCode plugin: server (system prompt, compaction, brag detection, auto-commit) + TUI (sidebar, tips, theme, branding)
 - CLI launcher (`npx @oribish/brainkit`) — detects OpenCode, sets up plugin config, spawns it
