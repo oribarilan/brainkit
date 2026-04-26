@@ -48,21 +48,7 @@ No commands, no formatting, no manual filing.
 - [**Doctor**](docs/doctor.md) — checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.
 - [**TUI**](docs/tui.md) — custom terminal UI for OpenCode: vault stats sidebar, rotating tips, rose-pink theme.
 
-## Quick start
-
-No install needed -- run it directly with npx:
-
-```bash
-npx @2brain/brainkit
-```
-
-This launches [OpenCode](https://opencode.ai) with the brainkit plugin loaded. On first run, the agent walks you through a getting-to-know-you conversation and creates a vault that matches your actual situation.
-
-Requires OpenCode on your `$PATH`.
-
 ## Install
-
-For regular use, install globally:
 
 ```bash
 npm install -g @2brain/brainkit
@@ -74,6 +60,8 @@ Then launch with:
 brainkit            # OpenCode (default)
 brainkit copilot    # GitHub Copilot CLI
 ```
+
+On first run, the agent walks you through a getting-to-know-you conversation and creates a vault that matches your actual situation.
 
 [![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
 
