@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-04-26
+
+### Fixed
+- Detect missing brain directory and offer factory reset instead of crashing
+
 ## [0.4.0] - 2026-04-26
 
 ### Added

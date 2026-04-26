@@ -149,8 +149,32 @@ export async function selectVault(
 
   try {
     vaults = discoverVaults(brainPath);
-  } catch (err) {
-    p.cancel(`Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
+  } catch {
+    p.log.warn(`Brain directory not found: ${brainPath}`);
+
+    if (process.stdin.isTTY) {
+      const shouldReset = await p.confirm({
+        message: "Reset brainkit config and start fresh?",
+      });
+
+      if (p.isCancel(shouldReset) || !shouldReset) {
+        p.cancel("Cannot continue without a valid brain directory.");
+        process.exit(1);
+      }
+
+      // Remove config to trigger onboarding on next launch
+      const configPath = path.join(getConfigDir(), "config.toml");
+      try {
+        fs.unlinkSync(configPath);
+      } catch {
+        // Already gone
+      }
+
+      p.log.success("Config reset. Restarting onboarding...");
+      return { vaultPath: undefined, brainPath: undefined };
+    }
+
+    p.cancel("Brain directory not found. Delete ~/.config/brainkit/config.toml to reset.");
     process.exit(1);
   }
 
