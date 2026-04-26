@@ -1,42 +1,43 @@
 #!/usr/bin/env node
 
+import * as p from "@clack/prompts";
 import { version } from "./version.js";
 import { isHarnessAlias, launchHarness, detectAndLaunch, parseVaultFlag, selectVault } from "./launch.js";
 
-function printUsage(): void {
-  console.log(`
-  brainkit v${version}
+const HELP_TEXT = `Usage:
+  brainkit                     Launch (auto-detects harness)
+  brainkit oc [args...]        Launch with OpenCode
+  brainkit opencode [args...]  Launch with OpenCode
+  brainkit copilot [args...]   Launch with Copilot CLI
+  brainkit cp [args...]        Launch with Copilot CLI
 
-  Usage:
-    brainkit                     Launch (auto-detects harness)
-    brainkit oc [args...]        Launch with OpenCode
-    brainkit opencode [args...]  Launch with OpenCode
-    brainkit copilot [args...]   Launch with Copilot CLI
-    brainkit cp [args...]        Launch with Copilot CLI
+Options:
+  --vault <name>  Pick which vault to open
+  --version       Print version
+  --help          Show this message
 
-  Options:
-    --vault <name>  Pick which vault to open
-    --version       Print version
-    --help          Show this message
-
-  Extra args are passed through to the harness.
-  Example: brainkit oc --model anthropic/claude-sonnet-4-5
-  Example: brainkit --vault work
-`);
-}
+Extra args are passed through to the harness.
+Example: brainkit oc --model anthropic/claude-sonnet-4-5
+Example: brainkit --vault work`;
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
+  // --version: plain output (for scripting/piping)
   if (args.includes("--version")) {
     console.log(version);
     process.exit(0);
   }
 
+  // --help: framed output
   if (args.includes("--help")) {
-    printUsage();
+    p.intro(`brainkit v${version}`);
+    p.note(HELP_TEXT, "Usage");
+    p.outro();
     process.exit(0);
   }
+
+  p.intro("brainkit");
 
   // Parse --vault from args (before or after harness alias)
   const { vault: vaultFlag, remaining } = parseVaultFlag(args);
@@ -53,15 +54,10 @@ async function main(): Promise<void> {
   }
 
   // No args or unknown — auto-detect and launch
-  detectAndLaunch(remaining, vaultPath);
+  await detectAndLaunch(remaining, vaultPath);
 }
 
-process.on("SIGINT", () => {
-  console.log("");
-  process.exit(0);
-});
-
 main().catch((err: unknown) => {
-  console.error(`  [brainkit] ${err instanceof Error ? err.message : String(err)}`);
+  p.log.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

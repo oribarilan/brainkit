@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "../core/index.js";
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
+import * as p from "@clack/prompts";
 
 // ---------------------------------------------------------------------------
 // Package root resolution
@@ -142,7 +143,7 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
   if (vaultPath === undefined) {
     const globalConfig = readGlobalConfig();
     if (globalConfig === null || !globalConfig.brain_path) {
-      console.error("  [brainkit] No vault configured. Run brainkit with OpenCode first to set up your vault.");
+      p.cancel("No vault configured. Run brainkit with OpenCode first to set up your vault.");
       process.exit(1);
     }
     vaultPath = globalConfig.brain_path;
