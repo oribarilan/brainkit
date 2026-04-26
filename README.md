@@ -48,40 +48,34 @@ No commands, no formatting, no manual filing.
 - [**Doctor**](docs/doctor.md) — checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.
 - [**TUI**](docs/tui.md) — custom terminal UI for OpenCode: vault stats sidebar, rotating tips, rose-pink theme.
 
-## Install
+## Quick start
 
-### OpenCode
+No install needed -- run it directly with npx:
 
 ```bash
 npx @2brain/brainkit
 ```
 
-Requires [OpenCode](https://opencode.ai) on your `$PATH`. The CLI launches OpenCode with the brainkit plugin loaded.
+This launches [OpenCode](https://opencode.ai) with the brainkit plugin loaded. On first run, the agent walks you through a getting-to-know-you conversation and creates a vault that matches your actual situation.
 
-### Copilot CLI
+Requires OpenCode on your `$PATH`.
 
-```bash
-brainkit copilot
-```
+## Install
 
-Requires [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed and authenticated. The launcher installs skills and hooks into your vault, then launches Copilot.
-
-Or install globally:
+For regular use, install globally:
 
 ```bash
 npm install -g @2brain/brainkit
-brainkit
+```
+
+Then launch with:
+
+```bash
+brainkit            # OpenCode (default)
+brainkit copilot    # GitHub Copilot CLI
 ```
 
 [![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
-
-## Getting started
-
-```bash
-brainkit
-```
-
-The agent walks you through a getting-to-know-you conversation on first run, covering your work, your personal life, your preferences. It creates a vault that matches your actual situation.
 
 ## License
 
