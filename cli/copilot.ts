@@ -84,7 +84,7 @@ export function generateCopilotSettings(vaultPath: string, statusScriptPath: str
   const settings = {
     companyAnnouncements: COMPANY_ANNOUNCEMENTS,
     statusLine: {
-      command: `node ${statusScriptPath}`,
+      command: `node ${statusScriptPath.replace(/\\/g, "/")}`,
     },
   };
 
@@ -99,23 +99,27 @@ const HOOKS_CONFIG = {
   hooks: [
     {
       event: "agentStop",
-      command: ".github/hooks/scripts/auto-commit.sh",
+      command: "node .github/hooks/scripts/auto-commit.js",
       description: "Auto-commit vault changes after agent turns",
     },
     {
       event: "sessionEnd",
-      command: ".github/hooks/scripts/auto-commit.sh",
+      command: "node .github/hooks/scripts/auto-commit.js",
       description: "Commit any remaining vault changes on session end",
     },
   ],
 };
 
-const AUTO_COMMIT_SCRIPT = `#!/usr/bin/env bash
-# Only commit if this is a git repo with uncommitted changes
-git rev-parse --git-dir > /dev/null 2>&1 || exit 0
-[ -z "$(git status --porcelain 2>/dev/null)" ] && exit 0
-git add -A 2>/dev/null || exit 0
-git commit -m "brainkit: auto-save $(date +%Y-%m-%d)" > /dev/null 2>&1 || true
+const AUTO_COMMIT_SCRIPT = `#!/usr/bin/env node
+const { execSync } = require("child_process");
+try { execSync("git rev-parse --git-dir", { stdio: "pipe" }); } catch { process.exit(0); }
+const status = execSync("git status --porcelain", { stdio: "pipe" }).toString().trim();
+if (!status) process.exit(0);
+try {
+  const date = new Date().toISOString().slice(0, 10);
+  execSync("git add -A", { stdio: "pipe" });
+  execSync(\`git commit -m "brainkit: auto-save \${date}"\`, { stdio: "pipe" });
+} catch { /* commit failed — skip silently */ }
 `;
 
 export function installCopilotHooks(vaultPath: string): void {
@@ -125,9 +129,8 @@ export function installCopilotHooks(vaultPath: string): void {
 
   fs.writeFileSync(path.join(hooksDir, "hooks.json"), JSON.stringify(HOOKS_CONFIG, null, 2) + "\n", "utf-8");
 
-  const scriptPath = path.join(scriptsDir, "auto-commit.sh");
+  const scriptPath = path.join(scriptsDir, "auto-commit.js");
   fs.writeFileSync(scriptPath, AUTO_COMMIT_SCRIPT, "utf-8");
-  fs.chmodSync(scriptPath, 0o755);
 }
 
 // ---------------------------------------------------------------------------
@@ -180,6 +183,7 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
       const child = spawn("copilot", ["-i", "Let's set up my first brainkit vault!", ...args], {
         stdio: "inherit",
         cwd: onboardingDir,
+        shell: process.platform === "win32",
       });
       child.on("exit", (code) => process.exit(code ?? 0));
       return;
@@ -213,6 +217,6 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
 
   // Spawn copilot with BRAINKIT_VAULT_PATH for status script
   const env = { ...process.env, BRAINKIT_VAULT_PATH: vaultPath };
-  const child = spawn("copilot", args, { stdio: "inherit", cwd: vaultPath, env });
+  const child = spawn("copilot", args, { stdio: "inherit", cwd: vaultPath, env, shell: process.platform === "win32" });
   child.on("exit", (code) => process.exit(code ?? 0));
 }

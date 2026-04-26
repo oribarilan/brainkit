@@ -20,7 +20,10 @@ interface Harness {
 
 function which(binary: string): string | null {
   try {
-    return execFileSync("which", [binary], { stdio: "pipe" }).toString().trim();
+    const cmd = process.platform === "win32" ? "where" : "which";
+    const result = execFileSync(cmd, [binary], { stdio: "pipe" }).toString().trim();
+    // `where` on Windows may return multiple lines — take the first match
+    return result.split(/\r?\n/)[0] ?? result;
   } catch {
     return null;
   }
@@ -74,7 +77,7 @@ function launchOpenCode(args: string[], vaultPath?: string): void {
   // No vault = onboarding — auto-submit initial prompt
   const launchArgs = vaultPath === undefined ? ["--prompt", "Let's set up my first brainkit vault!", ...args] : args;
 
-  const child = spawn("opencode", launchArgs, { stdio: "inherit", env });
+  const child = spawn("opencode", launchArgs, { stdio: "inherit", env, shell: process.platform === "win32" });
   child.on("exit", (code) => process.exit(code ?? 0));
 }
 
@@ -148,7 +151,7 @@ export async function selectVault(
     return { vaultPath: undefined, brainPath: undefined };
   }
 
-  const brainPath = globalConfig.brain_path.replace(/^~/, os.homedir());
+  const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
   let vaults: string[];
 
   try {
@@ -178,7 +181,7 @@ export async function selectVault(
       return { vaultPath: undefined, brainPath: undefined };
     }
 
-    p.cancel("Brain directory not found. Delete ~/.config/brainkit/config.toml to reset.");
+    p.cancel(`Brain directory not found. Delete ${path.join(getConfigDir(), "config.toml")} to reset.`);
     process.exit(1);
   }
 

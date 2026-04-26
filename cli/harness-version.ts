@@ -68,6 +68,7 @@ export function getInstalledVersion(meta: HarnessVersionMeta): string | null {
     const output = execFileSync(meta.binary, meta.versionArgs, {
       stdio: "pipe",
       timeout: 5_000,
+      shell: process.platform === "win32",
     }).toString();
     return meta.parseVersion(output);
   } catch {
@@ -80,6 +81,7 @@ export function getLatestNpmVersion(npmPackage: string): string | null {
     const output = execFileSync("npm", ["view", npmPackage, "version"], {
       stdio: "pipe",
       timeout: 10_000,
+      shell: process.platform === "win32",
     }).toString();
     return output.trim();
   } catch {

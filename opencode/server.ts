@@ -25,7 +25,7 @@ function resolveVaultPath(): string | undefined {
   try {
     const globalConfig = readGlobalConfig();
     if (!globalConfig?.brain_path) return undefined;
-    const brainPath = globalConfig.brain_path.replace(/^~/, os.homedir());
+    const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
     const vaults = discoverVaults(brainPath);
     if (vaults.length === 1) return path.join(brainPath, vaults[0]!);
   } catch {

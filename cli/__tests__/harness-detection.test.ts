@@ -83,7 +83,8 @@ import { detectAndLaunch } from "../launch.js";
 /** Configure which binaries are "installed" */
 function setInstalled(binaries: string[]): void {
   mockExecFileSync.mockImplementation((cmd, args) => {
-    if (cmd === "which" && args && binaries.includes(args[0] as string)) {
+    const lookupCmd = process.platform === "win32" ? "where" : "which";
+    if (cmd === lookupCmd && args && binaries.includes(args[0] as string)) {
       return Buffer.from(`/usr/local/bin/${String(args[0])}`);
     }
     throw new Error("not found");

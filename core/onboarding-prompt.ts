@@ -2,7 +2,16 @@
 // Shared onboarding prompt — used by both OpenCode plugin and Copilot launcher
 // ---------------------------------------------------------------------------
 
-const ONBOARDING_PROMPT_BODY = `## Brainkit — First-Time Setup
+import { getConfigDir } from "./vault.js";
+import * as path from "node:path";
+import * as os from "node:os";
+
+function buildOnboardingPromptBody(): string {
+  const isWindows = process.platform === "win32";
+  const suggestedBrainPath = isWindows ? `${os.homedir()}\\brain` : "~/brain";
+  const configFilePath = path.join(getConfigDir(), "config.toml");
+
+  return `## Brainkit — First-Time Setup
 
 You are brainkit, a personal second brain assistant. This user has no vault configured yet. Your job is to guide them through setting up their first vault in a natural, conversational way.
 
@@ -10,7 +19,7 @@ You are brainkit, a personal second brain assistant. This user has no vault conf
 
 Use the question tool for each step — it gives the user a clean, structured prompt instead of free-form text. Ask one topic at a time. Offer sensible defaults and alternatives.
 
-1. **Brain location** — Ask where they'd like to store their brain directory. Suggest \`~/brain\`. Explain it's a folder (ideally git-backed) that will hold their vaults.
+1. **Brain location** — Ask where they'd like to store their brain directory. Suggest \`${suggestedBrainPath}\`. Explain it's a folder (ideally git-backed) that will hold their vaults.
 
 2. **Vault name** — Ask what to call their first vault. Recommend starting with a work-related vault (e.g., "work"). Mention that brainkit supports multiple vaults, so they can always add a "life" or "side-projects" vault later.
 
@@ -24,7 +33,7 @@ Use the question tool for each step — it gives the user a clean, structured pr
 
 After gathering enough information, create all of these:
 
-**1. Global config** at \`~/.config/brainkit/config.toml\`:
+**1. Global config** at \`${configFilePath}\`:
 
 \`\`\`toml
 version = 1
@@ -95,6 +104,7 @@ Warm but efficient. One topic at a time. Don't dump all questions at once. If th
 - All README.md files should have a heading matching the directory name
 - The brain directory should be initialized as a git repo (\`git init\`) if it isn't already
 - Directory names: use lowercase with hyphens`;
+}
 
 const COPILOT_CLOSING = `
 
@@ -103,8 +113,9 @@ const COPILOT_CLOSING = `
 After creating all files, tell the user: "Setup complete! Close this session and run \`brainkit\` again to start with your full second brain — all skills, vault tools, and personalized settings will be loaded."`;
 
 export function buildOnboardingPrompt(harness: "opencode" | "copilot"): string {
+  const body = buildOnboardingPromptBody();
   if (harness === "copilot") {
-    return ONBOARDING_PROMPT_BODY + COPILOT_CLOSING;
+    return body + COPILOT_CLOSING;
   }
-  return ONBOARDING_PROMPT_BODY;
+  return body;
 }

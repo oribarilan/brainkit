@@ -103,21 +103,26 @@ describe("installCopilotHooks", () => {
     const hooksPath = path.join(vaultDir, ".github", "hooks", "hooks.json");
     expect(fs.existsSync(hooksPath)).toBe(true);
 
-    const hooks = JSON.parse(fs.readFileSync(hooksPath, "utf-8")) as { hooks: { event: string }[] };
+    const hooks = JSON.parse(fs.readFileSync(hooksPath, "utf-8")) as { hooks: { event: string; command: string }[] };
     const events = hooks.hooks.map((h) => h.event);
     expect(events).toContain("agentStop");
     expect(events).toContain("sessionEnd");
+
+    // All hook commands should reference the Node.js script
+    for (const hook of hooks.hooks) {
+      expect(hook.command).toContain("auto-commit.js");
+    }
   });
 
-  it("creates auto-commit.sh script", () => {
+  it("creates auto-commit.js script", () => {
     installCopilotHooks(vaultDir);
 
-    const scriptPath = path.join(vaultDir, ".github", "hooks", "scripts", "auto-commit.sh");
+    const scriptPath = path.join(vaultDir, ".github", "hooks", "scripts", "auto-commit.js");
     expect(fs.existsSync(scriptPath)).toBe(true);
 
-    const stat = fs.statSync(scriptPath);
-    // Check executable bit (owner execute)
-    expect(stat.mode & 0o100).toBeTruthy();
+    const content = fs.readFileSync(scriptPath, "utf-8");
+    expect(content).toContain("git add -A");
+    expect(content).toContain("brainkit: auto-save");
   });
 });
 

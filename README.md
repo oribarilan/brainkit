@@ -23,6 +23,8 @@
 npm install -g @2brain/brainkit
 ```
 
+Works on macOS, Linux, and Windows.
+
 Brainkit is a plugin for AI coding agents. It detects which harness you have, or you can pick one:
 
 | Harness                                                     | Command            |

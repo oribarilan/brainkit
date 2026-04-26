@@ -33,12 +33,15 @@ const brainkitPlaceholders = {
     "What's in my bragfile this quarter?",
     "Help me organize my project notes",
   ],
-  shell: [
-    "grep -r 'action item' ~/second-brain/01_projects/",
-    "cat ~/second-brain/02_areas/career/bragfile.md",
-    "find ~/second-brain -name '*.md' -mtime -7",
-    "wc -l ~/second-brain/03_resources/contacts.md",
-  ],
+  shell:
+    process.platform === "win32"
+      ? []
+      : [
+          "grep -r 'action item' ~/second-brain/01_projects/",
+          "cat ~/second-brain/02_areas/career/bragfile.md",
+          "find ~/second-brain -name '*.md' -mtime -7",
+          "wc -l ~/second-brain/03_resources/contacts.md",
+        ],
 };
 
 const tui: TuiPlugin = async (api) => {

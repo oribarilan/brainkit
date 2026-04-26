@@ -48,7 +48,12 @@ export const KEY_FILES = {
 // ---------------------------------------------------------------------------
 
 export function getConfigDir(): string {
-  return process.env["BRAINKIT_CONFIG_DIR"] ?? path.join(os.homedir(), ".config", "brainkit");
+  const envOverride = process.env["BRAINKIT_CONFIG_DIR"];
+  if (envOverride !== undefined && envOverride !== "") return envOverride;
+  if (process.platform === "win32") {
+    return path.join(process.env["APPDATA"] ?? path.join(os.homedir(), "AppData", "Roaming"), "brainkit");
+  }
+  return path.join(os.homedir(), ".config", "brainkit");
 }
 
 function getGlobalConfigPath(): string {
