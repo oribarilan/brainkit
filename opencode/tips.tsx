@@ -12,6 +12,7 @@ const tips = [
   "I organize using the PARA method",
   "I'll remind you if your bragfile gets stale",
   "@ a vault file to add it as context",
+  "you can add another vault anytime — just ask me to set one up",
 ];
 
 export const Tips = (props: { theme: TuiThemeCurrent }) => {
