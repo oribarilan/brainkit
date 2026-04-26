@@ -147,11 +147,12 @@ function promptVaultSelection(vaults: string[]): Promise<string> {
   });
 }
 
-export async function selectVault(vaultFlag: string | null): Promise<{ vaultPath: string; brainPath: string }> {
+export async function selectVault(
+  vaultFlag: string | null,
+): Promise<{ vaultPath: string | undefined; brainPath: string | undefined }> {
   const globalConfig = readGlobalConfig();
   if (globalConfig === null || !globalConfig.brain_path) {
-    console.error("  [brainkit] No brain configured. Run brainkit with OpenCode first to set up your vault.");
-    process.exit(1);
+    return { vaultPath: undefined, brainPath: undefined };
   }
 
   const brainPath = globalConfig.brain_path.replace(/^~/, os.homedir());

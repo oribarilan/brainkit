@@ -102,4 +102,13 @@ describe("selectVault", () => {
     expect(result.vaultPath).toBe(brainDir);
     expect(result.brainPath).toBe(brainDir);
   });
+
+  it("returns undefined paths when no global config exists", async () => {
+    mockReadGlobalConfig.mockReturnValue(null);
+
+    const result = await selectVault(null);
+    expect(result.vaultPath).toBeUndefined();
+    expect(result.brainPath).toBeUndefined();
+    expect(process.exit).not.toHaveBeenCalled();
+  });
 });
