@@ -152,6 +152,7 @@ export function buildBehavioralRules(_ctx: SectionContext): string {
   return [
     "## How to Work With This Vault",
     "",
+    "- Keep information where you'll search for it, not where you found it. When you capture something (meeting notes, a conversation, a link), extract the useful parts to where they belong and archive the original.",
     "- Use your built-in file editing to manage vault files. Follow the conventions and formats described in the installed skills.",
     "- Search the vault before answering — don't guess.",
     "- Preserve existing structure and formatting when editing.",
