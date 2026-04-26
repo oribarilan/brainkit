@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseVaultFlag, selectVault } from "../launch.js";
 
 // ---------------------------------------------------------------------------
 // Mock core module to control readGlobalConfig and discoverVaults
@@ -17,6 +16,33 @@ import { readGlobalConfig, discoverVaults } from "../../core/index.js";
 
 const mockReadGlobalConfig = vi.mocked(readGlobalConfig);
 const mockDiscoverVaults = vi.mocked(discoverVaults);
+
+// ---------------------------------------------------------------------------
+// Mock @clack/prompts
+// ---------------------------------------------------------------------------
+
+vi.mock("@clack/prompts", () => ({
+  cancel: vi.fn(),
+  outro: vi.fn(),
+  intro: vi.fn(),
+  note: vi.fn(),
+  log: {
+    error: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
+    message: vi.fn(),
+  },
+  select: vi.fn(),
+  isCancel: vi.fn(() => false),
+}));
+
+import * as p from "@clack/prompts";
+
+// ---------------------------------------------------------------------------
+// Import after mocks
+// ---------------------------------------------------------------------------
+
+import { parseVaultFlag, selectVault } from "../launch.js";
 
 // ---------------------------------------------------------------------------
 // parseVaultFlag
@@ -87,8 +113,7 @@ describe("selectVault", () => {
     mockDiscoverVaults.mockReturnValue(["work", "life"]);
 
     await expect(selectVault("bogus")).rejects.toThrow("process.exit");
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Vault "bogus" not found'));
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Available vaults:"));
+    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining('Vault "bogus" not found'));
   });
 
   it("returns brainPath when zero vaults (fresh brain)", async () => {

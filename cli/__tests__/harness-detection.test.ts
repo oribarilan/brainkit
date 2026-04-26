@@ -41,6 +41,27 @@ vi.mock("../copilot.js", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock @clack/prompts
+// ---------------------------------------------------------------------------
+
+vi.mock("@clack/prompts", () => ({
+  cancel: vi.fn(),
+  outro: vi.fn(),
+  intro: vi.fn(),
+  note: vi.fn(),
+  log: {
+    error: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
+    message: vi.fn(),
+  },
+  select: vi.fn(),
+  isCancel: vi.fn(() => false),
+}));
+
+import * as p from "@clack/prompts";
+
+// ---------------------------------------------------------------------------
 // Import after mocks
 // ---------------------------------------------------------------------------
 
@@ -78,25 +99,21 @@ describe("detectAndLaunch", () => {
     vi.restoreAllMocks();
   });
 
-  it("launches directly when only one harness is detected", () => {
+  it("launches directly when only one harness is detected", async () => {
     setInstalled(["opencode"]);
 
     // Should not throw (launches the harness via spawn)
-    expect(() => {
-      detectAndLaunch([]);
-    }).not.toThrow();
+    await detectAndLaunch([]);
   });
 
-  it("exits with error when no harnesses are detected", () => {
+  it("exits with error when no harnesses are detected", async () => {
     setInstalled([]);
 
-    expect(() => {
-      detectAndLaunch([]);
-    }).toThrow("process.exit");
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("No supported"));
+    await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("No supported"));
   });
 
-  it("launches saved default when it is installed", () => {
+  it("launches saved default when it is installed", async () => {
     setInstalled(["opencode", "copilot"]);
     mockReadGlobalConfig.mockReturnValue({
       version: 1,
@@ -105,14 +122,12 @@ describe("detectAndLaunch", () => {
     });
 
     // Should launch without prompting — no throw, no exit
-    expect(() => {
-      detectAndLaunch([]);
-    }).not.toThrow();
+    await detectAndLaunch([]);
     // Should NOT have written config (already saved)
     expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
   });
 
-  it("ignores saved default when it is not installed and falls through", () => {
+  it("ignores saved default when it is not installed and falls through", async () => {
     setInstalled(["copilot"]);
     mockReadGlobalConfig.mockReturnValue({
       version: 1,
@@ -122,12 +137,10 @@ describe("detectAndLaunch", () => {
 
     // With only one other harness available after ignoring default,
     // it should auto-launch copilot (falls through to single-harness case)
-    expect(() => {
-      detectAndLaunch([]);
-    }).not.toThrow();
+    await detectAndLaunch([]);
   });
 
-  it("errors in non-TTY when multiple harnesses detected and no default", () => {
+  it("errors in non-TTY when multiple harnesses detected and no default", async () => {
     setInstalled(["opencode", "copilot"]);
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
 
@@ -136,16 +149,14 @@ describe("detectAndLaunch", () => {
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
 
     try {
-      expect(() => {
-        detectAndLaunch([]);
-      }).toThrow("process.exit");
-      expect(console.error).toHaveBeenCalledWith(expect.stringContaining("multiple harnesses"));
+      await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+      expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("Multiple harnesses"));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
     }
   });
 
-  it("shows all harnesses with detection status in prompt output", () => {
+  it("shows actionable message in non-TTY when multiple harnesses detected", async () => {
     setInstalled(["opencode", "copilot"]);
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
 
@@ -154,12 +165,8 @@ describe("detectAndLaunch", () => {
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
 
     try {
-      expect(() => {
-        detectAndLaunch([]);
-      }).toThrow("process.exit");
-      // Should show detection status for all harnesses
-      const allOutput = (console.error as ReturnType<typeof vi.fn>).mock.calls.map((c: unknown[]) => c[0]).join("\n");
-      expect(allOutput).toContain("detected");
+      await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+      expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("brainkit oc"));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
     }
