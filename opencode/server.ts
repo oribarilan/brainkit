@@ -36,11 +36,9 @@ function resolveVaultPath(): string | undefined {
 }
 
 const server: Plugin = async () => {
-  // Resolve vault path once at init
-  const vaultPath = resolveVaultPath();
-
   return {
     "experimental.chat.system.transform": async (_input, output) => {
+      const vaultPath = resolveVaultPath();
       if (!vaultPath) return;
       try {
         const vaultConfig = readVaultConfigSimple(vaultPath);
@@ -54,6 +52,7 @@ const server: Plugin = async () => {
     },
 
     "experimental.session.compacting": async (_input, output) => {
+      const vaultPath = resolveVaultPath();
       if (!vaultPath) return;
       try {
         const vaultConfig = readVaultConfigSimple(vaultPath);
@@ -80,6 +79,8 @@ const server: Plugin = async () => {
     },
 
     "session.idle": async (event, api) => {
+      const vaultPath = resolveVaultPath();
+
       // Brag detection
       try {
         const sessionId = event.session?.id;
