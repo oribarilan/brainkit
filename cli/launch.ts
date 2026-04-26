@@ -222,9 +222,9 @@ export function detectAndLaunch(args: string[], vaultPath?: string): void {
   const available = HARNESSES.filter((h) => isInstalled(h.binaries));
 
   if (available.length === 0) {
-    console.error("  [brainkit] No supported coding harness found.");
+    console.error("  [brainkit] No supported harness found. Install one of these:");
     for (const h of HARNESSES) {
-      console.error(`    ${h.name}  (not installed)`);
+      console.error(`    ${h.name}`);
     }
     process.exit(1);
   }
@@ -251,7 +251,7 @@ export function detectAndLaunch(args: string[], vaultPath?: string): void {
 
   // Non-TTY — can't prompt
   if (!process.stdin.isTTY) {
-    console.error("  [brainkit] Multiple harnesses detected. Use a subcommand to pick one:");
+    console.error("  [brainkit] Found multiple harnesses. Pick one:");
     for (const h of HARNESSES) {
       const detected = available.includes(h);
       if (detected) {

@@ -139,7 +139,7 @@ describe("detectAndLaunch", () => {
       expect(() => {
         detectAndLaunch([]);
       }).toThrow("process.exit");
-      expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Multiple harnesses"));
+      expect(console.error).toHaveBeenCalledWith(expect.stringContaining("multiple harnesses"));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
     }

@@ -8,21 +8,20 @@ function printUsage(): void {
   brainkit v${version}
 
   Usage:
-    brainkit                     Auto-detect harness and launch
+    brainkit                     Launch (auto-detects harness)
     brainkit oc [args...]        Launch with OpenCode
     brainkit opencode [args...]  Launch with OpenCode
     brainkit copilot [args...]   Launch with Copilot CLI
     brainkit cp [args...]        Launch with Copilot CLI
 
   Options:
-    --vault <name>  Select which vault to open
-    --version       Print version and exit
-    --help          Show this help message
+    --vault <name>  Pick which vault to open
+    --version       Print version
+    --help          Show this message
 
-  All arguments after the harness alias are passed through.
+  Extra args are passed through to the harness.
   Example: brainkit oc --model anthropic/claude-sonnet-4-5
   Example: brainkit --vault work
-  Example: brainkit oc --vault life
 `);
 }
 
