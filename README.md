@@ -27,8 +27,10 @@ Brainkit is a plugin for AI coding agents. It detects which harness you have, or
 
 | Harness                                                     | Command            |
 | ----------------------------------------------------------- | ------------------ |
-| [OpenCode](https://opencode.ai) (default)                   | `brainkit`         |
+| [OpenCode](https://opencode.ai)                             | `brainkit oc`      |
 | [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` |
+
+If only one harness is installed, `brainkit` with no arguments launches it directly. With multiple, it asks you to pick a default on first run.
 
 Run `brainkit` from anywhere. It routes to your brain directory, or walks you through setting one up on first run.
 
