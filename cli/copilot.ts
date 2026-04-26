@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
-import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "@oribish/brainkit-core";
+import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "../core/index.js";
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
 

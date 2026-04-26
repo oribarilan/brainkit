@@ -9,7 +9,7 @@ import {
   getBragStats,
   readContacts,
   parseContacts,
-} from "@oribish/brainkit-core";
+} from "../core/index.js";
 
 function staleness(lastEntryDate) {
   if (!lastEntryDate) return { text: "never", color: "\x1b[31m" }; // red

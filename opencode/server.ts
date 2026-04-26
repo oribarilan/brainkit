@@ -9,7 +9,7 @@ import {
   buildSystemPrompt,
   containsUserAccomplishment,
   scheduleAutoCommit,
-} from "@oribish/brainkit-core";
+} from "../core/index.ts";
 
 const id = "brainkit";
 

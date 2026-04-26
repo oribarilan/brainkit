@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as readline from "node:readline";
 import { execFileSync, spawn } from "node:child_process";
-import { readGlobalConfig, discoverVaults } from "@oribish/brainkit-core";
+import { readGlobalConfig, discoverVaults } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 
 // ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ import {
   getBragStats,
   readContacts,
   parseContacts,
-} from "@oribish/brainkit-core";
+} from "../core/index.ts";
 
 type Api = Parameters<import("@opencode-ai/plugin/tui").TuiPlugin>[0];
 

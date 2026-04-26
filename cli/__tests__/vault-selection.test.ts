@@ -5,15 +5,15 @@ import { join } from "node:path";
 import { parseVaultFlag, selectVault } from "../launch.js";
 
 // ---------------------------------------------------------------------------
-// Mock @oribish/brainkit-core to control readGlobalConfig and discoverVaults
+// Mock core module to control readGlobalConfig and discoverVaults
 // ---------------------------------------------------------------------------
 
-vi.mock("@oribish/brainkit-core", () => ({
+vi.mock("../../core/index.js", () => ({
   readGlobalConfig: vi.fn(),
   discoverVaults: vi.fn(),
 }));
 
-import { readGlobalConfig, discoverVaults } from "@oribish/brainkit-core";
+import { readGlobalConfig, discoverVaults } from "../../core/index.js";
 
 const mockReadGlobalConfig = vi.mocked(readGlobalConfig);
 const mockDiscoverVaults = vi.mocked(discoverVaults);
