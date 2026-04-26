@@ -45,7 +45,7 @@ This is a session-level concept, not a config-level concept. The active agent de
 All scope-aware path resolution goes through a single function:
 
 ```typescript
-function resolveVaultPath(vaultPath: string, scope: VaultScope, relativePath: string): string
+function resolveVaultPath(vaultPath: string, scope: VaultScope, relativePath: string): string;
 ```
 
 - `scope: "work"` resolves to `<vaultPath>/work/<relativePath>`
@@ -58,11 +58,11 @@ Every vault operation (`readBragfile`, `appendBragEntry`, `readContacts`, `addCo
 
 Three primary agents, cycled with Tab in OpenCode or selected via `/agent` in Copilot CLI:
 
-| Agent | System prompt scope | Bragfile | Contacts | Use case |
-|---|---|---|---|---|
-| `bk` (default) | Full vault, both sub-vaults | work bragfile | both files | General use, cross-scope questions |
-| `work` | `work/` only | yes | work contacts only | Focused work sessions, performance reviews |
-| `life` | `life/` only | no | life contacts only | Personal planning, family, hobbies |
+| Agent          | System prompt scope         | Bragfile      | Contacts           | Use case                                   |
+| -------------- | --------------------------- | ------------- | ------------------ | ------------------------------------------ |
+| `bk` (default) | Full vault, both sub-vaults | work bragfile | both files         | General use, cross-scope questions         |
+| `work`         | `work/` only                | yes           | work contacts only | Focused work sessions, performance reviews |
+| `life`         | `life/` only                | no            | life contacts only | Personal planning, family, hobbies         |
 
 The launcher stays dumb. No `--work`/`--life` flags. Agent selection happens inside the session.
 
@@ -111,6 +111,7 @@ The agent creates both sub-vault PARA structures during setup. Phase 2 (professi
 Everything below needs to change. This is a foundational refactor, broken into 9 user stories (see `specs/US-wl-*` files).
 
 ### Core logic
+
 - `vault.ts` — add `resolveVaultPath()`, update `KEY_FILES` usage, all vault operations gain scope parameter
 - `prompt-sections.ts` — `SectionContext` gains scope, each section builder filters to the right sub-vault
 - `types.ts` — add `VaultScope` type, remove `config.user.scope`
@@ -118,27 +119,33 @@ Everything below needs to change. This is a foundational refactor, broken into 9
 - `isVaultFresh`, `detectVaultState` — operate on scoped paths
 
 ### Skills (all 7)
+
 - Skills stay scope-relative (paths unchanged within skills)
 - System prompt establishes sub-vault context
 - Only `skills/brainkit/SKILL.md` needs structural updates
 
 ### OpenCode plugin
+
 - `server.ts` — system prompt injection needs to determine which agent is active and inject the right scoped prompt; brag detection scoped to work/bk agents
 - `tui.tsx` — register three primary agents (bk, work, life) with different prompts and colors
 - `side.tsx` — sidebar stats: show scoped or aggregate data depending on active agent
 
 ### Copilot CLI
+
 - Launcher installs three `.agent.md` files
 - Three scoped system prompts generated
 
 ### Onboarding
+
 - Creates both sub-vault PARA structures
 - Routes professional setup to `work/`, personal to `life/`
 
 ### Auto-commit
+
 - No change. Commits the whole vault regardless of scope.
 
 ### Docs
+
 - All 8 feature docs need path updates and sub-vault awareness
 - README philosophy section may need updating
 
@@ -147,16 +154,19 @@ Everything below needs to change. This is a foundational refactor, broken into 9
 Test requirements for new scoped paths (priority order):
 
 **P0 — Must have before merge:**
+
 - `resolveVaultPath()` returns correct paths for all three scopes; rejects invalid scope; rejects `"all"` for write contexts; handles path traversal attempts
 - Each `build*()` prompt section function with `scope: "work"` only includes work paths; `scope: "life"` excludes bragfile; `scope: "all"` includes both
 
 **P1 — Should have:**
+
 - `readBragfile` / `readContacts` route to scoped paths
 - `readContacts` with `scope: "all"` reads and merges both files
 - `runHealthChecks` validates both sub-vault PARA structures; reports per-sub-vault results
 - `detectVaultState` / `isVaultFresh` work with new dual-tree structure
 
 **P2 — Nice to have:**
+
 - `searchContacts` across both files in `"all"` scope handles duplicate entries
 - Agent-to-scope mapping in plugin layer
 
@@ -164,17 +174,17 @@ Test requirements for new scoped paths (priority order):
 
 This refactor is broken into 9 user stories, ordered by dependency:
 
-| US | Description | Depends on | Files |
-|---|---|---|---|
-| US-wl-1 | Path abstraction + scope type | — | `specs/US-wl-1-path-abstraction.md` |
-| US-wl-2 | Scoped vault operations | US-1 | `specs/US-wl-2-scoped-vault-ops.md` |
-| US-wl-3 | Scoped system prompt | US-1 | `specs/US-wl-3-scoped-prompt.md` |
-| US-wl-4 | Remove config.user.scope | US-3 | `specs/US-wl-4-remove-scope-config.md` |
-| US-wl-5 | Skills update | US-3 | `specs/US-wl-5-skills-update.md` |
-| US-wl-6 | OpenCode agents + server plugin | US-1, US-3 | `specs/US-wl-6-opencode-agents.md` |
-| US-wl-7 | Onboarding for dual vaults | US-2 | `specs/US-wl-7-onboarding.md` |
-| US-wl-8 | Copilot CLI agents | US-3 | `specs/US-wl-8-copilot-agents.md` |
-| US-wl-9 | Docs update | US-2, US-3 | `specs/US-wl-9-docs.md` |
+| US      | Description                     | Depends on | Files                                  |
+| ------- | ------------------------------- | ---------- | -------------------------------------- |
+| US-wl-1 | Path abstraction + scope type   | —          | `specs/US-wl-1-path-abstraction.md`    |
+| US-wl-2 | Scoped vault operations         | US-1       | `specs/US-wl-2-scoped-vault-ops.md`    |
+| US-wl-3 | Scoped system prompt            | US-1       | `specs/US-wl-3-scoped-prompt.md`       |
+| US-wl-4 | Remove config.user.scope        | US-3       | `specs/US-wl-4-remove-scope-config.md` |
+| US-wl-5 | Skills update                   | US-3       | `specs/US-wl-5-skills-update.md`       |
+| US-wl-6 | OpenCode agents + server plugin | US-1, US-3 | `specs/US-wl-6-opencode-agents.md`     |
+| US-wl-7 | Onboarding for dual vaults      | US-2       | `specs/US-wl-7-onboarding.md`          |
+| US-wl-8 | Copilot CLI agents              | US-3       | `specs/US-wl-8-copilot-agents.md`      |
+| US-wl-9 | Docs update                     | US-2, US-3 | `specs/US-wl-9-docs.md`                |
 
 ### Execution order
 

@@ -11,11 +11,13 @@ Register three scope-based agents (bk, work, life) in the OpenCode TUI plugin an
 ## Blocker
 
 **Before implementing:** Investigate whether OpenCode's plugin API exposes the active agent identifier in:
+
 - `system.transform` hook callback
 - `session.idle` event callback
 - Any other accessible API surface
 
 If the API does NOT expose agent context:
+
 - Option A: Register per-agent system prompts at TUI layer (each agent's config includes its own prompt)
 - Option B: Store active scope in a plugin-level variable, updated on agent switch event
 
@@ -37,7 +39,7 @@ api.agent({
 
 // work — focused work scope
 api.agent({
-  name: "work", 
+  name: "work",
   description: "Work sub-vault only",
 });
 
@@ -51,6 +53,7 @@ api.agent({
 Each agent should have a distinct visual identity (color, label) in the TUI.
 
 Handle existing agents: the current Thinker, Consultant, and Librarian agents (from `core/agent-prompts.ts`) are role-based, not scope-based. Decision needed:
+
 - Keep them as additional agents alongside bk/work/life?
 - Retire them?
 - Make them scope-aware (each role x scope combination)?
@@ -84,6 +87,7 @@ api.event("session.idle", async (event) => {
 ### `opencode/side.tsx`
 
 Update sidebar to show scope-appropriate stats:
+
 - `work` agent: work brag count, work contacts count
 - `life` agent: life contacts count (no brag stats)
 - `bk` agent: aggregate stats (total brags, total contacts across both)
@@ -91,6 +95,7 @@ Update sidebar to show scope-appropriate stats:
 ## Tests
 
 No existing tests for the plugin layer. Testing depends on API investigation results. At minimum:
+
 - Agent-to-scope mapping function should be unit tested
 - Verify brag detection does not fire for life scope
 

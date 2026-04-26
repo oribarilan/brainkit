@@ -64,4 +64,3 @@ describe("discoverVaults", () => {
     expect(() => discoverVaults(filePath)).toThrow();
   });
 });
-

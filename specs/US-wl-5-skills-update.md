@@ -70,6 +70,7 @@ Update to reflect dual sub-vault creation. Phase 2 (professional) populates `wor
 ## Tests
 
 No automated tests for skill content (markdown files). Manual verification:
+
 - Grep all SKILL.md files for `03_resources/contacts.md` — should return zero matches after update
 - Grep for hardcoded `work/` or `life/` prefixes in skills other than brainkit — should return zero (skills are scope-relative)
 

@@ -15,9 +15,9 @@ version = 1
 brain_path = "/Users/you/brain"
 ```
 
-| Field        | Type   | Required | Description                                              |
-| ------------ | ------ | -------- | -------------------------------------------------------- |
-| `brain_path` | string | yes      | Absolute path to the brain directory containing vaults   |
+| Field        | Type   | Required | Description                                            |
+| ------------ | ------ | -------- | ------------------------------------------------------ |
+| `brain_path` | string | yes      | Absolute path to the brain directory containing vaults |
 
 **Created by:** The agent during onboarding, or manually by the user.
 
@@ -80,12 +80,12 @@ contacts = true
 
 ### `[user]` — Identity
 
-| Field       | Type     | Required | Default          | Description                                                                                               |
-| ----------- | -------- | -------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
-| `name`      | string   | yes      | —                | User's name. Used in system prompt and vault references.                                                  |
-| `role`      | string   | yes      | —                | Professional role/title.                                                                                  |
-| `expertise` | string[] | no       | `[]`             | Areas of expertise. Helps the agent tailor its responses.                                                 |
-| `tone`      | string   | no       | `"direct"`       | Preferred writing tone for vault content (direct, casual, concise, formal).                               |
+| Field       | Type     | Required | Default    | Description                                                                 |
+| ----------- | -------- | -------- | ---------- | --------------------------------------------------------------------------- |
+| `name`      | string   | yes      | —          | User's name. Used in system prompt and vault references.                    |
+| `role`      | string   | yes      | —          | Professional role/title.                                                    |
+| `expertise` | string[] | no       | `[]`       | Areas of expertise. Helps the agent tailor its responses.                   |
+| `tone`      | string   | no       | `"direct"` | Preferred writing tone for vault content (direct, casual, concise, formal). |
 
 ### `[user.work]` — Professional Context
 
@@ -95,8 +95,8 @@ contacts = true
 
 ### `[user.personal]` — Personal Context
 
-| Field         | Type   | Required | Default | Description                                                                                                                          |
-| ------------- | ------ | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Field         | Type   | Required | Default | Description                                                                      |
+| ------------- | ------ | -------- | ------- | -------------------------------------------------------------------------------- |
 | `description` | string | no       | —       | Free-text about the user's personal life — location, hobbies, family, interests. |
 
 ### `[user.customization]` — Behavioral Tweaks

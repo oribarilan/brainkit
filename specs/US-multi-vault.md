@@ -59,7 +59,7 @@ No migration code. This is a greenfield rename (no external users). The implemen
 New function in `core/vault.ts`:
 
 ```typescript
-function discoverVaults(brainPath: string): string[]
+function discoverVaults(brainPath: string): string[];
 ```
 
 Scans immediate children of `brainPath` for directories containing `brainkit.toml`. Returns vault names (directory names) sorted alphabetically. Does not recurse -- only one level deep.
@@ -136,26 +136,26 @@ Minimal:
 ```typescript
 export default ((api) => {
   // Resolve vault path once at init
-  const vaultPath = resolveVaultPath()
+  const vaultPath = resolveVaultPath();
 
   api.hook("experimental.chat.system.transform", (system) => {
     // uses cached vaultPath
-  })
-}) satisfies ServerPlugin
+  });
+}) satisfies ServerPlugin;
 
 function resolveVaultPath(): string | undefined {
   // 1. Env var (set by CLI launcher)
-  const fromEnv = process.env.BRAINKIT_VAULT_PATH
-  if (fromEnv) return fromEnv
+  const fromEnv = process.env.BRAINKIT_VAULT_PATH;
+  if (fromEnv) return fromEnv;
 
   // 2. Fallback: discover from brain_path
-  const globalConfig = readGlobalConfig()
-  if (!globalConfig?.brain_path) return undefined
-  const vaults = discoverVaults(globalConfig.brain_path)
-  if (vaults.length === 1) return path.join(globalConfig.brain_path, vaults[0])
+  const globalConfig = readGlobalConfig();
+  if (!globalConfig?.brain_path) return undefined;
+  const vaults = discoverVaults(globalConfig.brain_path);
+  if (vaults.length === 1) return path.join(globalConfig.brain_path, vaults[0]);
 
   // 3. Multiple or zero vaults without env var -- can't resolve
-  return undefined
+  return undefined;
 }
 ```
 
@@ -201,17 +201,17 @@ Update all documentation to reflect multi-vault:
 
 The entire US-wl series (9 user stories) is replaced:
 
-| US-wl | Disposition |
-|-------|-------------|
-| US-wl-1 (path abstraction + scope type) | Replaced. No `VaultScope`, no `resolveVaultPath`. |
-| US-wl-2 (scoped vault ops) | Eliminated. Vault ops are unchanged. |
-| US-wl-3 (scoped prompt) | Eliminated. Prompt builder sees one vault. |
-| US-wl-4 (remove config.user.scope) | Kept, simplified. Field removed, no replacement needed. |
-| US-wl-5 (skills update) | Eliminated. Skills are unchanged. |
-| US-wl-6 (OpenCode agents + server plugin) | Eliminated. No scope agents, no API blocker. |
-| US-wl-7 (onboarding) | Simplified. Creates one vault, not two sub-vaults. |
-| US-wl-8 (Copilot agents) | Eliminated. No scope agents for Copilot. |
-| US-wl-9 (docs update) | Simplified. Docs mention multi-vault, no scope language. |
+| US-wl                                     | Disposition                                              |
+| ----------------------------------------- | -------------------------------------------------------- |
+| US-wl-1 (path abstraction + scope type)   | Replaced. No `VaultScope`, no `resolveVaultPath`.        |
+| US-wl-2 (scoped vault ops)                | Eliminated. Vault ops are unchanged.                     |
+| US-wl-3 (scoped prompt)                   | Eliminated. Prompt builder sees one vault.               |
+| US-wl-4 (remove config.user.scope)        | Kept, simplified. Field removed, no replacement needed.  |
+| US-wl-5 (skills update)                   | Eliminated. Skills are unchanged.                        |
+| US-wl-6 (OpenCode agents + server plugin) | Eliminated. No scope agents, no API blocker.             |
+| US-wl-7 (onboarding)                      | Simplified. Creates one vault, not two sub-vaults.       |
+| US-wl-8 (Copilot agents)                  | Eliminated. No scope agents for Copilot.                 |
+| US-wl-9 (docs update)                     | Simplified. Docs mention multi-vault, no scope language. |
 
 ## Units of work
 
@@ -250,17 +250,20 @@ Lane 3: Unit 3c (onboarding, docs, README, specs) ──────>
 Split into three independent sub-units:
 
 **Unit 3a: Scope removal**
+
 - Remove `config.user.scope` from `BrainkitConfig` in `core/types.ts`
 - Remove scope references from `core/prompt-sections.ts` (lines 67, 76, 83, 224, 230)
 - Update `core/__tests__/prompt-sections.test.ts` (lines 28, 82, 88) -- remove/update scope tests
 - Tests: compile-time type check, prompt sections don't reference scope
 
 **Unit 3b: TUI vault name**
+
 - Update `opencode/server.ts` to use `BRAINKIT_VAULT_PATH` with closure caching and fallback
 - Update `opencode/side.tsx` to display active vault name
 - Tests: plugin vault resolution (env var present, env var absent with single vault fallback)
 
 **Unit 3c: Onboarding + docs**
+
 - Update onboarding skill to create named vault under `brain_path`
 - Update `docs/features.md`, `docs/config.md`, `docs/onboarding.md`
 - Update `README.md`
@@ -269,6 +272,7 @@ Split into three independent sub-units:
 ## Tests
 
 **Unit 1:**
+
 - `discoverVaults` returns vault names for directories containing `brainkit.toml`
 - `discoverVaults` ignores directories without `brainkit.toml`
 - `discoverVaults` ignores files (non-directories)
@@ -279,6 +283,7 @@ Split into three independent sub-units:
 - `readGlobalConfig` returns `brain_path`
 
 **Unit 2:**
+
 - `--vault work` resolves to `brain_path/work`
 - `--vault nonexistent` errors with available vault list
 - `--vault` without a value shows usage error
@@ -287,16 +292,19 @@ Split into three independent sub-units:
 - Non-TTY stdin with 2+ vaults and no `--vault` flag errors with guidance
 
 **Unit 3a:**
+
 - `config.user.scope` removed from type (compile-time check)
 - Prompt sections do not reference `config.user.scope`
 - Existing scope tests in `prompt-sections.test.ts` updated (regression check)
 
 **Unit 3b:**
+
 - Plugin resolves vault path from `BRAINKIT_VAULT_PATH` env var when present
 - Plugin falls back to `brain_path` + `discoverVaults` for single-vault case when env var absent
 - `side.tsx` displays vault name extracted from path
 
 **Unit 3c:**
+
 - Onboarding creates vault directory with PARA structure
 
 ## Not in scope

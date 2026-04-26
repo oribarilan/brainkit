@@ -105,12 +105,14 @@ A constant string in `server.ts` covering:
 **What to create (after gathering enough info):**
 
 1. `~/.config/brainkit/config.toml`:
+
    ```toml
    version = 1
    brain_path = "~/brain"
    ```
 
 2. `<brain_path>/<vault_name>/brainkit.toml`:
+
    ```toml
    version = 1
 
@@ -169,17 +171,21 @@ No restart needed. No user action needed.
 ### Edge cases
 
 **Partial onboarding -- `config.toml` written, `brainkit.toml` not yet:**
+
 - Next launch: CLI finds config, `discoverVaults()` returns `[]`, falls back to `vaultPath = brainPath` (`launch.ts:180`).
 - Server plugin: `resolveVaultPath()` returns the brain path, `readVaultConfigSimple()` throws, falls into onboarding prompt again.
 - User picks up where they left off.
 
 **Partial onboarding -- nothing written:**
+
 - Next launch is identical to first launch. Clean slate.
 
 **Existing users:**
+
 - Zero impact. They have `config.toml` and `brainkit.toml` -- the onboarding path is never entered.
 
 **Multi-vault later:**
+
 - User asks to create a new vault. The onboarding skill (`skills/onboarding/SKILL.md`) guides that flow. New vault gets its own `brainkit.toml` under the same brain directory. `discoverVaults()` picks it up on next launch.
 
 ## Units of work
@@ -205,21 +211,26 @@ Unit 1 (CLI + server plugin) ──> Unit 2 (TUI tip)
 ## Tests
 
 **`selectVault()` no config:**
+
 - Returns `{ vaultPath: undefined, brainPath: undefined }` when `readGlobalConfig()` returns `null`
 - Does not call `process.exit`
 
 **Server plugin onboarding prompt:**
+
 - Injects onboarding prompt when `resolveVaultPath()` returns `undefined`
 - Onboarding prompt contains key setup instructions (brain location, vault name, file formats)
 
 **Server plugin transition:**
+
 - After `config.toml` and `brainkit.toml` are written, `resolveVaultPath()` returns the real vault path
 - Normal system prompt is injected instead of onboarding prompt
 
 **Partial onboarding recovery:**
+
 - `config.toml` exists but no `brainkit.toml` -> onboarding prompt injected
 
 **Existing tests:**
+
 - Update any `selectVault()` tests that assert `process.exit` on missing config
 
 ## Not in scope

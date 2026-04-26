@@ -55,6 +55,7 @@ function createParaStructure(vaultPath: string, scope: SubVault): void {
 ### `skills/onboarding/SKILL.md`
 
 Already addressed in US-wl-5, but specifically:
+
 - Remove the "professional, personal, or both" scope question
 - Update the phase descriptions to mention `work/` and `life/` sub-vaults
 - Update example paths to show sub-vault-relative structure
@@ -62,6 +63,7 @@ Already addressed in US-wl-5, but specifically:
 ### Error handling
 
 If vault creation fails partway (e.g., `work/` created but `life/` fails):
+
 - The `isVaultFresh()` check should still detect the vault as partially set up
 - The onboarding flow should be able to resume and create missing structure
 - Do not leave the vault in a broken state — if creation fails, surface a clear error

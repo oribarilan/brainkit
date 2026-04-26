@@ -19,7 +19,7 @@ export type SectionContext = {
   config: BrainkitConfig;
   vaultPath: string;
   mode: PromptMode;
-  scope: VaultScope;  // new
+  scope: VaultScope; // new
   cwd?: string;
 };
 ```
@@ -46,7 +46,7 @@ export function buildSystemPrompt(
   config: BrainkitConfig,
   vaultPath: string,
   options?: { cwd?: string; mode?: PromptMode; scope?: VaultScope },
-): string
+): string;
 ```
 
 Default scope is `"all"`. Passes scope into `SectionContext`.

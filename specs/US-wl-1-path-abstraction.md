@@ -23,11 +23,7 @@ export type VaultScope = "all" | "work" | "life";
 Add `resolveVaultPath()`:
 
 ```typescript
-export function resolveVaultPath(
-  vaultPath: string,
-  scope: VaultScope,
-  relativePath: string,
-): string {
+export function resolveVaultPath(vaultPath: string, scope: VaultScope, relativePath: string): string {
   if (scope === "all") {
     throw new Error(
       "Cannot resolve a single path for scope 'all'. Use scope-specific reads or iterate both sub-vaults.",
