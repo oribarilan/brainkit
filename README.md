@@ -48,18 +48,19 @@ No commands, no formatting, no manual filing.
 
 ## Features
 
-- [**PARA vault**](docs/para.md) -- projects, areas, resources, archive. The agent files things where they belong.
-- [**Bragfile**](docs/bragfile.md) -- a running log of accomplishments. The agent offers to capture them when you mention shipping something, and nudges you when it's been a while.
-- [**Contacts**](docs/contacts.md) -- a people index. Cross-referenced when people come up in conversation.
-- [**Meeting notes**](docs/meeting-notes.md) -- structured notes filed under the right PARA directory with attendees, decisions, and action items.
-- [**Onboarding**](docs/onboarding.md) -- first run is a conversation that builds a vault matching your actual situation.
-- [**Auto-commit**](docs/auto-commit.md) -- vault changes get git-committed after conversations.
-- [**Doctor**](docs/doctor.md) -- checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.
-- [**TUI**](docs/tui.md) -- custom terminal UI for OpenCode with vault stats sidebar, rotating tips, and rose-pink theme.
+- [PARA vault](docs/para.md). Four directories: projects, areas, resources, archive. The agent files things where they belong.
+- [Multi-vault](docs/config.md). Keep separate vaults for work and life, or just use one. Each vault has its own config, contacts, and bragfile.
+- [Bragfile](docs/bragfile.md). A running log of accomplishments. The agent offers to capture them when you mention shipping something, and nudges you when it's been a while.
+- [Contacts](docs/contacts.md). A people index, cross-referenced when people come up in conversation.
+- [Meeting notes](docs/meeting-notes.md). Structured notes filed under the right PARA directory with attendees, decisions, and action items.
+- [Onboarding](docs/onboarding.md). First run is a conversation that builds a vault matching your actual situation.
+- [Auto-commit](docs/auto-commit.md). Vault changes get git-committed after conversations.
+- [Doctor](docs/doctor.md). Checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.
+- [TUI](docs/tui.md). Custom terminal UI for OpenCode with vault stats sidebar, rotating tips, and rose-pink theme.
 
 ## Philosophy
 
-**For both life and work.** A brain directory holds one or more vaults. You might have `work` and `life`, or just one. Each vault is independent with its own config, contacts, and bragfile. Pick which vault to open with `--vault`, or let brainkit auto-select when there's only one.
+**For both life and work.** Pick which vault to open with `--vault`, or let brainkit auto-select when there's only one.
 
 **Everything goes in.** Food recipes, feedback from your manager, notes from a doctor appointment, architecture decisions from a sprint review. If it's worth remembering, it belongs in the vault. The whole point is that you actually use it, so it has to be low friction.
 
