@@ -64,7 +64,7 @@ When the user is satisfied with their profile, the agent sets `onboarding_comple
 
 ### Tone and boundaries
 
-The agent is warm but efficient. Not overly chatty, not robotic. It asks one topic at a time and doesn't dump all questions at once. If the user wants to skip personal information, the agent respects that immediately — no pushing, no "are you sure?" The scope can be set to `"professional"` and personal fields left empty.
+The agent is warm but efficient. Not overly chatty, not robotic. It asks one topic at a time and doesn't dump all questions at once. If the user wants to skip personal information, the agent respects that immediately — no pushing, no "are you sure?" Personal fields can be left empty.
 
 ## Harness implementation
 

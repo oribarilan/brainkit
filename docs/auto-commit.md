@@ -49,7 +49,7 @@ Every git operation is wrapped in try/catch. If `git add` fails, `git commit` fa
 
 ### Scope
 
-Auto-commit only touches the vault directory, identified by `readGlobalConfig().vault_path`. It has no awareness of and no effect on the user's project repository or any other directory on disk.
+Auto-commit only touches the vault directory, identified by the `BRAINKIT_VAULT_PATH` environment variable (set by the CLI launcher). It has no awareness of and no effect on the user's project repository or any other directory on disk.
 
 ## Harness implementation
 
