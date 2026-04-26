@@ -52,7 +52,7 @@ No commands, no formatting, no manual filing.
 - [Multi-vault](docs/config.md). Keep separate vaults for work and life, or just use one. Each vault has its own config, contacts, and bragfile.
 - [Bragfile](docs/bragfile.md). A running log of accomplishments. The agent offers to capture them when you mention shipping something, and nudges you when it's been a while.
 - [Contacts](docs/contacts.md). A people index, cross-referenced when people come up in conversation.
-- [Meeting notes](docs/meeting-notes.md). Structured notes filed under the right PARA directory with attendees, decisions, and action items.
+- [Meeting notes](docs/meeting-notes.md). Capture notes from any meeting, then process them: action items, decisions, and contacts get distributed to where they belong, and the note gets archived.
 - [Onboarding](docs/onboarding.md). First run is a conversation that builds a vault matching your actual situation.
 - [Auto-commit](docs/auto-commit.md). Vault changes get git-committed after conversations.
 - [Doctor](docs/doctor.md). Checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.

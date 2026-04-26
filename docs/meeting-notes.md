@@ -69,6 +69,33 @@ The agent should offer to create meeting notes when:
 
 If the user's request is vague — "capture notes from my meeting" — the agent should ask clarifying questions: Who was in the meeting? What project or area does this relate to? What date was it? The agent needs enough context to pick the right PARA directory and fill in the template.
 
+## Processing
+
+Meeting notes are a capture format. The useful information inside them — action items, decisions, contacts — belongs in the places where you'll actually look for it later. Once those bits are distributed to their proper locations, the original note gets archived.
+
+### Processing flow
+
+After creating a meeting note, the agent offers to process it. Processing extracts and distributes information to where it belongs:
+
+- Action items go to the relevant project or area README, or its task list.
+- Accomplishments go to the bragfile (professional meetings only).
+- New contacts go to `03_resources/contacts.md`.
+- Key decisions go to the relevant project or area README.
+- Reference material goes to relevant resource notes.
+
+The original note then moves intact to `04_archive/meeting-notes/`. The agent confirms what was extracted and where each piece went.
+
+### Triggers
+
+Processing can happen at two points:
+
+- **Right after creation.** The agent offers: "Want me to process this note?"
+- **On demand.** The user says "process my meeting notes" or something similar.
+
+### Archive
+
+Processed notes go to `04_archive/meeting-notes/` as a flat directory. The original file is kept intact as a record — nothing is deleted or rewritten, just moved.
+
 ## Harness implementation
 
 | Capability                | OpenCode                                                                                                                                                                                                   | Copilot CLI                                                                          |

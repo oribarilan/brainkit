@@ -65,3 +65,19 @@ Key points discussed, organized by topic.
 ## When to Create
 
 Create meeting notes when the user says "I just had a meeting about...", pastes a transcript/agenda, or asks to summarize a discussion. Ask clarifying questions if needed: "Who was in the meeting? What project is this for?"
+
+## Processing
+
+After creating a meeting note, offer to process it: "Want me to process this note?" Also process on demand when the user asks (e.g. "process my meeting notes").
+
+Processing means extracting information and distributing it where it will be searched for, not where it was captured:
+
+- Action items with deadlines → relevant project/area README or task list
+- Accomplishments → bragfile (professional only, per bragfile rules)
+- New people → contacts (`03_resources/contacts.md`)
+- Key decisions → relevant project/area README
+- Reference info → relevant resource notes
+
+After extracting, move the original note (intact) to `04_archive/meeting-notes/`. Confirm what was extracted and where it went.
+
+The original file is kept as a record. Don't modify it during archival.
