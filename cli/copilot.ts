@@ -162,13 +162,13 @@ export function cleanupOnboardingWorkspace(configDir: string): void {
 // ---------------------------------------------------------------------------
 
 export function launchCopilot(args: string[], selectedVaultPath?: string): void {
+  const configDir = path.join(os.homedir(), ".config", "brainkit");
   let vaultPath = selectedVaultPath;
 
   if (vaultPath === undefined) {
     const globalConfig = readGlobalConfig();
     if (globalConfig === null || !globalConfig.brain_path) {
       // No vault configured — launch onboarding
-      const configDir = path.join(os.homedir(), ".config", "brainkit");
       const onboardingDir = ensureOnboardingWorkspace(configDir);
 
       p.outro("Starting onboarding...");
@@ -180,7 +180,6 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
   }
 
   // Clean up onboarding workspace from a previous first run
-  const configDir = path.join(os.homedir(), ".config", "brainkit");
   cleanupOnboardingWorkspace(configDir);
 
   const config = readVaultConfigSimple(vaultPath);
