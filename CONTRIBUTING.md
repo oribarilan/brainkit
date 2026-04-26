@@ -72,7 +72,7 @@ When the user asks to prepare a release, the agent:
    - Only `Fixed` entries → patch
    - Any `Added` entries → minor
    - Any `Removed` or breaking `Changed` entries → major (or minor while pre-1.0)
-3. Bumps `version` in `package.json`
+3. Bumps `version` in `package.json` and runs `npm install` to sync `package-lock.json`
 4. Locks changelog — renames `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`, adds fresh `[Unreleased]` placeholder, adds comparison link
 5. Creates a `release/vX.Y.Z` branch and opens a PR to `main`
 
