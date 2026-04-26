@@ -1,6 +1,7 @@
 export interface BrainkitGlobalConfig {
   version: number;
   brain_path: string;
+  default_harness?: string;
 }
 
 export interface BrainkitConfig {

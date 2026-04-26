@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+- Harness auto-detection with remembered default — when multiple harnesses are installed, brainkit prompts you to pick a default and saves the choice to global config
+
+### Changed
+- Package renamed from `@oribish/brainkit` to `@2brain/brainkit`
+- Release pipeline switched from NPM_TOKEN to OIDC trusted publishing
+
 ## [0.2.0] - 2026-04-26
 
 ### Added

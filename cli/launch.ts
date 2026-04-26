@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as readline from "node:readline";
 import { execFileSync, spawn } from "node:child_process";
-import { readGlobalConfig, discoverVaults } from "../core/index.js";
+import { readGlobalConfig, writeGlobalConfig, discoverVaults } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 
 // ---------------------------------------------------------------------------
@@ -223,8 +223,9 @@ export function detectAndLaunch(args: string[], vaultPath?: string): void {
 
   if (available.length === 0) {
     console.error("  [brainkit] No supported coding harness found.");
-    console.error("  [brainkit] Install OpenCode: https://opencode.ai");
-    console.error("  [brainkit] Install Copilot CLI: https://github.com/github/copilot-cli");
+    for (const h of HARNESSES) {
+      console.error(`    ${h.name}  (not installed)`);
+    }
     process.exit(1);
   }
 
@@ -236,10 +237,64 @@ export function detectAndLaunch(args: string[], vaultPath?: string): void {
     return;
   }
 
-  // Multiple harnesses — prompt user (for now, just list them)
-  console.log("  [brainkit] Multiple coding harnesses found:");
-  for (const h of available) {
-    console.log(`    brainkit ${h.aliases[0]}  — launch ${h.name}`);
+  // Multiple harnesses — check for saved default
+  const globalConfig = readGlobalConfig();
+  const savedDefault = globalConfig?.default_harness;
+  if (savedDefault !== undefined && savedDefault !== "") {
+    const defaultHarness = available.find((h) => h.aliases.includes(savedDefault));
+    if (defaultHarness) {
+      defaultHarness.launch(args, vaultPath);
+      return;
+    }
+    // Saved default not installed — fall through to prompt
   }
-  process.exit(0);
+
+  // Non-TTY — can't prompt
+  if (!process.stdin.isTTY) {
+    console.error("  [brainkit] Multiple harnesses detected. Use a subcommand to pick one:");
+    for (const h of HARNESSES) {
+      const detected = available.includes(h);
+      if (detected) {
+        console.error(`    brainkit ${h.aliases[0]}  — ${h.name}  (detected)`);
+      } else {
+        console.error(`    brainkit ${h.aliases[0]}  — ${h.name}  (not installed)`);
+      }
+    }
+    process.exit(1);
+  }
+
+  // Interactive prompt
+  console.log("\n  [brainkit] Select your default harness:\n");
+  let selectable = 0;
+  const indexToHarness: Harness[] = [];
+  for (const h of HARNESSES) {
+    const detected = available.includes(h);
+    if (detected) {
+      selectable++;
+      indexToHarness.push(h);
+      console.log(`    ${selectable}. ${h.name}        (detected)`);
+    } else {
+      console.log(`       ${h.name}        (not installed)`);
+    }
+  }
+  console.log("");
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  rl.question("  Choice (number): ", (answer) => {
+    rl.close();
+    const idx = parseInt(answer, 10) - 1;
+    const selected = indexToHarness[idx];
+    if (selected === undefined) {
+      console.error(`  [brainkit] Invalid selection. Choose 1-${selectable}.`);
+      process.exit(1);
+    }
+
+    // Save default
+    const config = globalConfig ?? { version: 1, brain_path: "" };
+    config.default_harness = selected.aliases[0];
+    writeGlobalConfig(config);
+    console.log(`  [brainkit] Default harness set to ${selected.name}.`);
+
+    selected.launch(args, vaultPath);
+  });
 }
