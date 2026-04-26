@@ -39,36 +39,60 @@ Runtime dependencies require explicit approval — open an issue first explainin
 
 Dev dependencies (testing, linting, formatting) have a lower bar but should still be discussed for anything beyond the existing toolchain.
 
-Current runtime dependencies: `smol-toml`. That's it.
+Current runtime dependency: `smol-toml`. That's it.
 
-## Deploy flow
+## Releasing
 
-### npm (`npx @oribish/brainkit`)
+### Semver convention
 
-Two packages are published to npm from this repo:
+| Bump | When | Examples |
+|------|------|----------|
+| **Patch** (0.1.0 → 0.1.1) | Bug fixes, doc updates, internal refactors with no behavior change | Fix path traversal edge case, update skill wording |
+| **Minor** (0.1.0 → 0.2.0) | New features, new skills, non-breaking additions | Add meeting notes feature, new TUI widget |
+| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags |
 
-1. `@oribish/brainkit-core` — shared vault logic, system prompt, types
-2. `@oribish/brainkit` — CLI + OpenCode plugin + skills
+While at `0.x`, minor bumps may include breaking changes (standard pre-1.0 practice).
 
-Publishing order: core first, then brainkit. This is currently manual (not in CI/CD).
+### Changelog discipline
 
-1. Run all checks: `just check`
-2. Build the CLI: `just build-cli`
-3. Bump `version` in both `package.json` files and update `CHANGELOG.md`
-4. Publish core: `npm publish --access=public` from `core/`
-5. Publish brainkit: `npm publish --access=public` from root
-6. Tag and push:
-   ```bash
-   git tag v0.2.0
-   git push origin v0.2.0
-   ```
+Every PR that changes behavior must add an entry under `## [Unreleased]` in `CHANGELOG.md`:
+- `Added` — new features
+- `Changed` — changes to existing features
+- `Fixed` — bug fixes
+- `Removed` — removed features
+- `Deprecated` — features marked for removal
 
-The CLI compiles `cli/` and shared modules from `core/` to `dist/` via `tsc`. The `dist/` directory is gitignored but included in the npm package via the `files` field in `package.json`.
+### Release process (agent-driven)
+
+When the user asks to prepare a release, the agent:
+
+1. Reviews `[Unreleased]` in `CHANGELOG.md` — confirms there are entries to release
+2. Determines bump type from changelog categories:
+   - Only `Fixed` entries → patch
+   - Any `Added` entries → minor
+   - Any `Removed` or breaking `Changed` entries → major (or minor while pre-1.0)
+3. Bumps `version` in `package.json`
+4. Locks changelog — renames `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`, adds fresh `[Unreleased]` placeholder, adds comparison link
+5. Creates a `release/vX.Y.Z` branch and opens a PR to `main`
+
+### What CI does automatically
+
+After the release PR is merged to `main`:
+1. `check.yml` runs `just check` (lint + format + test + package integrity)
+2. `release.yml` detects the version change and:
+   - Runs `just check` again (belt and suspenders)
+   - Publishes to npm with provenance (`npm publish --provenance --access=public`)
+   - Creates a GitHub Release with the changelog entries
+
+### Manual setup (one-time)
+
+- Create an npm automation token at npmjs.com → Access Tokens → Automation
+- Add it as `NPM_TOKEN` secret in the GitHub repo settings
 
 ## Project structure
 
 ```
-core/               # TypeScript — shared logic (@oribish/brainkit-core)
+core/               # TypeScript — shared vault logic
 opencode/           # TypeScript/TSX — OpenCode plugin (server + TUI)
 cli/                # TypeScript — CLI entry point
 skills/             # Markdown — domain knowledge for the agent
@@ -81,7 +105,7 @@ See `AGENTS.md` for detailed structure and coding principles.
 ## Conventions
 
 - TypeScript, strict mode, ESM imports
-- `.js` extension for local imports in `core/` and `cli/` (Node/jiti resolution)
+- `.js` extension for local imports in `core/` and `cli/` (Node resolution)
 - `.ts`/`.tsx` extensions for imports in `opencode/` (bun resolution)
 - `import type` for type-only imports
 - `camelCase` for functions/variables, `PascalCase` for types, `UPPER_SNAKE` for constants
