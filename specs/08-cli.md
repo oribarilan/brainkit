@@ -2,7 +2,7 @@
 
 ## Overview
 
-The brainkit CLI (`npx @oribish/brainkit` or `brainkit`) is a thin launcher that spawns OpenCode with the brainkit plugin loaded. It handles harness detection, config generation, and argument forwarding — nothing more.
+The brainkit CLI (`npx @2brain/brainkit` or `brainkit`) is a thin launcher that spawns OpenCode with the brainkit plugin loaded. It handles harness detection, config generation, and argument forwarding — nothing more.
 
 All vault operations, onboarding, skill loading, and system prompt injection happen inside the harness via the plugin. The CLI's only job is to get the user into the right harness with brainkit configured.
 
@@ -37,7 +37,7 @@ The CLI maintains a registry of supported harnesses (currently only OpenCode). O
 
 Before launching OpenCode, the CLI ensures config files exist at `~/.config/brainkit/`:
 
-- `opencode.json` — registers `@oribish/brainkit` as a plugin
+- `opencode.json` — registers `@2brain/brainkit` as a plugin
 - `tui.json` — registers the TUI plugin
 
 These are created only if they don't already exist (no overwrite on re-run).
@@ -104,7 +104,7 @@ The CLI is compiled to ESM JavaScript via `tsc` and published with a `bin` field
 }
 ```
 
-The compiled `dist/cli/index.js` starts with `#!/usr/bin/env node`. When users run `npx @oribish/brainkit`, npm downloads the package and executes it. No additional runtime dependencies (tsx, jiti, esbuild) are needed.
+The compiled `dist/cli/index.js` starts with `#!/usr/bin/env node`. When users run `npx @2brain/brainkit`, npm downloads the package and executes it. No additional runtime dependencies (tsx, jiti, esbuild) are needed.
 
 Build command:
 
@@ -123,9 +123,9 @@ just build-cli    # tsc --project cli/tsconfig.json → dist/
 
 ## Why not a separate package?
 
-The CLI, plugin, and skills all live in `@oribish/brainkit`. One package with two entry points (CLI launcher + OpenCode plugin) keeps everything in sync — the CLI launches the same version of the plugin that ships alongside it.
+The CLI, plugin, and skills all live in `@2brain/brainkit`. One package with two entry points (CLI launcher + OpenCode plugin) keeps everything in sync — the CLI launches the same version of the plugin that ships alongside it.
 
-Core vault logic lives in `@oribish/brainkit-core` (a separate workspace package), but the CLI doesn't import from it. The CLI is purely a launcher.
+Core vault logic lives in `@2brain/brainkit-core` (a separate workspace package), but the CLI doesn't import from it. The CLI is purely a launcher.
 
 ## Future: multi-harness support
 

@@ -15,10 +15,10 @@ Both are exported from `package.json` via the `exports` field. OpenCode loads `.
 
 ### Two-Package Structure
 
-| Package                  | Contents                                                                      | Depends on               |
-| ------------------------ | ----------------------------------------------------------------------------- | ------------------------ |
-| `@oribish/brainkit-core` | Vault operations, system prompt builder, brag detection helpers, config types | `smol-toml`              |
-| `@oribish/brainkit`      | CLI (launcher) + OpenCode plugin + skills                                     | `@oribish/brainkit-core` |
+| Package                 | Contents                                                                      | Depends on              |
+| ----------------------- | ----------------------------------------------------------------------------- | ----------------------- |
+| `@2brain/brainkit-core` | Vault operations, system prompt builder, brag detection helpers, config types | `smol-toml`             |
+| `@2brain/brainkit`      | CLI (launcher) + OpenCode plugin + skills                                     | `@2brain/brainkit-core` |
 
 The `package.json` exports OpenCode entry points:
 
@@ -34,7 +34,7 @@ The `package.json` exports OpenCode entry points:
 OpenCode plugin config references the package:
 
 ```json
-{ "plugin": ["@oribish/brainkit"] }
+{ "plugin": ["@2brain/brainkit"] }
 ```
 
 ### What lives in `brainkit-core`
@@ -127,7 +127,7 @@ The plugin degrades gracefully when the vault is unavailable:
 
 ```
 core/
-  package.json          # @oribish/brainkit-core
+  package.json          # @2brain/brainkit-core
   index.ts              # re-exports
   vault.ts              # extracted from extensions/vault.ts
   system-prompt.ts      # extracted from extensions/system-prompt.ts
@@ -173,14 +173,14 @@ Plugin options via `opencode.json`:
 
 ## Dependencies
 
-### `@oribish/brainkit-core`
+### `@2brain/brainkit-core`
 
 - Runtime: `smol-toml`
 - No peer dependencies
 
-### `@oribish/brainkit`
+### `@2brain/brainkit`
 
-- Runtime: `@oribish/brainkit-core`
+- Runtime: `@2brain/brainkit-core`
 - Peer (optional): `@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`
 
 ## CLI — `brainkit`
@@ -227,7 +227,7 @@ OpenCode **merges** configs (confirmed in docs: "Configuration files are merged 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@oribish/brainkit"]
+  "plugin": ["@2brain/brainkit"]
 }
 ```
 
@@ -236,7 +236,7 @@ OpenCode **merges** configs (confirmed in docs: "Configuration files are merged 
 ```json
 {
   "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["@oribish/brainkit"]
+  "plugin": ["@2brain/brainkit"]
 }
 ```
 
@@ -248,8 +248,8 @@ Skills ship as markdown files in the npm package under `skills/`. The server plu
 
 Two npm packages from this repo (npm workspaces):
 
-1. **`@oribish/brainkit-core`** — shared vault logic, system prompt, types
-2. **`@oribish/brainkit`** — CLI + OpenCode plugin + skills
+1. **`@2brain/brainkit-core`** — shared vault logic, system prompt, types
+2. **`@2brain/brainkit`** — CLI + OpenCode plugin + skills
    - `bin.brainkit` — launcher
    - `./server` — OpenCode server plugin export
    - `./tui` — OpenCode TUI plugin export

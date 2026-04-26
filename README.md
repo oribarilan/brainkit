@@ -53,7 +53,7 @@ No commands, no formatting, no manual filing.
 ### OpenCode
 
 ```bash
-npx @oribish/brainkit
+npx @2brain/brainkit
 ```
 
 Requires [OpenCode](https://opencode.ai) on your `$PATH`. The CLI launches OpenCode with the brainkit plugin loaded.
@@ -69,11 +69,11 @@ Requires [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed a
 Or install globally:
 
 ```bash
-npm install -g @oribish/brainkit
+npm install -g @2brain/brainkit
 brainkit
 ```
 
-[![npm version](https://img.shields.io/npm/v/@oribish/brainkit)](https://www.npmjs.com/package/@oribish/brainkit)
+[![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
 
 ## Getting started
 

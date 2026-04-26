@@ -34,7 +34,7 @@ opencode/           # TypeScript/TSX — OpenCode plugin
   side.tsx          # Sidebar component (vault stats)
   tips.tsx          # Rotating tips component
   brainkit.json     # Custom color theme
-cli/                # TypeScript — CLI entry point for npx @oribish/brainkit
+cli/                # TypeScript — CLI entry point for npx @2brain/brainkit
   index.ts          # Entry point, routes to harness launcher
   launch.ts         # Harness detection, config setup, spawn opencode
 skills/             # Markdown — client-side domain knowledge for the user's agent
@@ -167,7 +167,7 @@ Tests live in `__tests__/` directories alongside source. Each test file maps to 
 
 ## Package Architecture
 
-The repo publishes a single npm package: `@oribish/brainkit`.
+The repo publishes a single npm package: `@2brain/brainkit`.
 
 | Directory   | What it contains                               |
 | ----------- | ---------------------------------------------- |

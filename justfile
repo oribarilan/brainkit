@@ -61,23 +61,23 @@ test-package:
     npm init -y --silent > /dev/null 2>&1
     npm install "/tmp/$TARBALL" --silent > /dev/null 2>&1
     # Verify CLI binary exists and runs
-    node node_modules/@oribish/brainkit/dist/cli/index.js --help > /dev/null
+    node node_modules/@2brain/brainkit/dist/cli/index.js --help > /dev/null
     # Verify key directories exist
     for dir in core opencode skills dist; do
-        if [ ! -d "node_modules/@oribish/brainkit/$dir" ]; then
+        if [ ! -d "node_modules/@2brain/brainkit/$dir" ]; then
             echo "FAIL: missing directory $dir" >&2
             exit 1
         fi
     done
     # Verify plugin exports exist
     for f in opencode/server.ts opencode/tui.tsx; do
-        if [ ! -f "node_modules/@oribish/brainkit/$f" ]; then
+        if [ ! -f "node_modules/@2brain/brainkit/$f" ]; then
             echo "FAIL: missing export file $f" >&2
             exit 1
         fi
     done
     # Verify test files are NOT shipped
-    if [ -d "node_modules/@oribish/brainkit/core/__tests__" ]; then
+    if [ -d "node_modules/@2brain/brainkit/core/__tests__" ]; then
         echo "FAIL: core/__tests__/ should not be in the package" >&2
         exit 1
     fi

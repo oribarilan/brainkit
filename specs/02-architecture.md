@@ -22,22 +22,22 @@ A key design choice: brainkit does **not** define typed tools (no `brain_*` func
 
 ## Package Structure
 
-> **Note (2026-04-26):** The two-package architecture described below has been superseded. The repo now publishes a single `@oribish/brainkit` package. See `specs/07-decisions.md` for rationale.
+> **Note (2026-04-26):** The two-package architecture described below has been superseded. The repo now publishes a single `@2brain/brainkit` package. See `specs/07-decisions.md` for rationale.
 
 Brainkit publishes two npm packages:
 
-| Package                  | Directory | What it contains                                 |
-| ------------------------ | --------- | ------------------------------------------------ |
-| `@oribish/brainkit-core` | `core/`   | Vault ops, system prompt, types. Zero peer deps. |
-| `@oribish/brainkit`      | root      | CLI + OpenCode plugin + skills. Depends on core. |
+| Package                 | Directory | What it contains                                 |
+| ----------------------- | --------- | ------------------------------------------------ |
+| `@2brain/brainkit-core` | `core/`   | Vault ops, system prompt, types. Zero peer deps. |
+| `@2brain/brainkit`      | root      | CLI + OpenCode plugin + skills. Depends on core. |
 
-`@oribish/brainkit-core` has a single runtime dependency (`smol-toml` for TOML parsing). `@oribish/brainkit` has optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
+`@2brain/brainkit-core` has a single runtime dependency (`smol-toml` for TOML parsing). `@2brain/brainkit` has optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
 
 Root `package.json` uses `"workspaces": ["core"]`. Publishing order: core first, then brainkit.
 
 ```
 brainkit/
-  core/                     # @oribish/brainkit-core
+  core/                     # @2brain/brainkit-core
     vault.ts                # Vault discovery, config, file operations, brag stats
     system-prompt.ts        # Dynamic system prompt builder
     prompt-sections.ts      # Individual prompt section builders
@@ -74,10 +74,10 @@ Distributed via npm. Users install globally or run with `npx`:
 
 ```bash
 # Run directly (recommended)
-npx @oribish/brainkit
+npx @2brain/brainkit
 
 # Or install globally
-npm install -g @oribish/brainkit
+npm install -g @2brain/brainkit
 brainkit
 ```
 
@@ -101,7 +101,7 @@ OpenCode loads `.ts`/`.tsx` files directly via bun — no build step needed for 
 ## Data Flow
 
 ```
-CLI Launch (npx @oribish/brainkit)
+CLI Launch (npx @2brain/brainkit)
 │
 ├─► Detect OpenCode on $PATH
 ├─► Create config at ~/.config/brainkit/

@@ -106,9 +106,9 @@ This documents key design decisions, their reasoning, and alternatives considere
 
 ### 13. npm package with OpenCode plugin exports
 
-**Decision**: Structure the repo as two npm packages — `@oribish/brainkit-core` (shared logic) and `@oribish/brainkit` (CLI + plugin + skills) — with OpenCode plugin entry points declared via `exports` in package.json. _(Supersedes original pi package format decision.)_
+**Decision**: Structure the repo as two npm packages — `@2brain/brainkit-core` (shared logic) and `@2brain/brainkit` (CLI + plugin + skills) — with OpenCode plugin entry points declared via `exports` in package.json. _(Supersedes original pi package format decision.)_
 
-**Reasoning**: OpenCode loads plugins via package.json `exports`. The `./server` export points to `opencode/server.ts` (server plugin: system prompt injection, event hooks) and the `./tui` export points to `opencode/tui.tsx` (TUI plugin: ASCII art, sidebar, tips, theme). OpenCode runs these via bun — no build step needed for the plugin itself. The CLI (`cli/index.ts`) is compiled to `dist/` for npm distribution. The two-package split keeps `@oribish/brainkit-core` dependency-free (only `smol-toml`) while `@oribish/brainkit` has optional peer deps on OpenCode packages.
+**Reasoning**: OpenCode loads plugins via package.json `exports`. The `./server` export points to `opencode/server.ts` (server plugin: system prompt injection, event hooks) and the `./tui` export points to `opencode/tui.tsx` (TUI plugin: ASCII art, sidebar, tips, theme). OpenCode runs these via bun — no build step needed for the plugin itself. The CLI (`cli/index.ts`) is compiled to `dist/` for npm distribution. The two-package split keeps `@2brain/brainkit-core` dependency-free (only `smol-toml`) while `@2brain/brainkit` has optional peer deps on OpenCode packages.
 
 ---
 
@@ -172,7 +172,7 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 
 **Decision**: Version management is handled through npm's standard mechanisms (`npm update`, semver). No custom auto-update infrastructure. _(Supersedes original auto-update via GitHub version check decision.)_
 
-**Reasoning**: The original design relied on a harness-specific update mechanism that doesn't apply to OpenCode's plugin model. npm already handles versioning, dependency resolution, and updates. Users install via `npm install @oribish/brainkit` and update via `npm update`. This is simpler, more reliable, and follows ecosystem conventions. A future enhancement could add a version check on session start to suggest updates, but it's not needed for v1.
+**Reasoning**: The original design relied on a harness-specific update mechanism that doesn't apply to OpenCode's plugin model. npm already handles versioning, dependency resolution, and updates. Users install via `npm install @2brain/brainkit` and update via `npm update`. This is simpler, more reliable, and follows ecosystem conventions. A future enhancement could add a version check on session start to suggest updates, but it's not needed for v1.
 
 ---
 
@@ -194,11 +194,11 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 
 ### 22. OpenCode-first with multi-harness extensibility
 
-**Decision**: OpenCode is the primary and recommended harness. The CLI (`npx @oribish/brainkit`) is a thin launcher that spawns OpenCode with the plugin loaded. Future harness support (e.g., Copilot CLI) can be added as additional launcher targets. _(Supersedes original pi-first with CLI fallback decision.)_
+**Decision**: OpenCode is the primary and recommended harness. The CLI (`npx @2brain/brainkit`) is a thin launcher that spawns OpenCode with the plugin loaded. Future harness support (e.g., Copilot CLI) can be added as additional launcher targets. _(Supersedes original pi-first with CLI fallback decision.)_
 
 **Reasoning**: The original dual-mode approach (full extension experience + degraded CLI skill distribution) created maintenance overhead with unclear benefit. The current architecture inverts this: the CLI IS the entry point, but its job is to launch OpenCode with the right config. The CLI creates config files at `~/.config/brainkit/`, sets `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars, and spawns `opencode`. This gives every user the full experience — there's no degraded mode.
 
-**Trade-off**: Users need OpenCode installed. Accepted because brainkit's value proposition (persistent second brain with ambient intelligence) requires the plugin infrastructure that OpenCode provides. The CLI launcher makes installation frictionless (`npx @oribish/brainkit` auto-detects OpenCode on `$PATH`).
+**Trade-off**: Users need OpenCode installed. Accepted because brainkit's value proposition (persistent second brain with ambient intelligence) requires the plugin infrastructure that OpenCode provides. The CLI launcher makes installation frictionless (`npx @2brain/brainkit` auto-detects OpenCode on `$PATH`).
 
 **Future extensibility**: The launcher architecture supports multiple harnesses. Adding Copilot CLI support would mean detecting `copilot` on `$PATH` and generating its config format. Skills are already harness-agnostic (Decision #23), so only the launcher needs per-harness logic.
 
@@ -216,6 +216,6 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 
 ### Collapsed to single npm package (2026-04-26)
 
-**Decision**: Merge `@oribish/brainkit-core` into `@oribish/brainkit` as a single published package. The `core/` directory remains as an organizational boundary but is no longer a separate workspace or npm package.
+**Decision**: Merge `@2brain/brainkit-core` into `@2brain/brainkit` as a single published package. The `core/` directory remains as an organizational boundary but is no longer a separate workspace or npm package.
 
-**Reasoning**: The separate core package added complexity (workspace protocol resolution, two-package publish ordering, version synchronization) with no external consumer. All imports changed from `@oribish/brainkit-core` to relative paths. `smol-toml` and `@types/node` moved to root package.json. _(Supersedes the two-package split decision.)_
+**Reasoning**: The separate core package added complexity (workspace protocol resolution, two-package publish ordering, version synchronization) with no external consumer. All imports changed from `@2brain/brainkit-core` to relative paths. `smol-toml` and `@types/node` moved to root package.json. _(Supersedes the two-package split decision.)_

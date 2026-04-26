@@ -8,7 +8,7 @@ Automate brainkit's release process: single-package npm distribution with CI/CD 
 
 - **Approach**: Agent-driven release (Approach A) — the agent handles version bumps and changelog locking, CI handles publishing
 - **Publish trigger**: Auto-publish on merge to `main` when `package.json` version differs from npm
-- **Package structure**: Single `@oribish/brainkit` package (collapsing the separate `@oribish/brainkit-core`)
+- **Package structure**: Single `@2brain/brainkit` package (collapsing the separate `@2brain/brainkit-core`)
 - **Versioning**: Standard semver, bump type determined by changelog categories
 - **Changelog**: Keep a Changelog format, entries added per PR, locked at release time
 
@@ -16,17 +16,17 @@ Automate brainkit's release process: single-package npm distribution with CI/CD 
 
 ### Problem
 
-The repo currently publishes two npm packages: `@oribish/brainkit-core` (vault logic) and `@oribish/brainkit` (CLI + plugin + skills). The separate core package adds complexity (workspace resolution, publish ordering, version sync) with no real external consumer — only brainkit itself uses core.
+The repo currently publishes two npm packages: `@2brain/brainkit-core` (vault logic) and `@2brain/brainkit` (CLI + plugin + skills). The separate core package adds complexity (workspace resolution, publish ordering, version sync) with no real external consumer — only brainkit itself uses core.
 
 ### Changes
 
-1. **Change all `@oribish/brainkit-core` imports to relative paths.** Extension convention differs by directory (per AGENTS.md): `opencode/` uses `.ts` extensions (bun resolution), `cli/` and `core/` use `.js` extensions (Node/jiti resolution). Source files affected:
+1. **Change all `@2brain/brainkit-core` imports to relative paths.** Extension convention differs by directory (per AGENTS.md): `opencode/` uses `.ts` extensions (bun resolution), `cli/` and `core/` use `.js` extensions (Node/jiti resolution). Source files affected:
    - `opencode/server.ts` → `import { ... } from "../core/index.ts"` (bun, `.ts` extension)
    - `opencode/side.tsx` → `import { ... } from "../core/index.ts"` (bun, `.ts` extension)
    - `cli/launch.ts` → `import { ... } from "../core/index.js"` (Node, `.js` extension)
    - `cli/copilot.ts` → `import { ... } from "../core/index.js"` (Node, `.js` extension)
    - `scripts/copilot-status.js` → relative import to `../core/index.js`
-   - `cli/__tests__/vault-selection.test.ts` → update mock path from `@oribish/brainkit-core` to `../../core/index.js`
+   - `cli/__tests__/vault-selection.test.ts` → update mock path from `@2brain/brainkit-core` to `../../core/index.js`
 
 2. **Move `smol-toml`** from `core/package.json` dependencies to root `package.json`.
 
@@ -34,7 +34,7 @@ The repo currently publishes two npm packages: `@oribish/brainkit-core` (vault l
 
 4. **Remove from root `package.json`:**
    - `"workspaces": ["core"]`
-   - `"@oribish/brainkit-core": "workspace:*"` from dependencies
+   - `"@2brain/brainkit-core": "workspace:*"` from dependencies
 
 5. **Add `"core/"` to the root `files` array** so core TypeScript ships with the package.
 
@@ -140,7 +140,7 @@ jobs:
         id: check
         run: |
           LOCAL=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view @oribish/brainkit version 2>/dev/null || echo "0.0.0")
+          PUBLISHED=$(npm view @2brain/brainkit version 2>/dev/null || echo "0.0.0")
           if [ "$LOCAL" = "$PUBLISHED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
@@ -199,7 +199,7 @@ A `just test-package` recipe that validates the npm package works before publish
 
 1. `npm pack` — create the tarball (identical to what `npm publish` would upload)
 2. Install the tarball in a temp directory
-3. Verify the CLI binary runs: `node node_modules/@oribish/brainkit/dist/cli/index.js --help`
+3. Verify the CLI binary runs: `node node_modules/@2brain/brainkit/dist/cli/index.js --help`
 4. Verify key files exist in the installed package: `core/`, `opencode/`, `skills/`, `dist/`
 5. Verify package exports resolve (file existence check for `./opencode/server.ts` and `./opencode/tui.tsx`)
 6. Clean up temp directory and tarball

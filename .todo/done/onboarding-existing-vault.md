@@ -2,7 +2,7 @@
 
 ## Context
 
-Brainkit currently assumes every vault is created from scratch via `npx @oribish/brainkit`. There is **zero support** for adopting an existing markdown vault (e.g., an Obsidian vault, a plain notes folder, or a previously hand-maintained PARA structure). No code, skills, or specs address this scenario.
+Brainkit currently assumes every vault is created from scratch via `npx @2brain/brainkit`. There is **zero support** for adopting an existing markdown vault (e.g., an Obsidian vault, a plain notes folder, or a previously hand-maintained PARA structure). No code, skills, or specs address this scenario.
 
 This is a real user need: many people already have a notes vault and want to layer brainkit on top of it rather than starting over. The current init flow would silently overwrite their `brainkit.toml` and ignore any existing content structure.
 
@@ -41,7 +41,7 @@ This is a real user need: many people already have a notes vault and want to lay
 1. **`brainkit.toml` always overwritten** (`cli/init.ts:120`) — `init()` unconditionally writes a fresh config. Note: the CLI router (`cli/index.ts:41-44`) prevents `init()` from running when `brainkit.toml` exists (routes to `update()` instead), so the real-world risk is limited to programmatic calls bypassing the router. Still worth guarding defensively inside `init()`.
 2. **`isVaultFresh()` false positives** (`vault.ts:373-408`) — checks bragfile empty + contacts empty + no project dirs; adopted vault has none of these brainkit-specific files but plenty of content → triggers onboarding as if brand new. Also doesn't check `02_areas/` or `03_resources/` content (only checks contacts file existence, not other area/resource files).
 3. **Onboarding skill assumes blank slate** (`skills/onboarding/SKILL.md`) — 5-phase Q&A creates everything from scratch with no awareness of existing content
-4. **`init()` doesn't detect existing content** — running `npx @oribish/brainkit` in a directory full of `.md` files proceeds silently with no awareness that content exists
+4. **`init()` doesn't detect existing content** — running `npx @2brain/brainkit` in a directory full of `.md` files proceeds silently with no awareness that content exists
 5. **Orphan file warnings noisy** (`vault.ts:521`) — health checks flag anything outside PARA dirs; existing vaults will have tons of "orphans" initially (non-destructive, tolerable for P0)
 6. **Naming convention warnings noisy** (`vault.ts:487-519`) — kebab-case check will flag every existing file with spaces/underscores (non-destructive, tolerable for P0)
 
@@ -153,7 +153,7 @@ The `adopted` flag has no automatic off-ramp in P0. The system prompt will show 
 
 ### Adoption Flow
 
-**CLI** (`npx @oribish/brainkit` in any directory without `brainkit.toml`):
+**CLI** (`npx @2brain/brainkit` in any directory without `brainkit.toml`):
 
 1. Runs normal identity Q&A
 2. Detects existing `.md` files via `findUserContent()` (excluding dotfolders and brainkit-generated files)

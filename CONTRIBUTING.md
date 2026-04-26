@@ -83,13 +83,16 @@ After the release PR is merged to `main`:
 1. `check.yml` runs `just check` (lint + format + test + package integrity)
 2. `release.yml` detects the version change and:
    - Runs `just check` again (belt and suspenders)
-   - Publishes to npm with provenance (`npm publish --provenance --access=public`)
+   - Publishes to npm via OIDC trusted publishing (no tokens needed)
    - Creates a GitHub Release with the changelog entries
 
 ### Manual setup (one-time)
 
-- Configure trusted publishing on npmjs.com: go to package settings → Trusted Publisher → GitHub Actions
-  - Repository owner: `oribarilan`, Repository: `brainkit`, Workflow filename: `release.yml`
+Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) with OIDC — no `NPM_TOKEN` secret required.
+
+1. Go to `@2brain/brainkit` package settings on npmjs.com → Trusted Publisher
+2. Select GitHub Actions and configure:
+   - Repository owner: `oribarilan`, Repository: `brainkit`, Workflow filename: `release.yml`
 
 ## Project structure
 

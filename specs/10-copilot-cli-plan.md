@@ -428,7 +428,7 @@ import * as os from "node:os";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "@oribish/brainkit-core";
+import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "@2brain/brainkit-core";
 
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
@@ -547,13 +547,13 @@ function findPackageRoot(): string {
     if (fs.existsSync(candidate)) {
       try {
         const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as { name?: string };
-        if (pkg.name === "@oribish/brainkit") return dir;
+        if (pkg.name === "@2brain/brainkit") return dir;
       } catch {
         // not valid JSON, keep walking
       }
     }
     const parent = path.dirname(dir);
-    if (parent === dir) throw new Error("Could not find @oribish/brainkit package root");
+    if (parent === dir) throw new Error("Could not find @2brain/brainkit package root");
     dir = parent;
   }
 }
@@ -720,7 +720,7 @@ import {
   getBragStats,
   readContacts,
   parseContacts,
-} from "@oribish/brainkit-core";
+} from "@2brain/brainkit-core";
 
 function staleness(lastEntryDate) {
   if (!lastEntryDate) return { text: "never", color: "\x1b[31m" }; // red

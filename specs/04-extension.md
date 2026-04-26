@@ -86,7 +86,7 @@ Every turn, the server plugin:
 
 1. Reads global config (`~/.config/brainkit/config.toml`) for `vault_path`
 2. Reads vault config (`brainkit.toml`) from the vault
-3. Calls `buildSystemPrompt()` from `@oribish/brainkit-core`
+3. Calls `buildSystemPrompt()` from `@2brain/brainkit-core`
 4. Deduplicates (skips if prompt already present in the system array)
 5. Appends the prompt to `output.system`
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Set up automated npm publishing with CI/CD, collapsing the two-package architecture into a single `@oribish/brainkit` package.
+**Goal:** Set up automated npm publishing with CI/CD, collapsing the two-package architecture into a single `@2brain/brainkit` package.
 
 **Architecture:** Single npm package published via GitHub Actions on version change. Agent-driven release process documented in CONTRIBUTING.md. Package integrity test validates the artifact before every publish.
 
@@ -35,7 +35,7 @@ In `package.json`, make these changes:
 ],
 ```
 
-2. Replace the `"dependencies"` section — remove `@oribish/brainkit-core`, add `smol-toml`:
+2. Replace the `"dependencies"` section — remove `@2brain/brainkit-core`, add `smol-toml`:
 
 ```json
 "dependencies": {
@@ -104,7 +104,7 @@ This compiles core source files alongside CLI (top-level only, excludes `core/__
 npm install
 ```
 
-Expected: clean install with no workspace symlinks. The `node_modules/@oribish/brainkit-core` symlink should no longer exist.
+Expected: clean install with no workspace symlinks. The `node_modules/@2brain/brainkit-core` symlink should no longer exist.
 
 - [ ] **Step 6: Run type-check to verify**
 
@@ -119,7 +119,7 @@ Expected: no errors. The root tsconfig still covers `core/**/*.ts`.
 ```bash
 git add package.json package-lock.json cli/tsconfig.json
 git add -u core/package.json core/tsconfig.json
-git commit -m "refactor: collapse to single @oribish/brainkit package"
+git commit -m "refactor: collapse to single @2brain/brainkit package"
 ```
 
 ---
@@ -148,7 +148,7 @@ import {
   buildSystemPrompt,
   containsUserAccomplishment,
   scheduleAutoCommit,
-} from "@oribish/brainkit-core";
+} from "@2brain/brainkit-core";
 
 // NEW:
 import {
@@ -167,7 +167,7 @@ Change the import (bun resolution — use `.ts` extension):
 
 ```typescript
 // OLD:
-import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "@oribish/brainkit-core";
+import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "@2brain/brainkit-core";
 
 // NEW:
 import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.ts";
@@ -179,7 +179,7 @@ Change the import (Node resolution — use `.js` extension):
 
 ```typescript
 // OLD:
-import { readGlobalConfig, discoverVaults } from "@oribish/brainkit-core";
+import { readGlobalConfig, discoverVaults } from "@2brain/brainkit-core";
 
 // NEW:
 import { readGlobalConfig, discoverVaults } from "../core/index.js";
@@ -191,7 +191,7 @@ Change the import (Node resolution — use `.js` extension):
 
 ```typescript
 // OLD:
-import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "@oribish/brainkit-core";
+import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "@2brain/brainkit-core";
 
 // NEW:
 import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt } from "../core/index.js";
@@ -209,7 +209,7 @@ import {
   getBragStats,
   readContacts,
   parseContacts,
-} from "@oribish/brainkit-core";
+} from "@2brain/brainkit-core";
 
 // NEW:
 import { readGlobalConfig, readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.js";
@@ -221,12 +221,12 @@ Change both the mock path and the import (vitest resolves mocks relative to the 
 
 ```typescript
 // OLD:
-vi.mock("@oribish/brainkit-core", () => ({
+vi.mock("@2brain/brainkit-core", () => ({
   readGlobalConfig: vi.fn(),
   discoverVaults: vi.fn(),
 }));
 
-import { readGlobalConfig, discoverVaults } from "@oribish/brainkit-core";
+import { readGlobalConfig, discoverVaults } from "@2brain/brainkit-core";
 
 // NEW:
 vi.mock("../../core/index.js", () => ({
@@ -241,7 +241,7 @@ Also update the comment on line 8:
 
 ```typescript
 // OLD:
-// Mock @oribish/brainkit-core to control readGlobalConfig and discoverVaults
+// Mock @2brain/brainkit-core to control readGlobalConfig and discoverVaults
 
 // NEW:
 // Mock core module to control readGlobalConfig and discoverVaults
@@ -268,7 +268,7 @@ Expected: no errors.
 
 ```bash
 git add opencode/server.ts opencode/side.tsx cli/launch.ts cli/copilot.ts scripts/copilot-status.js cli/__tests__/vault-selection.test.ts
-git commit -m "refactor: change @oribish/brainkit-core imports to relative paths"
+git commit -m "refactor: change @2brain/brainkit-core imports to relative paths"
 ```
 
 ---
@@ -318,23 +318,23 @@ test-package:
     npm init -y --silent > /dev/null 2>&1
     npm install "/tmp/$TARBALL" --silent > /dev/null 2>&1
     # Verify CLI binary exists and runs
-    node node_modules/@oribish/brainkit/dist/cli/index.js --help > /dev/null
+    node node_modules/@2brain/brainkit/dist/cli/index.js --help > /dev/null
     # Verify key directories exist
     for dir in core opencode skills dist; do
-        if [ ! -d "node_modules/@oribish/brainkit/$dir" ]; then
+        if [ ! -d "node_modules/@2brain/brainkit/$dir" ]; then
             echo "FAIL: missing directory $dir" >&2
             exit 1
         fi
     done
     # Verify plugin exports exist
     for f in opencode/server.ts opencode/tui.tsx; do
-        if [ ! -f "node_modules/@oribish/brainkit/$f" ]; then
+        if [ ! -f "node_modules/@2brain/brainkit/$f" ]; then
             echo "FAIL: missing export file $f" >&2
             exit 1
         fi
     done
     # Verify test files are NOT shipped
-    if [ -d "node_modules/@oribish/brainkit/core/__tests__" ]; then
+    if [ -d "node_modules/@2brain/brainkit/core/__tests__" ]; then
         echo "FAIL: core/__tests__/ should not be in the package" >&2
         exit 1
     fi
@@ -434,7 +434,7 @@ jobs:
         id: check
         run: |
           LOCAL=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view @oribish/brainkit version 2>/dev/null || echo "0.0.0")
+          PUBLISHED=$(npm view @2brain/brainkit version 2>/dev/null || echo "0.0.0")
           if [ "$LOCAL" = "$PUBLISHED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
@@ -596,10 +596,10 @@ git commit -m "docs: update CONTRIBUTING.md with release process and single-pack
 
 - [ ] **Step 1: Update the structure section**
 
-In the `### Structure` section, remove the `@oribish/brainkit-core` annotation. Change:
+In the `### Structure` section, remove the `@2brain/brainkit-core` annotation. Change:
 
 ```
-core/               # TypeScript — shared logic (@oribish/brainkit-core)
+core/               # TypeScript — shared logic (@2brain/brainkit-core)
 ```
 
 to:
@@ -615,7 +615,7 @@ Replace the entire `## Two-Package Architecture` section with:
 ```markdown
 ## Package Architecture
 
-The repo publishes a single npm package: `@oribish/brainkit`.
+The repo publishes a single npm package: `@2brain/brainkit`.
 
 | Directory   | What it contains                               |
 | ----------- | ---------------------------------------------- |
@@ -655,7 +655,7 @@ git commit -m "docs: update AGENTS.md for single-package architecture"
 In the `## [Unreleased]` section, under `### Changed`, add:
 
 ```markdown
-- Collapsed two-package architecture (`@oribish/brainkit-core` + `@oribish/brainkit`) into single `@oribish/brainkit` package
+- Collapsed two-package architecture (`@2brain/brainkit-core` + `@2brain/brainkit`) into single `@2brain/brainkit` package
 ```
 
 Under `### Added`, add:
@@ -668,7 +668,7 @@ Under `### Added`, add:
 Also remove the now-outdated entry under `### Added`:
 
 ```markdown
-- Two-package architecture: `@oribish/brainkit-core` (vault ops, system prompt, types) + `@oribish/brainkit` (CLI + plugin + skills)
+- Two-package architecture: `@2brain/brainkit-core` (vault ops, system prompt, types) + `@2brain/brainkit` (CLI + plugin + skills)
 ```
 
 - [ ] **Step 2: Commit**
@@ -727,9 +727,9 @@ Append a new decision entry at the end:
 ```markdown
 ### Collapsed to single npm package (2026-04-26)
 
-**Decision**: Merge `@oribish/brainkit-core` into `@oribish/brainkit` as a single published package. The `core/` directory remains as an organizational boundary but is no longer a separate workspace or npm package.
+**Decision**: Merge `@2brain/brainkit-core` into `@2brain/brainkit` as a single published package. The `core/` directory remains as an organizational boundary but is no longer a separate workspace or npm package.
 
-**Reasoning**: The separate core package added complexity (workspace protocol resolution, two-package publish ordering, version synchronization) with no external consumer. All imports changed from `@oribish/brainkit-core` to relative paths. `smol-toml` and `@types/node` moved to root package.json. _(Supersedes the two-package split decision.)_
+**Reasoning**: The separate core package added complexity (workspace protocol resolution, two-package publish ordering, version synchronization) with no external consumer. All imports changed from `@2brain/brainkit-core` to relative paths. `smol-toml` and `@types/node` moved to root package.json. _(Supersedes the two-package split decision.)_
 ```
 
 - [ ] **Step 2: Update `specs/02-architecture.md`**
@@ -737,7 +737,7 @@ Append a new decision entry at the end:
 Find the two-package table and add a note that it's been superseded. Add at the top of the relevant section:
 
 ```markdown
-> **Note (2026-04-26):** The two-package architecture described below has been superseded. The repo now publishes a single `@oribish/brainkit` package. See `specs/07-decisions.md` for rationale.
+> **Note (2026-04-26):** The two-package architecture described below has been superseded. The repo now publishes a single `@2brain/brainkit` package. See `specs/07-decisions.md` for rationale.
 ```
 
 - [ ] **Step 3: Commit**

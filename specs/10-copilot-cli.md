@@ -97,7 +97,7 @@ A `.brainkit-version` file is written containing the current package version. On
 
 ### Source resolution
 
-The skills source directory is resolved relative to the npm package root. Since `skills/` is listed in the `files` field in `package.json`, it's available on disk after `npm install` or `npx`. The launcher resolves the package root by walking up from `__dirname` to find the nearest `package.json` with `name: "@oribish/brainkit"`.
+The skills source directory is resolved relative to the npm package root. Since `skills/` is listed in the `files` field in `package.json`, it's available on disk after `npm install` or `npx`. The launcher resolves the package root by walking up from `__dirname` to find the nearest `package.json` with `name: "@2brain/brainkit"`.
 
 ## AGENTS.md generation
 
@@ -193,7 +193,7 @@ A Node script that reads vault state and prints a one-liner for Copilot's footer
 }
 ```
 
-The script imports from `@oribish/brainkit-core` and prints something like:
+The script imports from `@2brain/brainkit-core` and prints something like:
 
 ```
 🧠 Ori's vault · 12 brags · last: 3d ago · 8 contacts

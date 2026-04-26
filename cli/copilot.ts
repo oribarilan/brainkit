@@ -16,12 +16,12 @@ function findPackageRoot(): string {
     const candidate = path.join(dir, "package.json");
     try {
       const content = JSON.parse(fs.readFileSync(candidate, "utf-8")) as { name?: string };
-      if (content.name === "@oribish/brainkit") return dir;
+      if (content.name === "@2brain/brainkit") return dir;
     } catch {
       // not found or not parseable, keep walking
     }
     const parent = path.dirname(dir);
-    if (parent === dir) throw new Error("Could not find @oribish/brainkit package root");
+    if (parent === dir) throw new Error("Could not find @2brain/brainkit package root");
     dir = parent;
   }
 }

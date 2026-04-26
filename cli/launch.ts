@@ -41,7 +41,7 @@ function ensureOpenCodeConfig(): void {
   if (!fs.existsSync(ocConfigPath)) {
     const config = {
       $schema: "https://opencode.ai/config.json",
-      plugin: ["@oribish/brainkit"],
+      plugin: ["@2brain/brainkit"],
     };
     fs.writeFileSync(ocConfigPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
   }
@@ -50,7 +50,7 @@ function ensureOpenCodeConfig(): void {
   if (!fs.existsSync(tuiConfigPath)) {
     const config = {
       $schema: "https://opencode.ai/tui.json",
-      plugin: ["@oribish/brainkit"],
+      plugin: ["@2brain/brainkit"],
     };
     fs.writeFileSync(tuiConfigPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
   }

@@ -536,7 +536,7 @@ Add after `parseVaultFlag`:
 // ---------------------------------------------------------------------------
 
 import * as readline from "node:readline";
-import { readGlobalConfig, discoverVaults } from "@oribish/brainkit-core";
+import { readGlobalConfig, discoverVaults } from "@2brain/brainkit-core";
 
 function promptVaultSelection(vaults: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -816,7 +816,7 @@ import {
   buildSystemPrompt,
   containsUserAccomplishment,
   scheduleAutoCommit,
-} from "@oribish/brainkit-core";
+} from "@2brain/brainkit-core";
 
 const id = "brainkit";
 
@@ -947,7 +947,7 @@ Replace `opencode/side.tsx`:
 import type { TuiPlugin } from "@opencode-ai/plugin/tui";
 import * as path from "node:path";
 import { createMemo } from "solid-js";
-import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "@oribish/brainkit-core";
+import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "@2brain/brainkit-core";
 
 type Api = Parameters<import("@opencode-ai/plugin/tui").TuiPlugin>[0];
 
