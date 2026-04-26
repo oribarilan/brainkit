@@ -15,6 +15,7 @@
 ### Task 1: Consolidate to single package (package.json changes)
 
 **Files:**
+
 - Modify: `package.json`
 - Delete: `core/package.json`
 - Delete: `core/tsconfig.json`
@@ -27,6 +28,7 @@ Remove workspace config, move dependencies from core, add engines:
 In `package.json`, make these changes:
 
 1. Remove `"workspaces"` field entirely:
+
 ```json
 "workspaces": [
   "core"
@@ -34,6 +36,7 @@ In `package.json`, make these changes:
 ```
 
 2. Replace the `"dependencies"` section — remove `@oribish/brainkit-core`, add `smol-toml`:
+
 ```json
 "dependencies": {
   "smol-toml": "^1.3.1"
@@ -41,11 +44,13 @@ In `package.json`, make these changes:
 ```
 
 3. Add `@types/node` to `"devDependencies"`:
+
 ```json
 "@types/node": "^25.6.0",
 ```
 
 4. Add `"engines"` field (after `"type": "module"`):
+
 ```json
 "engines": {
   "node": ">=22"
@@ -53,6 +58,7 @@ In `package.json`, make these changes:
 ```
 
 5. Update `"files"` array:
+
 ```json
 "files": [
   "dist/",
@@ -79,10 +85,13 @@ rm core/tsconfig.json
 - [ ] **Step 4: Update `cli/tsconfig.json` to compile core**
 
 In `cli/tsconfig.json`, change the `include` from:
+
 ```json
 "include": ["./**/*.ts"],
 ```
+
 to:
+
 ```json
 "include": ["./**/*.ts", "../core/*.ts"],
 ```
@@ -118,6 +127,7 @@ git commit -m "refactor: collapse to single @oribish/brainkit package"
 ### Task 2: Update all import paths
 
 **Files:**
+
 - Modify: `opencode/server.ts:5-12`
 - Modify: `opencode/side.tsx:6-11`
 - Modify: `cli/launch.ts:6`
@@ -157,20 +167,10 @@ Change the import (bun resolution — use `.ts` extension):
 
 ```typescript
 // OLD:
-import {
-  readVaultConfigSimple,
-  getBragStats,
-  readContacts,
-  parseContacts,
-} from "@oribish/brainkit-core";
+import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "@oribish/brainkit-core";
 
 // NEW:
-import {
-  readVaultConfigSimple,
-  getBragStats,
-  readContacts,
-  parseContacts,
-} from "../core/index.ts";
+import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.ts";
 ```
 
 - [ ] **Step 3: Update `cli/launch.ts`**
@@ -212,13 +212,7 @@ import {
 } from "@oribish/brainkit-core";
 
 // NEW:
-import {
-  readGlobalConfig,
-  readVaultConfigSimple,
-  getBragStats,
-  readContacts,
-  parseContacts,
-} from "../core/index.js";
+import { readGlobalConfig, readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.js";
 ```
 
 - [ ] **Step 6: Update `cli/__tests__/vault-selection.test.ts`**
@@ -244,6 +238,7 @@ import { readGlobalConfig, discoverVaults } from "../../core/index.js";
 ```
 
 Also update the comment on line 8:
+
 ```typescript
 // OLD:
 // Mock @oribish/brainkit-core to control readGlobalConfig and discoverVaults
@@ -281,6 +276,7 @@ git commit -m "refactor: change @oribish/brainkit-core imports to relative paths
 ### Task 3: Update justfile (lint fix + test-package recipe)
 
 **Files:**
+
 - Modify: `justfile`
 
 - [ ] **Step 1: Remove core tsconfig from lint recipe**
@@ -396,6 +392,7 @@ git commit -m "chore: update lint recipe and add test-package integrity check"
 ### Task 4: Create release workflow
 
 **Files:**
+
 - Create: `.github/workflows/release.yml`
 
 - [ ] **Step 1: Create the release workflow**
@@ -483,6 +480,7 @@ git commit -m "ci: add release workflow for automated npm publishing"
 ### Task 5: Update CONTRIBUTING.md
 
 **Files:**
+
 - Modify: `CONTRIBUTING.md`
 
 - [ ] **Step 1: Rewrite the deploy flow and conventions sections**
@@ -496,17 +494,18 @@ Replace from `## Deploy flow` through the end of the "Deploy flow" section (endi
 
 ### Semver convention
 
-| Bump | When | Examples |
-|------|------|----------|
-| **Patch** (0.1.0 → 0.1.1) | Bug fixes, doc updates, internal refactors with no behavior change | Fix path traversal edge case, update skill wording |
-| **Minor** (0.1.0 → 0.2.0) | New features, new skills, non-breaking additions | Add meeting notes feature, new TUI widget |
-| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags |
+| Bump                             | When                                                                          | Examples                                           |
+| -------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Patch** (0.1.0 → 0.1.1)        | Bug fixes, doc updates, internal refactors with no behavior change            | Fix path traversal edge case, update skill wording |
+| **Minor** (0.1.0 → 0.2.0)        | New features, new skills, non-breaking additions                              | Add meeting notes feature, new TUI widget          |
+| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags      |
 
 While at `0.x`, minor bumps may include breaking changes (standard pre-1.0 practice).
 
 ### Changelog discipline
 
 Every PR that changes behavior must add an entry under `## [Unreleased]` in `CHANGELOG.md`:
+
 - `Added` — new features
 - `Changed` — changes to existing features
 - `Fixed` — bug fixes
@@ -529,6 +528,7 @@ When the user asks to prepare a release, the agent:
 ### What CI does automatically
 
 After the release PR is merged to `main`:
+
 1. `check.yml` runs `just check` (lint + format + test + package integrity)
 2. `release.yml` detects the version change and:
    - Runs `just check` again (belt and suspenders)
@@ -545,14 +545,15 @@ Replace the "Project structure" section with:
 
 ```markdown
 ## Project structure
-
 ```
-core/               # TypeScript — shared vault logic
-opencode/           # TypeScript/TSX — OpenCode plugin (server + TUI)
-cli/                # TypeScript — CLI entry point
-skills/             # Markdown — domain knowledge for the agent
-specs/              # Design documents — read before architectural changes
-docs/               # Feature documentation
+
+core/ # TypeScript — shared vault logic
+opencode/ # TypeScript/TSX — OpenCode plugin (server + TUI)
+cli/ # TypeScript — CLI entry point
+skills/ # Markdown — domain knowledge for the agent
+specs/ # Design documents — read before architectural changes
+docs/ # Feature documentation
+
 ```
 
 See `AGENTS.md` for detailed structure and coding principles.
@@ -573,6 +574,7 @@ Replace the "Conventions" section's import extension note:
 ```
 
 Also update the "Current runtime dependencies" note (line 42):
+
 ```markdown
 Current runtime dependency: `smol-toml`. That's it.
 ```
@@ -589,6 +591,7 @@ git commit -m "docs: update CONTRIBUTING.md with release process and single-pack
 ### Task 6: Update AGENTS.md
 
 **Files:**
+
 - Modify: `AGENTS.md`
 
 - [ ] **Step 1: Update the structure section**
@@ -614,12 +617,12 @@ Replace the entire `## Two-Package Architecture` section with:
 
 The repo publishes a single npm package: `@oribish/brainkit`.
 
-| Directory | What it contains |
-| --------- | ------------------------------------------------ |
-| `core/`   | Vault ops, system prompt, types. No UI deps.     |
-| `cli/`    | CLI entry point, compiled to `dist/` for npm     |
+| Directory   | What it contains                               |
+| ----------- | ---------------------------------------------- |
+| `core/`     | Vault ops, system prompt, types. No UI deps.   |
+| `cli/`      | CLI entry point, compiled to `dist/` for npm   |
 | `opencode/` | OpenCode plugin (server + TUI). Ships raw TS.  |
-| `skills/` | Markdown domain knowledge for the user's agent   |
+| `skills/`   | Markdown domain knowledge for the user's agent |
 
 Runtime dependency: `smol-toml` (TOML parsing). Optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
 ```
@@ -644,6 +647,7 @@ git commit -m "docs: update AGENTS.md for single-package architecture"
 ### Task 7: Update CHANGELOG.md
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 
 - [ ] **Step 1: Add consolidation entry and update existing entries**
@@ -662,6 +666,7 @@ Under `### Added`, add:
 ```
 
 Also remove the now-outdated entry under `### Added`:
+
 ```markdown
 - Two-package architecture: `@oribish/brainkit-core` (vault ops, system prompt, types) + `@oribish/brainkit` (CLI + plugin + skills)
 ```
@@ -711,6 +716,7 @@ git commit -m "chore: fix formatting after distribution pipeline setup"
 ### Task 9: Specs cleanup
 
 **Files:**
+
 - Modify: `specs/02-architecture.md`
 - Modify: `specs/07-decisions.md`
 

@@ -3,13 +3,7 @@
 // Copilot CLI statusLine script — prints vault stats for the footer bar.
 // Called by Copilot CLI via the statusLine config in .github/copilot/settings.json.
 
-import {
-  readGlobalConfig,
-  readVaultConfigSimple,
-  getBragStats,
-  readContacts,
-  parseContacts,
-} from "../core/index.js";
+import { readGlobalConfig, readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.js";
 
 function staleness(lastEntryDate) {
   if (!lastEntryDate) return { text: "never", color: "\x1b[31m" }; // red

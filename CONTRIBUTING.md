@@ -45,17 +45,18 @@ Current runtime dependency: `smol-toml`. That's it.
 
 ### Semver convention
 
-| Bump | When | Examples |
-|------|------|----------|
-| **Patch** (0.1.0 → 0.1.1) | Bug fixes, doc updates, internal refactors with no behavior change | Fix path traversal edge case, update skill wording |
-| **Minor** (0.1.0 → 0.2.0) | New features, new skills, non-breaking additions | Add meeting notes feature, new TUI widget |
-| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags |
+| Bump                             | When                                                                          | Examples                                           |
+| -------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Patch** (0.1.0 → 0.1.1)        | Bug fixes, doc updates, internal refactors with no behavior change            | Fix path traversal edge case, update skill wording |
+| **Minor** (0.1.0 → 0.2.0)        | New features, new skills, non-breaking additions                              | Add meeting notes feature, new TUI widget          |
+| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags      |
 
 While at `0.x`, minor bumps may include breaking changes (standard pre-1.0 practice).
 
 ### Changelog discipline
 
 Every PR that changes behavior must add an entry under `## [Unreleased]` in `CHANGELOG.md`:
+
 - `Added` — new features
 - `Changed` — changes to existing features
 - `Fixed` — bug fixes
@@ -78,6 +79,7 @@ When the user asks to prepare a release, the agent:
 ### What CI does automatically
 
 After the release PR is merged to `main`:
+
 1. `check.yml` runs `just check` (lint + format + test + package integrity)
 2. `release.yml` detects the version change and:
    - Runs `just check` again (belt and suspenders)

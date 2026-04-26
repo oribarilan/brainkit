@@ -3,12 +3,7 @@
 import type { TuiPlugin } from "@opencode-ai/plugin/tui";
 import * as path from "node:path";
 import { createMemo } from "solid-js";
-import {
-  readVaultConfigSimple,
-  getBragStats,
-  readContacts,
-  parseContacts,
-} from "../core/index.ts";
+import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.ts";
 
 type Api = Parameters<import("@opencode-ai/plugin/tui").TuiPlugin>[0];
 
@@ -75,7 +70,9 @@ export const Sidebar = (props: { api: Api }) => {
               <text fg={theme().primary} bold>
                 🧠 {d.name}'s vault
               </text>
-              <text fg={theme().textMuted}>{d.vaultName} — {d.path}</text>
+              <text fg={theme().textMuted}>
+                {d.vaultName} — {d.path}
+              </text>
             </box>
 
             {d.features.bragfile && d.bragStats && (

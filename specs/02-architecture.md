@@ -185,11 +185,11 @@ Created by the agent during onboarding, guided by the brainkit and onboarding sk
 
 #### What `brainkit.toml` controls
 
-| Section      | Fields                                                           | Used by                                                                                                    |
-| ------------ | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `[brainkit]` | `version`                                                        | Version tracking, config migrations                                                                        |
+| Section      | Fields                                                  | Used by                                                                                                    |
+| ------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `[brainkit]` | `version`                                               | Version tracking, config migrations                                                                        |
 | `[user]`     | `name`, `role`, `expertise`, `tone`, `context`, `rules` | System prompt builder — shapes how the agent communicates and what context it has                          |
-| `[features]` | `bragfile`, `contacts`                                           | System prompt (omits disabled feature sections), health checks (skips disabled features), skill activation |
+| `[features]` | `bragfile`, `contacts`                                  | System prompt (omits disabled feature sections), health checks (skips disabled features), skill activation |
 
 Feature flags only exist for features with runtime behavior. No flag is defined until the feature is built.
 

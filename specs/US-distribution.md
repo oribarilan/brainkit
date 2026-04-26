@@ -54,15 +54,16 @@ The repo currently publishes two npm packages: `@oribish/brainkit-core` (vault l
 
 Standard semver rules, documented in CONTRIBUTING.md:
 
-| Bump | When | Examples |
-|------|------|----------|
-| **Patch** (0.1.0 → 0.1.1) | Bug fixes, doc updates, internal refactors with no behavior change | Fix path traversal edge case, update skill wording |
-| **Minor** (0.1.0 → 0.2.0) | New features, new skills, non-breaking additions | Add meeting notes feature, new TUI widget |
-| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags |
+| Bump                             | When                                                                          | Examples                                           |
+| -------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Patch** (0.1.0 → 0.1.1)        | Bug fixes, doc updates, internal refactors with no behavior change            | Fix path traversal edge case, update skill wording |
+| **Minor** (0.1.0 → 0.2.0)        | New features, new skills, non-breaking additions                              | Add meeting notes feature, new TUI widget          |
+| **Major** (0.x → 1.0, 1.x → 2.0) | Breaking changes to vault format, config schema, CLI interface, or plugin API | Change brainkit.toml schema, rename CLI flags      |
 
 While at `0.x`, minor bumps may include breaking changes (standard pre-1.0 semver practice).
 
 The agent determines bump type by reading the `[Unreleased]` changelog categories:
+
 - Only `Fixed` → patch
 - Any `Added` → minor
 - Any `Removed` or breaking `Changed` → major (or minor while pre-1.0)
@@ -74,6 +75,7 @@ Keeps the existing Keep a Changelog format (`CHANGELOG.md`).
 ### During development (every PR)
 
 Each PR that changes behavior adds an entry under `## [Unreleased]` in the appropriate category:
+
 - `Added` — new features
 - `Changed` — changes to existing features
 - `Fixed` — bug fixes
@@ -85,6 +87,7 @@ This is a contributor responsibility, listed in the PR checklist in CONTRIBUTING
 ### At release time (agent-driven)
 
 The agent:
+
 1. Replaces `## [Unreleased]` heading with `## [X.Y.Z] - YYYY-MM-DD`
 2. Adds a fresh empty `## [Unreleased]` section above it
 3. Adds a comparison link at the bottom: `[X.Y.Z]: https://github.com/oribarilan/brainkit/compare/vPREV...vX.Y.Z`
@@ -114,8 +117,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write    # for GitHub Release creation
-  id-token: write    # for npm provenance
+  contents: write # for GitHub Release creation
+  id-token: write # for npm provenance
 
 jobs:
   release:
@@ -212,6 +215,7 @@ A `just test-package` recipe that validates the npm package works before publish
 ### `engines` field
 
 Add to root `package.json`:
+
 ```json
 "engines": {
   "node": ">=22"
@@ -234,6 +238,7 @@ Add to root `package.json`:
 ### Updated CONTRIBUTING.md
 
 The "Deploy flow" section is rewritten to document:
+
 - The agent-driven release process (Section 5)
 - Semver convention (Section 2)
 - Changelog discipline (Section 3)
@@ -247,22 +252,22 @@ The "Deploy flow" section is rewritten to document:
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `package.json` | Remove workspace, add smol-toml, add @types/node (dev), add engines, update files, bump version |
-| `core/package.json` | **Deleted** |
-| `core/tsconfig.json` | **Deleted** (redundant with root tsconfig) |
-| `package-lock.json` | Regenerated |
-| `opencode/server.ts` | Import path change |
-| `opencode/side.tsx` | Import path change |
-| `cli/launch.ts` | Import path change |
-| `cli/copilot.ts` | Import path change |
-| `cli/__tests__/vault-selection.test.ts` | Mock path change |
-| `scripts/copilot-status.js` | Import path change |
-| `cli/tsconfig.json` | Include core in compilation |
-| `.github/workflows/release.yml` | **New** — publish + GitHub Release |
-| `justfile` | Add `test-package` recipe, include in `check`, remove core tsconfig lint step |
-| `CONTRIBUTING.md` | Rewrite deploy flow section |
-| `AGENTS.md` | Update architecture references |
-| `CHANGELOG.md` | Add consolidation entry under Unreleased |
-| Specs referencing two-package arch | Note as superseded |
+| File                                    | Change                                                                                          |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `package.json`                          | Remove workspace, add smol-toml, add @types/node (dev), add engines, update files, bump version |
+| `core/package.json`                     | **Deleted**                                                                                     |
+| `core/tsconfig.json`                    | **Deleted** (redundant with root tsconfig)                                                      |
+| `package-lock.json`                     | Regenerated                                                                                     |
+| `opencode/server.ts`                    | Import path change                                                                              |
+| `opencode/side.tsx`                     | Import path change                                                                              |
+| `cli/launch.ts`                         | Import path change                                                                              |
+| `cli/copilot.ts`                        | Import path change                                                                              |
+| `cli/__tests__/vault-selection.test.ts` | Mock path change                                                                                |
+| `scripts/copilot-status.js`             | Import path change                                                                              |
+| `cli/tsconfig.json`                     | Include core in compilation                                                                     |
+| `.github/workflows/release.yml`         | **New** — publish + GitHub Release                                                              |
+| `justfile`                              | Add `test-package` recipe, include in `check`, remove core tsconfig lint step                   |
+| `CONTRIBUTING.md`                       | Rewrite deploy flow section                                                                     |
+| `AGENTS.md`                             | Update architecture references                                                                  |
+| `CHANGELOG.md`                          | Add consolidation entry under Unreleased                                                        |
+| Specs referencing two-package arch      | Note as superseded                                                                              |

@@ -169,12 +169,12 @@ Tests live in `__tests__/` directories alongside source. Each test file maps to 
 
 The repo publishes a single npm package: `@oribish/brainkit`.
 
-| Directory | What it contains |
-| --------- | ------------------------------------------------ |
-| `core/`   | Vault ops, system prompt, types. No UI deps.     |
-| `cli/`    | CLI entry point, compiled to `dist/` for npm     |
+| Directory   | What it contains                               |
+| ----------- | ---------------------------------------------- |
+| `core/`     | Vault ops, system prompt, types. No UI deps.   |
+| `cli/`      | CLI entry point, compiled to `dist/` for npm   |
 | `opencode/` | OpenCode plugin (server + TUI). Ships raw TS.  |
-| `skills/` | Markdown domain knowledge for the user's agent   |
+| `skills/`   | Markdown domain knowledge for the user's agent |
 
 Runtime dependency: `smol-toml` (TOML parsing). Optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
 
