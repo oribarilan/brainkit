@@ -47,8 +47,6 @@ jobs:
       - name: Publish to npm
         if: steps.check.outputs.skip == 'false'
         run: npm publish --provenance --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         if: steps.check.outputs.skip == 'false'

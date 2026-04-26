@@ -88,8 +88,8 @@ After the release PR is merged to `main`:
 
 ### Manual setup (one-time)
 
-- Create an npm automation token at npmjs.com → Access Tokens → Automation
-- Add it as `NPM_TOKEN` secret in the GitHub repo settings
+- Configure trusted publishing on npmjs.com: go to package settings → Trusted Publisher → GitHub Actions
+  - Repository owner: `oribarilan`, Repository: `brainkit`, Workflow filename: `release.yml`
 
 ## Project structure
 
