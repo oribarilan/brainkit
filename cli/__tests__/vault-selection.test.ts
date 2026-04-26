@@ -57,9 +57,9 @@ describe("selectVault", () => {
   beforeEach(() => {
     brainDir = mkdtempSync(join(tmpdir(), "brainkit-sv-"));
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: brainDir });
-    vi.spyOn(process, "exit").mockImplementation((() => {
+    vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
-    }) as never);
+    });
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 

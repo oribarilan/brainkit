@@ -65,7 +65,7 @@ export function writeGlobalConfig(config: BrainkitGlobalConfig): void {
   const configPath = getGlobalConfigPath();
   const dir = path.dirname(configPath);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(configPath, stringifyToml(config as unknown as Record<string, unknown>) + "\n", "utf-8");
+  fs.writeFileSync(configPath, stringifyToml(config) + "\n", "utf-8");
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ export function readVaultConfigSimple(vaultPath: string): BrainkitConfig {
 
 export function writeVaultConfig(vaultPath: string, config: BrainkitConfig): void {
   const configPath = path.resolve(vaultPath, KEY_FILES.config);
-  const toml = stringifyToml(config as unknown as Record<string, unknown>);
+  const toml = stringifyToml(config);
   fs.writeFileSync(configPath, toml + "\n", "utf-8");
 }
 
