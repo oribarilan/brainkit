@@ -5,11 +5,13 @@
 ### Added
 - OpenCode plugin: server (system prompt, compaction, brag detection, auto-commit) + TUI (sidebar, tips, theme, branding)
 - CLI launcher (`npx @oribish/brainkit`) — detects OpenCode, sets up plugin config, spawns it
-- Two-package architecture: `@oribish/brainkit-core` (vault ops, system prompt, types) + `@oribish/brainkit` (CLI + plugin + skills)
+- CI release pipeline: auto-publish to npm on version change, GitHub Releases with changelog
+- Package integrity test (`just test-package`) — validates npm artifact before every publish
 - `writeVaultConfig` function for creating `brainkit.toml` programmatically
 - `just build-cli` recipe for compiling CLI to `dist/`
 
 ### Changed
+- Collapsed two-package architecture (`@oribish/brainkit-core` + `@oribish/brainkit`) into single `@oribish/brainkit` package
 - `buildSystemPrompt` now accepts `{ cwd?, mode? }` options object instead of positional `cwd`
 - All skills rewritten to action-oriented language (no tool name references)
 - Package renamed to `@oribish/brainkit` for npm publishing
