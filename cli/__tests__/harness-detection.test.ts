@@ -34,6 +34,14 @@ import { execFileSync } from "node:child_process";
 const mockExecFileSync = vi.mocked(execFileSync);
 
 // ---------------------------------------------------------------------------
+// Mock harness-version to avoid side effects during harness detection tests
+// ---------------------------------------------------------------------------
+
+vi.mock("../harness-version.js", () => ({
+  maybeCheckHarnessVersion: vi.fn(),
+}));
+
+// ---------------------------------------------------------------------------
 // Mock copilot launcher to avoid filesystem side effects
 // ---------------------------------------------------------------------------
 

@@ -87,7 +87,7 @@ async function main(): Promise<void> {
 
   // Harness alias — launch explicitly
   if (firstArg !== undefined && isHarnessAlias(firstArg)) {
-    launchHarness(firstArg, remaining.slice(1), vaultPath);
+    await launchHarness(firstArg, remaining.slice(1), vaultPath);
     return;
   }
 
