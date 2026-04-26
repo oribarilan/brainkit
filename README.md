@@ -70,10 +70,10 @@ On first run, the agent walks you through a getting-to-know-you conversation and
 
 Brainkit works as a plugin for AI coding agents. Pick the one you use:
 
-| Harness | Command | Requirements |
-| --- | --- | --- |
-| [OpenCode](https://opencode.ai) (default) | `brainkit` | OpenCode on `$PATH` |
-| [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` | Copilot CLI installed and authenticated |
+| Harness | Command |
+| --- | --- |
+| [OpenCode](https://opencode.ai) (default) | `brainkit` |
+| [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` |
 
 ## License
 
