@@ -41,6 +41,7 @@ These commands (`grep`, `cat`, `find`, `wc`) and `~/` paths are non-functional a
 `brainkitPlaceholders` is a `const` at module scope (line 25). Two approaches:
 
 1. **Ternary at definition** — simplest, keeps it as a `const`:
+
 ```ts
 const brainkitPlaceholders = {
   normal: [ ... ],  // same on all platforms
@@ -59,6 +60,7 @@ const brainkitPlaceholders = {
 ```
 
 2. **Empty array on Windows** — if OpenCode doesn't support shell mode on Windows, or if PowerShell examples aren't useful, just use `[]`:
+
 ```ts
 shell: process.platform === "win32" ? [] : [ ... ],
 ```

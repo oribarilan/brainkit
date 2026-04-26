@@ -45,13 +45,17 @@ Several user-facing messages and AI prompts hardcode Unix path conventions (`~/`
 ### Tilde expansion fix
 
 Change:
+
 ```ts
 const brainPath = globalConfig.brain_path.replace(/^~/, os.homedir());
 ```
+
 to:
+
 ```ts
 const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
 ```
+
 `path.resolve()` normalizes separators on all platforms. Apply to both `cli/launch.ts:151` and `opencode/server.ts:28`.
 
 ### Onboarding prompt

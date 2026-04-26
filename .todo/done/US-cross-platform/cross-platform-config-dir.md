@@ -38,6 +38,7 @@ Additionally, the error message at `cli/launch.ts:181` hardcodes `~/.config/brai
 ## Notes
 
 Standard pattern:
+
 ```ts
 function getConfigDir(): string {
   if (process.env["BRAINKIT_CONFIG_DIR"]) return process.env["BRAINKIT_CONFIG_DIR"];
@@ -51,6 +52,7 @@ function getConfigDir(): string {
 Using `APPDATA` (Roaming) is correct — it's the Windows standard for app config that should persist across logins on domain-joined machines. `LOCALAPPDATA` is for caches and large data.
 
 For the error message at `cli/launch.ts:181`:
+
 ```ts
 const configPath = path.join(getConfigDir(), "config.toml");
 p.cancel(`Brain directory not found. Delete ${configPath} to reset.`);
