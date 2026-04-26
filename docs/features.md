@@ -7,6 +7,7 @@ Each feature is documented in its own page with behavior specs and per-harness i
 - [Contacts](contacts.md) — people index, search, cross-referencing
 - [Meeting notes](meeting-notes.md) — structured notes with PARA placement
 - [Doctor](doctor.md) — vault health checks and structural fixes
+- **Content curation** — detects life and work changes in conversation (promotions, new skills, team changes) and suggests updating your config, contacts, or bragfile
 - [Onboarding](onboarding.md) — guided first-run setup
 - [Auto-commit](auto-commit.md) — automatic git commits of vault changes
 - [TUI](tui.md) — terminal UI for OpenCode (sidebar, tips, theme, branding)

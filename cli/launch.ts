@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as p from "@clack/prompts";
 import { execFileSync, spawn } from "node:child_process";
-import { readGlobalConfig, writeGlobalConfig, discoverVaults } from "../core/index.js";
+import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 
 // ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ function isInstalled(binaries: string[]): boolean {
 // ---------------------------------------------------------------------------
 
 function ensureOpenCodeConfig(): void {
-  const configDir = path.join(os.homedir(), ".config", "brainkit");
+  const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
 
   const ocConfigPath = path.join(configDir, "opencode.json");
@@ -59,8 +59,7 @@ function ensureOpenCodeConfig(): void {
 function launchOpenCode(args: string[], vaultPath?: string): void {
   ensureOpenCodeConfig();
 
-  const configDir = path.join(os.homedir(), ".config", "brainkit");
-  const env: Record<string, string | undefined> = {
+  const configDir = getConfigDir();  const env: Record<string, string | undefined> = {
     ...process.env,
     OPENCODE_CONFIG: path.join(configDir, "opencode.json"),
     OPENCODE_TUI_CONFIG: path.join(configDir, "tui.json"),
@@ -246,7 +245,10 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
   // Interactive prompt
   const selected = await p.select({
     message: "Select your default harness",
-    options: available.map((h) => ({ value: h, label: h.name })),
+    options: HARNESSES.map((h) => {
+      const detected = available.includes(h);
+      return { value: h, label: `${h.name} (${detected ? "detected" : "not installed"})`, disabled: !detected };
+    }),
   });
 
   if (p.isCancel(selected)) {

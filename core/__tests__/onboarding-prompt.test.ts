@@ -12,8 +12,7 @@ describe("buildOnboardingPrompt", () => {
     expect(result).toContain("Brain location");
     expect(result).toContain("Vault name");
     expect(result).toContain("Basics");
-    expect(result).toContain("Professional context");
-    expect(result).toContain("Personal context");
+    expect(result).toContain("Context");
     expect(result).toContain("Preferences");
   });
 

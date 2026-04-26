@@ -12,6 +12,7 @@ export type {
 export {
   PARA,
   KEY_FILES,
+  getConfigDir,
   readGlobalConfig,
   writeGlobalConfig,
   discoverVaults,

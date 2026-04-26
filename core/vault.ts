@@ -47,8 +47,12 @@ export const KEY_FILES = {
 // Global config
 // ---------------------------------------------------------------------------
 
+export function getConfigDir(): string {
+  return process.env["BRAINKIT_CONFIG_DIR"] ?? path.join(os.homedir(), ".config", "brainkit");
+}
+
 function getGlobalConfigPath(): string {
-  return path.join(os.homedir(), ".config", "brainkit", "config.toml");
+  return path.join(getConfigDir(), "config.toml");
 }
 
 export function readGlobalConfig(): BrainkitGlobalConfig | null {

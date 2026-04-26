@@ -1,9 +1,8 @@
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
-import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt, buildOnboardingPrompt } from "../core/index.js";
+import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt, buildOnboardingPrompt, getConfigDir } from "../core/index.js";
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
 import * as p from "@clack/prompts";
@@ -162,7 +161,7 @@ export function cleanupOnboardingWorkspace(configDir: string): void {
 // ---------------------------------------------------------------------------
 
 export function launchCopilot(args: string[], selectedVaultPath?: string): void {
-  const configDir = path.join(os.homedir(), ".config", "brainkit");
+  const configDir = getConfigDir();
   let vaultPath = selectedVaultPath;
 
   if (vaultPath === undefined) {

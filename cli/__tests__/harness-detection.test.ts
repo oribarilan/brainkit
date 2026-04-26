@@ -12,6 +12,7 @@ vi.mock("../../core/index.js", () => ({
   readVaultFile: vi.fn(),
   writeVaultFile: vi.fn(),
   searchVaultFiles: vi.fn(),
+  getConfigDir: vi.fn(() => "/tmp/brainkit-test-config"),
 }));
 
 import { readGlobalConfig, writeGlobalConfig } from "../../core/index.js";
