@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { updateGitignore, generateCopilotSettings, installCopilotHooks } from "../copilot.js";
+import {
+  updateGitignore,
+  generateCopilotSettings,
+  installCopilotHooks,
+  ensureOnboardingWorkspace,
+  cleanupOnboardingWorkspace,
+} from "../copilot.js";
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-copilot-test-"));
@@ -112,5 +118,78 @@ describe("installCopilotHooks", () => {
     const stat = fs.statSync(scriptPath);
     // Check executable bit (owner execute)
     expect(stat.mode & 0o100).toBeTruthy();
+  });
+});
+
+describe("ensureOnboardingWorkspace", () => {
+  let configDir: string;
+
+  beforeEach(() => {
+    configDir = makeTempDir();
+  });
+
+  afterEach(() => {
+    fs.rmSync(configDir, { recursive: true, force: true });
+  });
+
+  it("creates onboarding directory", () => {
+    ensureOnboardingWorkspace(configDir);
+    const onboardingDir = path.join(configDir, "onboarding");
+    expect(fs.existsSync(onboardingDir)).toBe(true);
+  });
+
+  it("writes AGENTS.md with onboarding prompt", () => {
+    ensureOnboardingWorkspace(configDir);
+    const agentsPath = path.join(configDir, "onboarding", "AGENTS.md");
+    expect(fs.existsSync(agentsPath)).toBe(true);
+
+    const content = fs.readFileSync(agentsPath, "utf-8");
+    expect(content).toContain("Brainkit — First-Time Setup");
+  });
+
+  it("AGENTS.md contains copilot restart instruction", () => {
+    ensureOnboardingWorkspace(configDir);
+    const agentsPath = path.join(configDir, "onboarding", "AGENTS.md");
+    const content = fs.readFileSync(agentsPath, "utf-8");
+    expect(content).toContain("run `brainkit` again");
+  });
+
+  it("returns the onboarding directory path", () => {
+    const result = ensureOnboardingWorkspace(configDir);
+    expect(result).toBe(path.join(configDir, "onboarding"));
+  });
+
+  it("is idempotent — can be called multiple times", () => {
+    ensureOnboardingWorkspace(configDir);
+    ensureOnboardingWorkspace(configDir);
+
+    const agentsPath = path.join(configDir, "onboarding", "AGENTS.md");
+    expect(fs.existsSync(agentsPath)).toBe(true);
+  });
+});
+
+describe("cleanupOnboardingWorkspace", () => {
+  let configDir: string;
+
+  beforeEach(() => {
+    configDir = makeTempDir();
+  });
+
+  afterEach(() => {
+    fs.rmSync(configDir, { recursive: true, force: true });
+  });
+
+  it("removes onboarding directory when it exists", () => {
+    const onboardingDir = path.join(configDir, "onboarding");
+    fs.mkdirSync(onboardingDir, { recursive: true });
+    fs.writeFileSync(path.join(onboardingDir, "AGENTS.md"), "test", "utf-8");
+
+    cleanupOnboardingWorkspace(configDir);
+    expect(fs.existsSync(onboardingDir)).toBe(false);
+  });
+
+  it("does nothing when onboarding directory does not exist", () => {
+    cleanupOnboardingWorkspace(configDir);
+    expect(fs.existsSync(path.join(configDir, "onboarding"))).toBe(false);
   });
 });

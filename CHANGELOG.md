@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-26
+
+### Added
+- Polished CLI experience with `@clack/prompts` — branded intro, boxed help, interactive select menus for vault and harness selection, styled errors and cancellation
+- Copilot CLI first-run onboarding — agent-guided vault setup without requiring OpenCode first, using a temporary onboarding workspace
+- Shared onboarding prompt module — both OpenCode and Copilot use the same setup flow, extracted to `core/onboarding-prompt.ts`
+- `BRAINKIT_CONFIG_DIR` env var to override the default config directory (useful for isolated dev/testing)
+- `just run` and `just reset` recipes for testing the full CLI launch experience with isolated config
+- Content curation listed as a feature in docs
+- Harness detection hints — select menu shows "(detected)" / "(not installed)" for each harness
+
+### Changed
+- Onboarding prompt scoped to vault type — work vaults only ask about work context, personal vaults about personal context
+- Onboarding uses the question tool for structured prompts instead of free-form text
+- Config directory paths centralized through `getConfigDir()` instead of hardcoded `~/.config/brainkit`
+
+### Fixed
+- OIDC trusted publisher for npm auth (Node 24 compatibility)
+
 ## [0.3.0] - 2026-04-26
 
 ### Added

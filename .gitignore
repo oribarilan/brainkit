@@ -4,3 +4,4 @@ node_modules/
 dist/
 .reference/
 .worktrees/
+.dev/user-config/

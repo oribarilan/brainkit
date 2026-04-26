@@ -1,9 +1,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import * as readline from "node:readline";
+import * as p from "@clack/prompts";
 import { execFileSync, spawn } from "node:child_process";
-import { readGlobalConfig, writeGlobalConfig, discoverVaults } from "../core/index.js";
+import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 
 // ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ function isInstalled(binaries: string[]): boolean {
 // ---------------------------------------------------------------------------
 
 function ensureOpenCodeConfig(): void {
-  const configDir = path.join(os.homedir(), ".config", "brainkit");
+  const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
 
   const ocConfigPath = path.join(configDir, "opencode.json");
@@ -59,7 +59,7 @@ function ensureOpenCodeConfig(): void {
 function launchOpenCode(args: string[], vaultPath?: string): void {
   ensureOpenCodeConfig();
 
-  const configDir = path.join(os.homedir(), ".config", "brainkit");
+  const configDir = getConfigDir();
   const env: Record<string, string | undefined> = {
     ...process.env,
     OPENCODE_CONFIG: path.join(configDir, "opencode.json"),
@@ -117,34 +117,23 @@ export function parseVaultFlag(args: string[]): { vault: string | null; remainin
 // Vault selection
 // ---------------------------------------------------------------------------
 
-function promptVaultSelection(vaults: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!process.stdin.isTTY) {
-      reject(new Error("Multiple vaults found. Use --vault <name> to select one."));
-      return;
-    }
+async function promptVaultSelection(vaults: string[]): Promise<string> {
+  if (!process.stdin.isTTY) {
+    p.cancel("Multiple vaults found. Use --vault <name> to select one.");
+    process.exit(1);
+  }
 
-    console.log("\n  [brainkit] Multiple vaults found:\n");
-    for (let i = 0; i < vaults.length; i++) {
-      const v = vaults[i];
-      if (v !== undefined) {
-        console.log(`    ${i + 1}. ${v}`);
-      }
-    }
-    console.log("");
-
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    rl.question("  Select vault (number): ", (answer) => {
-      rl.close();
-      const idx = parseInt(answer, 10) - 1;
-      const selected = vaults[idx];
-      if (selected === undefined) {
-        reject(new Error(`Invalid selection. Choose 1-${vaults.length}.`));
-        return;
-      }
-      resolve(selected);
-    });
+  const selected = await p.select({
+    message: "Select a vault",
+    options: vaults.map((v) => ({ value: v, label: v })),
   });
+
+  if (p.isCancel(selected)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  return selected;
 }
 
 export async function selectVault(
@@ -161,17 +150,18 @@ export async function selectVault(
   try {
     vaults = discoverVaults(brainPath);
   } catch (err) {
-    console.error(`  [brainkit] Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
+    p.cancel(`Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   }
 
   // Explicit --vault flag
   if (vaultFlag !== null) {
     if (!vaults.includes(vaultFlag)) {
-      console.error(`  [brainkit] Vault "${vaultFlag}" not found.`);
-      if (vaults.length > 0) {
-        console.error(`  [brainkit] Available vaults: ${vaults.join(", ")}`);
-      }
+      const msg =
+        vaults.length > 0
+          ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
+          : `Vault "${vaultFlag}" not found.`;
+      p.cancel(msg);
       process.exit(1);
     }
     return { vaultPath: path.join(brainPath, vaultFlag), brainPath };
@@ -206,32 +196,31 @@ export function isHarnessAlias(arg: string): boolean {
 export function launchHarness(alias: string, args: string[], vaultPath?: string): void {
   const harness = HARNESSES.find((h) => h.aliases.includes(alias));
   if (!harness) {
-    console.error(`  [brainkit] Unknown harness: ${alias}`);
+    p.cancel(`Unknown harness: ${alias}`);
     process.exit(1);
   }
 
   if (!isInstalled(harness.binaries)) {
-    console.error(`  [brainkit] ${harness.name} is not installed. Install it first.`);
+    p.cancel(`${harness.name} is not installed.`);
     process.exit(1);
   }
 
+  p.outro(`Launching ${harness.name}...`);
   harness.launch(args, vaultPath);
 }
 
-export function detectAndLaunch(args: string[], vaultPath?: string): void {
+export async function detectAndLaunch(args: string[], vaultPath?: string): Promise<void> {
   const available = HARNESSES.filter((h) => isInstalled(h.binaries));
 
   if (available.length === 0) {
-    console.error("  [brainkit] No supported harness found. Install one of these:");
-    for (const h of HARNESSES) {
-      console.error(`    ${h.name}`);
-    }
+    p.cancel("No supported harness found. Install OpenCode or Copilot CLI.");
     process.exit(1);
   }
 
   if (available.length === 1) {
     const harness = available[0];
     if (harness !== undefined) {
+      p.outro(`Launching ${harness.name}...`);
       harness.launch(args, vaultPath);
     }
     return;
@@ -243,58 +232,38 @@ export function detectAndLaunch(args: string[], vaultPath?: string): void {
   if (savedDefault !== undefined && savedDefault !== "") {
     const defaultHarness = available.find((h) => h.aliases.includes(savedDefault));
     if (defaultHarness) {
+      p.outro(`Launching ${defaultHarness.name}...`);
       defaultHarness.launch(args, vaultPath);
       return;
     }
-    // Saved default not installed — fall through to prompt
   }
 
   // Non-TTY — can't prompt
   if (!process.stdin.isTTY) {
-    console.error("  [brainkit] Found multiple harnesses. Pick one:");
-    for (const h of HARNESSES) {
-      const detected = available.includes(h);
-      if (detected) {
-        console.error(`    brainkit ${h.aliases[0]}  — ${h.name}  (detected)`);
-      } else {
-        console.error(`    brainkit ${h.aliases[0]}  — ${h.name}  (not installed)`);
-      }
-    }
+    p.cancel("Multiple harnesses found. Specify one: brainkit oc | brainkit copilot");
     process.exit(1);
   }
 
   // Interactive prompt
-  console.log("\n  [brainkit] Select your default harness:\n");
-  let selectable = 0;
-  const indexToHarness: Harness[] = [];
-  for (const h of HARNESSES) {
-    const detected = available.includes(h);
-    if (detected) {
-      selectable++;
-      indexToHarness.push(h);
-      console.log(`    ${selectable}. ${h.name}        (detected)`);
-    } else {
-      console.log(`       ${h.name}        (not installed)`);
-    }
-  }
-  console.log("");
-
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  rl.question("  Choice (number): ", (answer) => {
-    rl.close();
-    const idx = parseInt(answer, 10) - 1;
-    const selected = indexToHarness[idx];
-    if (selected === undefined) {
-      console.error(`  [brainkit] Invalid selection. Choose 1-${selectable}.`);
-      process.exit(1);
-    }
-
-    // Save default
-    const config = globalConfig ?? { version: 1, brain_path: "" };
-    config.default_harness = selected.aliases[0];
-    writeGlobalConfig(config);
-    console.log(`  [brainkit] Default harness set to ${selected.name}.`);
-
-    selected.launch(args, vaultPath);
+  const selected = await p.select({
+    message: "Select your default harness",
+    options: HARNESSES.map((h) => {
+      const detected = available.includes(h);
+      return { value: h, label: `${h.name} (${detected ? "detected" : "not installed"})`, disabled: !detected };
+    }),
   });
+
+  if (p.isCancel(selected)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  // Save default
+  const config = globalConfig ?? { version: 1, brain_path: "" };
+  config.default_harness = selected.aliases[0];
+  writeGlobalConfig(config);
+  p.log.success(`Default harness set to ${selected.name}.`);
+
+  p.outro(`Launching ${selected.name}...`);
+  selected.launch(args, vaultPath);
 }

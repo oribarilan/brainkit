@@ -9,6 +9,15 @@ default:
 dev:
     just oc
 
+# run the CLI from source (test the full launch experience, isolated from user config)
+run *args:
+    BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config npx tsx cli/index.ts {{args}}
+
+# reset dev config for a clean first-run experience
+reset:
+    rm -rf {{justfile_directory()}}/.dev/user-config
+    @echo "Dev config reset. Run 'just run' for a fresh start."
+
 # launch opencode with the local brainkit plugin
 oc:
     OPENCODE_CONFIG={{justfile_directory()}}/.dev/opencode.json OPENCODE_TUI_CONFIG={{justfile_directory()}}/.dev/tui.json opencode
