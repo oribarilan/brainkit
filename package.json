@@ -1,6 +1,6 @@
 {
   "name": "@oribish/brainkit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Second brain plugin for OpenCode - capture, organize, and retrieve knowledge with PARA method",
   "keywords": [
     "opencode-plugin",
