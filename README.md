@@ -15,19 +15,26 @@
                    { }
 ```
 
+[![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
+
+## Install
+
+```bash
+npm install -g @2brain/brainkit
+```
+
+Brainkit works as a plugin for AI coding agents. It auto-detects which harness you have installed, or you can pick one explicitly:
+
+| Harness                                                     | Command            |
+| ----------------------------------------------------------- | ------------------ |
+| [OpenCode](https://opencode.ai) (default)                   | `brainkit`         |
+| [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` |
+
+Run `brainkit` from anywhere -- it connects to your brain directory regardless of where you are in the filesystem. If you haven't set one up yet, the agent guides you through it on first run.
+
+## What is it
+
 I've been maintaining a second brain for over 10 years. Brainkit is the collection of my opinionated workflows and practices, packaged as a coding agent plugin. You can use it as-is if you like how I do things, pick a skill or two to add a specific workflow to your own setup, or just browse for ideas.
-
-If you have something that fits brainkit's philosophy, contributions are welcome. Open an issue first to talk through the problem you're solving before writing code.
-
-## Philosophy
-
-**Personal use, for both life and work.** A brain directory holds one or more vaults — you might have `work` and `life`, or just a single vault. Each vault is independent with its own config, contacts, and bragfile. Choose which vault to open at launch with `--vault`, or let brainkit auto-select when there's only one.
-
-**Everything goes in.** Food recipes, feedback from your manager, notes from a doctor appointment, architecture decisions from a sprint review. If it's worth remembering, it belongs in the vault. The whole point is that you actually use it, so it has to be low friction.
-
-**Common best practices over custom systems.** I prefer battle-tested conventions. [PARA](https://fortelabs.com/blog/para/) for file organization, a bragfile for tracking accomplishments, etc. Brainkit just wires them together and teaches an AI agent to maintain them.
-
-## What it does
 
 You talk to your coding agent, things happen in your vault:
 
@@ -48,32 +55,17 @@ No commands, no formatting, no manual filing.
 - [**Doctor**](docs/doctor.md) — checks vault health: missing structure, naming violations, whether your GitHub repo is private. Fixes what it can.
 - [**TUI**](docs/tui.md) — custom terminal UI for OpenCode: vault stats sidebar, rotating tips, rose-pink theme.
 
-## Install
+## Philosophy
 
-```bash
-npm install -g @2brain/brainkit
-```
+**Personal use, for both life and work.** A brain directory holds one or more vaults — you might have `work` and `life`, or just a single vault. Each vault is independent with its own config, contacts, and bragfile. Choose which vault to open at launch with `--vault`, or let brainkit auto-select when there's only one.
 
-[![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
+**Everything goes in.** Food recipes, feedback from your manager, notes from a doctor appointment, architecture decisions from a sprint review. If it's worth remembering, it belongs in the vault. The whole point is that you actually use it, so it has to be low friction.
 
-## Usage
+**Common best practices over custom systems.** I prefer battle-tested conventions. [PARA](https://fortelabs.com/blog/para/) for file organization, a bragfile for tracking accomplishments, etc. Brainkit just wires them together and teaches an AI agent to maintain them.
 
-Run `brainkit` from anywhere -- it connects to your brain directory regardless of where you are in the filesystem. If you haven't set one up yet, the agent guides you through it.
+## Contributing
 
-```bash
-brainkit
-```
-
-On first run, the agent walks you through a getting-to-know-you conversation and creates a vault that matches your actual situation.
-
-### Supported harnesses
-
-Brainkit works as a plugin for AI coding agents. Pick the one you use:
-
-| Harness                                                     | Command            |
-| ----------------------------------------------------------- | ------------------ |
-| [OpenCode](https://opencode.ai) (default)                   | `brainkit`         |
-| [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` |
+Contributions are welcome. Open an issue first to talk through the problem you're solving before writing code. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
