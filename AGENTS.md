@@ -271,3 +271,9 @@ All vault logic lives in `core/`. Key patterns:
 - `runHealthChecks()` — vault doctor diagnostics
 
 All file operations validate paths are within the vault boundary (path traversal protection). Current implementation uses synchronous fs — flagged as tech debt for async migration.
+
+---
+
+## Releasing
+
+**Never publish to npm manually.** Publishing happens automatically via GitHub Actions when a release PR is merged to `main`. See `CONTRIBUTING.md` § Releasing for the full process — version bump, changelog, PR, CI publish.
