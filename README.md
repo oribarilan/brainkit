@@ -64,6 +64,8 @@ No commands, no formatting, no manual filing.
 
 **Everything goes in.** Food recipes, feedback from your manager, notes from a doctor appointment, architecture decisions from a sprint review. If it's worth remembering, it belongs in the vault. The whole point is that you actually use it, so it has to be low friction.
 
+**Store where you'll search, not where you found it.** Meeting notes get processed: action items go to the project, accomplishments go to the bragfile, new people go to contacts. The original note gets archived. Information should live where you'll look for it later.
+
 **Convention over configuration.** I prefer battle-tested patterns. [PARA](https://fortelabs.com/blog/para/) for organization, a bragfile for tracking accomplishments, etc. Brainkit wires them together and teaches an agent to maintain them.
 
 ## Contributing
