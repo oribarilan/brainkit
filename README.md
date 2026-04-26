@@ -54,16 +54,26 @@ No commands, no formatting, no manual filing.
 npm install -g @2brain/brainkit
 ```
 
-Then launch with:
+[![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
+
+## Usage
+
+Run `brainkit` from anywhere -- it connects to your brain directory regardless of where you are in the filesystem. If you haven't set one up yet, the agent guides you through it.
 
 ```bash
-brainkit            # OpenCode (default)
-brainkit copilot    # GitHub Copilot CLI
+brainkit
 ```
 
 On first run, the agent walks you through a getting-to-know-you conversation and creates a vault that matches your actual situation.
 
-[![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
+### Supported harnesses
+
+Brainkit works as a plugin for AI coding agents. Pick the one you use:
+
+| Harness | Command | Requirements |
+| --- | --- | --- |
+| [OpenCode](https://opencode.ai) (default) | `brainkit` | OpenCode on `$PATH` |
+| [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` | Copilot CLI installed and authenticated |
 
 ## License
 
