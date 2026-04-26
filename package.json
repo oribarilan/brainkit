@@ -1,7 +1,7 @@
 {
   "name": "@2brain/brainkit",
   "version": "0.2.0",
-  "description": "Second brain plugin for OpenCode - capture, organize, and retrieve knowledge with PARA method",
+  "description": "An augmentation kit for your brain",
   "keywords": [
     "opencode-plugin",
     "second-brain",
