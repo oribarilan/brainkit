@@ -70,7 +70,10 @@ function launchOpenCode(args: string[], vaultPath?: string): void {
     env["BRAINKIT_VAULT_PATH"] = vaultPath;
   }
 
-  const child = spawn("opencode", args, { stdio: "inherit", env });
+  // No vault = onboarding — auto-submit initial prompt
+  const launchArgs = vaultPath === undefined ? ["--prompt", "Let's set up my first brainkit vault!", ...args] : args;
+
+  const child = spawn("opencode", launchArgs, { stdio: "inherit", env });
   child.on("exit", (code) => process.exit(code ?? 0));
 }
 

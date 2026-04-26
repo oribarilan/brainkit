@@ -177,7 +177,10 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
       const onboardingDir = ensureOnboardingWorkspace(configDir);
 
       p.outro("Starting onboarding...");
-      const child = spawn("copilot", args, { stdio: "inherit", cwd: onboardingDir });
+      const child = spawn("copilot", ["-i", "Let's set up my first brainkit vault!", ...args], {
+        stdio: "inherit",
+        cwd: onboardingDir,
+      });
       child.on("exit", (code) => process.exit(code ?? 0));
       return;
     }

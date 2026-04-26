@@ -2,10 +2,11 @@
 
 ## [Unreleased]
 
-## [0.4.1] - 2026-04-26
+## [0.5.0] - 2026-04-26
 
-### Fixed
-- Detect missing brain directory and offer factory reset instead of crashing
+### Added
+- `brainkit reset` command — factory reset with confirmation prompt, removes config and re-triggers onboarding
+- Auto-submit initial prompt on first-run onboarding: OpenCode uses `--prompt`, Copilot CLI uses `-i`
 
 ## [0.4.0] - 2026-04-26
 
