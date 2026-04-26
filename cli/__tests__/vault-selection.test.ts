@@ -53,22 +53,19 @@ describe("parseVaultFlag", () => {
 
 describe("selectVault", () => {
   let brainDir: string;
-  let exitSpy: ReturnType<typeof vi.spyOn>;
-  let errorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     brainDir = mkdtempSync(join(tmpdir(), "brainkit-sv-"));
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: brainDir });
-    exitSpy = vi.spyOn(process, "exit").mockImplementation((code) => {
-      throw new Error(`process.exit(${code})`);
-    });
-    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("process.exit called");
+    }) as never);
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
     rmSync(brainDir, { recursive: true, force: true });
-    exitSpy.mockRestore();
-    errorSpy.mockRestore();
+    vi.restoreAllMocks();
   });
 
   it("auto-selects when only one vault exists", async () => {
@@ -90,10 +87,10 @@ describe("selectVault", () => {
     mockDiscoverVaults.mockReturnValue(["work", "life"]);
 
     await expect(selectVault("bogus")).rejects.toThrow("process.exit");
-    expect(errorSpy).toHaveBeenCalledWith(
+    expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Vault "bogus" not found'),
     );
-    expect(errorSpy).toHaveBeenCalledWith(
+    expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining("Available vaults:"),
     );
   });

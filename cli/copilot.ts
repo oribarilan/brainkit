@@ -136,14 +136,17 @@ function writeAgentsMd(vaultPath: string, config: ReturnType<typeof readVaultCon
 // Launch orchestrator
 // ---------------------------------------------------------------------------
 
-export function launchCopilot(args: string[]): void {
-  const globalConfig = readGlobalConfig();
-  if (globalConfig === null || !globalConfig.brain_path) {
-    console.error("  [brainkit] No vault configured. Run brainkit with OpenCode first to set up your vault.");
-    process.exit(1);
-  }
+export function launchCopilot(args: string[], selectedVaultPath?: string): void {
+  let vaultPath = selectedVaultPath;
 
-  const vaultPath = globalConfig.brain_path;
+  if (vaultPath === undefined) {
+    const globalConfig = readGlobalConfig();
+    if (globalConfig === null || !globalConfig.brain_path) {
+      console.error("  [brainkit] No vault configured. Run brainkit with OpenCode first to set up your vault.");
+      process.exit(1);
+    }
+    vaultPath = globalConfig.brain_path;
+  }
   const config = readVaultConfigSimple(vaultPath);
 
   // Install skills
@@ -165,7 +168,8 @@ export function launchCopilot(args: string[]): void {
   // Update .gitignore
   updateGitignore(vaultPath);
 
-  // Spawn copilot
-  const child = spawn("copilot", args, { stdio: "inherit", cwd: vaultPath });
+  // Spawn copilot with BRAINKIT_VAULT_PATH for status script
+  const env = { ...process.env, BRAINKIT_VAULT_PATH: vaultPath };
+  const child = spawn("copilot", args, { stdio: "inherit", cwd: vaultPath, env });
   child.on("exit", (code) => process.exit(code ?? 0));
 }
