@@ -5,6 +5,7 @@ import * as p from "@clack/prompts";
 import { execFileSync, spawn } from "node:child_process";
 import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
+import { maybeCheckHarnessVersion } from "./harness-version.js";
 
 // ---------------------------------------------------------------------------
 // Harness definitions
@@ -220,7 +221,7 @@ export function isHarnessAlias(arg: string): boolean {
   return HARNESSES.some((h) => h.aliases.includes(arg));
 }
 
-export function launchHarness(alias: string, args: string[], vaultPath?: string): void {
+export async function launchHarness(alias: string, args: string[], vaultPath?: string): Promise<void> {
   const harness = HARNESSES.find((h) => h.aliases.includes(alias));
   if (!harness) {
     p.cancel(`Unknown harness: ${alias}`);
@@ -232,6 +233,7 @@ export function launchHarness(alias: string, args: string[], vaultPath?: string)
     process.exit(1);
   }
 
+  await maybeCheckHarnessVersion(harness.name);
   p.outro(`Launching ${harness.name}...`);
   harness.launch(args, vaultPath);
 }
@@ -247,6 +249,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
   if (available.length === 1) {
     const harness = available[0];
     if (harness !== undefined) {
+      await maybeCheckHarnessVersion(harness.name);
       p.outro(`Launching ${harness.name}...`);
       harness.launch(args, vaultPath);
     }
@@ -259,6 +262,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
   if (savedDefault !== undefined && savedDefault !== "") {
     const defaultHarness = available.find((h) => h.aliases.includes(savedDefault));
     if (defaultHarness) {
+      await maybeCheckHarnessVersion(defaultHarness.name);
       p.outro(`Launching ${defaultHarness.name}...`);
       defaultHarness.launch(args, vaultPath);
       return;
@@ -291,6 +295,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
   writeGlobalConfig(config);
   p.log.success(`Default harness set to ${selected.name}.`);
 
+  await maybeCheckHarnessVersion(selected.name);
   p.outro(`Launching ${selected.name}...`);
   selected.launch(args, vaultPath);
 }

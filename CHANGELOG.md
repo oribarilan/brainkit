@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- Harness version check — on first run or brainkit version change, checks if OpenCode/Copilot CLI is outdated via npm registry and suggests updating
+
 ## [0.5.0] - 2026-04-26
 
 ### Added
