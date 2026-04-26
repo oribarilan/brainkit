@@ -24,7 +24,7 @@ When editing client-side files, you're changing the experience for brainkit's en
 ### Structure
 
 ```
-core/               # TypeScript — shared logic (@oribish/brainkit-core)
+core/               # TypeScript — shared vault logic
   vault.ts          # Vault discovery, config, file operations, brag stats
   system-prompt.ts  # Dynamic system prompt builder (client-side)
   types.ts          # Shared types (BrainkitConfig, etc.)
@@ -165,18 +165,18 @@ Tests live in `__tests__/` directories alongside source. Each test file maps to 
 
 ---
 
-## Two-Package Architecture
+## Package Architecture
 
-The repo publishes two npm packages:
+The repo publishes a single npm package: `@oribish/brainkit`.
 
-| Package                  | Directory | What it contains                                 |
-| ------------------------ | --------- | ------------------------------------------------ |
-| `@oribish/brainkit-core` | `core/`   | Vault ops, system prompt, types. No UI deps.     |
-| `@oribish/brainkit`      | root      | CLI + OpenCode plugin + skills. Depends on core. |
+| Directory | What it contains |
+| --------- | ------------------------------------------------ |
+| `core/`   | Vault ops, system prompt, types. No UI deps.     |
+| `cli/`    | CLI entry point, compiled to `dist/` for npm     |
+| `opencode/` | OpenCode plugin (server + TUI). Ships raw TS.  |
+| `skills/` | Markdown domain knowledge for the user's agent   |
 
-`@oribish/brainkit-core` has zero peer dependencies. `@oribish/brainkit` has optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
-
-Root `package.json` uses `"workspaces": ["core"]`. Publishing order: core first, then brainkit.
+Runtime dependency: `smol-toml` (TOML parsing). Optional peer deps on OpenCode packages (`@opencode-ai/plugin`, `@opentui/core`, `@opentui/solid`, `solid-js`).
 
 ---
 
