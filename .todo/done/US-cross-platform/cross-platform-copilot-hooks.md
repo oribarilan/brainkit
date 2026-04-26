@@ -11,14 +11,17 @@ git rev-parse --git-dir > /dev/null 2>&1 || exit 0
 ```
 
 This script:
+
 1. Won't run on Windows — no `/usr/bin/env bash` (unless Git Bash or WSL)
 2. `chmod 0o755` (line 130) is a no-op on Windows (NTFS doesn't use Unix permissions)
 3. The hook config references `.github/hooks/scripts/auto-commit.sh` (lines 102, 107)
 
 Additionally, `generateCopilotSettings()` at `cli/copilot.ts:87` embeds a Node.js script path into a JSON config:
+
 ```ts
 command: `node ${statusScriptPath}`,
 ```
+
 where `statusScriptPath` is built via `path.join(packageRoot, "dist", "cli", "copilot-status.js")` (line 208). On Windows, `path.join` produces backslashes (`node C:\Users\...\copilot-status.js`), which may be misinterpreted as escape characters depending on the shell Copilot uses to execute the command.
 
 Meanwhile, `core/auto-commit.ts` already has a pure Node.js implementation of the same auto-commit logic (`commitChanges()`, `scheduleAutoCommit()`). The Copilot hook duplicates this as a bash script.
@@ -56,17 +59,24 @@ The replacement `.js` script must be self-contained because it runs as a standal
 ```js
 #!/usr/bin/env node
 const { execSync } = require("child_process");
-try { execSync("git rev-parse --git-dir", { stdio: "pipe" }); } catch { process.exit(0); }
+try {
+  execSync("git rev-parse --git-dir", { stdio: "pipe" });
+} catch {
+  process.exit(0);
+}
 const status = execSync("git status --porcelain", { stdio: "pipe" }).toString().trim();
 if (!status) process.exit(0);
 try {
   const date = new Date().toISOString().slice(0, 10);
   execSync("git add -A", { stdio: "pipe" });
   execSync(`git commit -m "brainkit: auto-save ${date}"`, { stdio: "pipe" });
-} catch { /* commit failed — skip silently */ }
+} catch {
+  /* commit failed — skip silently */
+}
 ```
 
 For the status script path, the fix is simple:
+
 ```ts
 command: `node ${statusScriptPath.replace(/\\/g, "/")}`,
 ```

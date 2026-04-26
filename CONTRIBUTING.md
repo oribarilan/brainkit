@@ -65,6 +65,8 @@ Every PR that changes behavior must add an entry under `## [Unreleased]` in `CHA
 
 ### Release process (agent-driven)
 
+**Never publish to npm manually.** All publishing happens through GitHub Actions after a release PR is merged to `main`.
+
 When the user asks to prepare a release, the agent:
 
 1. Reviews `[Unreleased]` in `CHANGELOG.md` — confirms there are entries to release
