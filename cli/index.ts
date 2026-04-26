@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   if (args.includes("--help")) {
     p.intro(`brainkit v${version}`);
     p.note(HELP_TEXT, "Usage");
-    p.outro();
+    p.outro("Happy thinking!");
     process.exit(0);
   }
 

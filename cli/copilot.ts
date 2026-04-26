@@ -143,7 +143,7 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
   if (vaultPath === undefined) {
     const globalConfig = readGlobalConfig();
     if (globalConfig === null || !globalConfig.brain_path) {
-      p.cancel("No vault configured. Run brainkit with OpenCode first to set up your vault.");
+      p.log.error("No vault configured. Run brainkit with OpenCode first to set up your vault.");
       process.exit(1);
     }
     vaultPath = globalConfig.brain_path;
