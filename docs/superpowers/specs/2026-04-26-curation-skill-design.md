@@ -27,24 +27,24 @@ A skill that teaches the agent to passively detect when conversations reveal inf
 
 ### Config fields (`brainkit.toml`)
 
-| Field | Trigger examples |
-|-------|-----------------|
-| `user.role` | "I got promoted to senior engineer", "I switched to the platform team" |
-| `user.expertise` | "I've been doing a lot of Rust lately", "I'm learning Kubernetes" |
-| `user.work.description` | "We reorganized, I'm now on the infra team", "started a new project" |
-| `user.personal.description` | "We just moved to Austin", "had a baby" (personal vaults only) |
-| `user.customization.context` | Any significant change to the user's overall context |
+| Field                        | Trigger examples                                                       |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `user.role`                  | "I got promoted to senior engineer", "I switched to the platform team" |
+| `user.expertise`             | "I've been doing a lot of Rust lately", "I'm learning Kubernetes"      |
+| `user.work.description`      | "We reorganized, I'm now on the infra team", "started a new project"   |
+| `user.personal.description`  | "We just moved to Austin", "had a baby" (personal vaults only)         |
+| `user.customization.context` | Any significant change to the user's overall context                   |
 
 ### Vault content
 
-| Target | Trigger examples |
-|--------|-----------------|
-| `contacts.md` | "My new manager is Sarah", "had a meeting with the CTO" |
+| Target        | Trigger examples                                            |
+| ------------- | ----------------------------------------------------------- |
+| `contacts.md` | "My new manager is Sarah", "had a meeting with the CTO"     |
 | `bragfile.md` | "I shipped the migration", "got great feedback from the VP" |
 
 ### Behavior
 
-- Always *suggest*, never auto-update. Use the question tool to ask: "Sounds like your role changed — want me to update your config?"
+- Always _suggest_, never auto-update. Use the question tool to ask: "Sounds like your role changed — want me to update your config?"
 - Don't interrupt the user's current task. Note the opportunity and suggest at a natural pause.
 - If the user declines, don't ask again for the same information.
 - For config updates: read the current `brainkit.toml`, show the proposed change, ask for confirmation.
@@ -68,11 +68,11 @@ A skill that teaches the agent to passively detect when conversations reveal inf
 
 ## Changes Summary
 
-| File | Action | Type |
-|------|--------|------|
-| `core/onboarding-prompt.ts` | Modify | Prompt text |
-| `skills/curation/SKILL.md` | Create | Skill markdown |
+| File                          | Action | Type                  |
+| ----------------------------- | ------ | --------------------- |
+| `core/onboarding-prompt.ts`   | Modify | Prompt text           |
+| `skills/curation/SKILL.md`    | Create | Skill markdown        |
 | `skills/maintenance/SKILL.md` | Modify | Heading + description |
-| `cli/install-skills.ts` | Modify | Label string |
+| `cli/install-skills.ts`       | Modify | Label string          |
 
 No code logic changes. No new tests needed (skill files are markdown, onboarding prompt tests already cover structure).

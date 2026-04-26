@@ -59,7 +59,8 @@ function ensureOpenCodeConfig(): void {
 function launchOpenCode(args: string[], vaultPath?: string): void {
   ensureOpenCodeConfig();
 
-  const configDir = getConfigDir();  const env: Record<string, string | undefined> = {
+  const configDir = getConfigDir();
+  const env: Record<string, string | undefined> = {
     ...process.env,
     OPENCODE_CONFIG: path.join(configDir, "opencode.json"),
     OPENCODE_TUI_CONFIG: path.join(configDir, "tui.json"),
@@ -156,9 +157,10 @@ export async function selectVault(
   // Explicit --vault flag
   if (vaultFlag !== null) {
     if (!vaults.includes(vaultFlag)) {
-      const msg = vaults.length > 0
-        ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
-        : `Vault "${vaultFlag}" not found.`;
+      const msg =
+        vaults.length > 0
+          ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
+          : `Vault "${vaultFlag}" not found.`;
       p.cancel(msg);
       process.exit(1);
     }

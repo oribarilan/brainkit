@@ -12,23 +12,25 @@
 
 ### File Map
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `package.json` | Modify | Add `@clack/prompts` dependency |
-| `cli/index.ts` | Modify | Branded intro, styled help, error handling |
-| `cli/launch.ts` | Modify | Select prompts for vault/harness, styled errors, outro |
-| `cli/copilot.ts` | Modify | Single error message update |
+| File             | Action | Responsibility                                         |
+| ---------------- | ------ | ------------------------------------------------------ |
+| `package.json`   | Modify | Add `@clack/prompts` dependency                        |
+| `cli/index.ts`   | Modify | Branded intro, styled help, error handling             |
+| `cli/launch.ts`  | Modify | Select prompts for vault/harness, styled errors, outro |
+| `cli/copilot.ts` | Modify | Single error message update                            |
 
 ---
 
 ### Task 1: Add @clack/prompts dependency
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install the dependency**
 
 Run:
+
 ```bash
 npm install @clack/prompts
 ```
@@ -38,6 +40,7 @@ Expected: `@clack/prompts` appears in `dependencies` in `package.json`.
 - [ ] **Step 2: Verify install**
 
 Run:
+
 ```bash
 node -e "import('@clack/prompts').then(m => console.log(Object.keys(m).slice(0,5).join(', ')))"
 ```
@@ -56,6 +59,7 @@ git commit -m "deps: add @clack/prompts for CLI polish"
 ### Task 2: Update cli/index.ts — branded intro, styled help & errors
 
 **Files:**
+
 - Modify: `cli/index.ts`
 
 **Context:** Current file uses `console.log` for help/version, `console.error` for errors, and a raw `SIGINT` handler. Replace all with clack equivalents.
@@ -131,6 +135,7 @@ main().catch((err: unknown) => {
 ```
 
 Key changes from the original:
+
 - Removed `printUsage()` function → replaced with `HELP_TEXT` constant + `p.note()`
 - Added `p.intro("brainkit")` at the start of normal flow
 - `--help` gets its own `intro/note/outro` frame
@@ -142,6 +147,7 @@ Key changes from the original:
 - [ ] **Step 2: Verify the file compiles**
 
 Run:
+
 ```bash
 npx tsc --project cli/tsconfig.json --noEmit
 ```
@@ -160,6 +166,7 @@ git commit -m "feat(cli): add clack intro, styled help and error output"
 ### Task 3: Update cli/launch.ts — select prompts, styled errors, outro
 
 **Files:**
+
 - Modify: `cli/launch.ts`
 
 **Context:** This is the biggest change. Replace `readline`-based interactive prompts with `select()`, swap `console.error` for `cancel()`/`log.error()`, add `outro()` before launching harnesses. `detectAndLaunch` becomes async.
@@ -167,11 +174,13 @@ git commit -m "feat(cli): add clack intro, styled help and error output"
 - [ ] **Step 1: Add clack import, remove readline import**
 
 Replace:
+
 ```typescript
 import * as readline from "node:readline";
 ```
 
 With:
+
 ```typescript
 import * as p from "@clack/prompts";
 ```
@@ -208,33 +217,38 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
 In the `selectVault` function, replace the `console.error` + `process.exit` calls:
 
 Replace:
+
 ```typescript
-    console.error(`  [brainkit] Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
+console.error(`  [brainkit] Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
+process.exit(1);
 ```
 
 With:
+
 ```typescript
-    p.cancel(`Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
+p.cancel(`Cannot read brain directory: ${err instanceof Error ? err.message : String(err)}`);
+process.exit(1);
 ```
 
 Replace:
+
 ```typescript
-    console.error(`  [brainkit] Vault "${vaultFlag}" not found.`);
-    if (vaults.length > 0) {
-      console.error(`  [brainkit] Available vaults: ${vaults.join(", ")}`);
-    }
-    process.exit(1);
+console.error(`  [brainkit] Vault "${vaultFlag}" not found.`);
+if (vaults.length > 0) {
+  console.error(`  [brainkit] Available vaults: ${vaults.join(", ")}`);
+}
+process.exit(1);
 ```
 
 With:
+
 ```typescript
-    const msg = vaults.length > 0
-      ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
-      : `Vault "${vaultFlag}" not found.`;
-    p.cancel(msg);
-    process.exit(1);
+const msg =
+  vaults.length > 0
+    ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
+    : `Vault "${vaultFlag}" not found.`;
+p.cancel(msg);
+process.exit(1);
 ```
 
 - [ ] **Step 4: Update `launchHarness` with styled errors and outro**
@@ -324,6 +338,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
 - [ ] **Step 6: Verify compilation**
 
 Run:
+
 ```bash
 npx tsc --project cli/tsconfig.json --noEmit
 ```
@@ -342,6 +357,7 @@ git commit -m "feat(cli): replace readline with clack select prompts and styled 
 ### Task 4: Update cli/copilot.ts — styled error
 
 **Files:**
+
 - Modify: `cli/copilot.ts`
 
 - [ ] **Step 1: Add clack import**
@@ -355,20 +371,23 @@ import * as p from "@clack/prompts";
 - [ ] **Step 2: Replace console.error in launchCopilot**
 
 In the `launchCopilot` function, replace:
+
 ```typescript
-      console.error("  [brainkit] No vault configured. Run brainkit with OpenCode first to set up your vault.");
-      process.exit(1);
+console.error("  [brainkit] No vault configured. Run brainkit with OpenCode first to set up your vault.");
+process.exit(1);
 ```
 
 With:
+
 ```typescript
-      p.cancel("No vault configured. Run brainkit with OpenCode first to set up your vault.");
-      process.exit(1);
+p.cancel("No vault configured. Run brainkit with OpenCode first to set up your vault.");
+process.exit(1);
 ```
 
 - [ ] **Step 3: Verify compilation**
 
 Run:
+
 ```bash
 npx tsc --project cli/tsconfig.json --noEmit
 ```
@@ -389,6 +408,7 @@ git commit -m "feat(cli): use clack cancel for copilot error message"
 - [ ] **Step 1: Full build**
 
 Run:
+
 ```bash
 just build-cli
 ```
@@ -398,6 +418,7 @@ Expected: compiles to `dist/` without errors.
 - [ ] **Step 2: Test help output**
 
 Run:
+
 ```bash
 node dist/cli/index.js --help
 ```
@@ -407,6 +428,7 @@ Expected: branded intro (`┌ brainkit v0.3.0`), boxed usage note, outro frame.
 - [ ] **Step 3: Test version output**
 
 Run:
+
 ```bash
 node dist/cli/index.js --version
 ```
@@ -416,6 +438,7 @@ Expected: plain `0.3.0` (no framing — for scripting).
 - [ ] **Step 4: Run existing tests**
 
 Run:
+
 ```bash
 just test
 ```
@@ -425,6 +448,7 @@ Expected: all tests pass (this change is UI-only, no logic changes).
 - [ ] **Step 5: Run lint + typecheck**
 
 Run:
+
 ```bash
 just lint
 ```

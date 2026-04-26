@@ -1,0 +1,225 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "rose": "#E8A0BF",
+    "roseBright": "#F0B8D0",
+    "roseDim": "#A06080",
+    "roseDark": "#704060",
+    "roseFaint": "#4A2840",
+    "roseMuted": "#B07090",
+    "bgBlack": "#1a1a2e",
+    "bgPanel": "#1c1c2e",
+    "bgElement": "#242440",
+    "bgBorder": "#3A2850"
+  },
+  "theme": {
+    "primary": {
+      "dark": "rose",
+      "light": "rose"
+    },
+    "secondary": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "accent": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "error": {
+      "dark": "#E85050",
+      "light": "#E85050"
+    },
+    "warning": {
+      "dark": "#E8C850",
+      "light": "#E8C850"
+    },
+    "success": {
+      "dark": "#50E880",
+      "light": "#50E880"
+    },
+    "info": {
+      "dark": "rose",
+      "light": "rose"
+    },
+    "text": {
+      "dark": "#E8E0E8",
+      "light": "#E8E0E8"
+    },
+    "textMuted": {
+      "dark": "#8A7090",
+      "light": "#8A7090"
+    },
+    "background": {
+      "dark": "bgBlack",
+      "light": "bgBlack"
+    },
+    "backgroundPanel": {
+      "dark": "bgPanel",
+      "light": "bgPanel"
+    },
+    "backgroundElement": {
+      "dark": "bgElement",
+      "light": "bgElement"
+    },
+    "backgroundMenu": {
+      "dark": "bgElement",
+      "light": "bgElement"
+    },
+    "selectedListItemText": {
+      "dark": "bgBlack",
+      "light": "bgBlack"
+    },
+    "border": {
+      "dark": "bgBorder",
+      "light": "bgBorder"
+    },
+    "borderActive": {
+      "dark": "rose",
+      "light": "rose"
+    },
+    "borderSubtle": {
+      "dark": "bgElement",
+      "light": "bgElement"
+    },
+    "diffAdded": {
+      "dark": "#50E880",
+      "light": "#50E880"
+    },
+    "diffRemoved": {
+      "dark": "#E85050",
+      "light": "#E85050"
+    },
+    "diffContext": {
+      "dark": "roseDark",
+      "light": "roseDark"
+    },
+    "diffHunkHeader": {
+      "dark": "roseMuted",
+      "light": "roseMuted"
+    },
+    "diffHighlightAdded": {
+      "dark": "#70F0A0",
+      "light": "#70F0A0"
+    },
+    "diffHighlightRemoved": {
+      "dark": "#F07070",
+      "light": "#F07070"
+    },
+    "diffAddedBg": {
+      "dark": "#1a2e1a",
+      "light": "#1a2e1a"
+    },
+    "diffRemovedBg": {
+      "dark": "#2e1a1a",
+      "light": "#2e1a1a"
+    },
+    "diffContextBg": {
+      "dark": "bgPanel",
+      "light": "bgPanel"
+    },
+    "diffLineNumber": {
+      "dark": "roseFaint",
+      "light": "roseFaint"
+    },
+    "diffAddedLineNumberBg": {
+      "dark": "#142814",
+      "light": "#142814"
+    },
+    "diffRemovedLineNumberBg": {
+      "dark": "#281414",
+      "light": "#281414"
+    },
+    "markdownText": {
+      "dark": "#E8E0E8",
+      "light": "#E8E0E8"
+    },
+    "markdownHeading": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownLink": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownLinkText": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownCode": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownBlockQuote": {
+      "dark": "roseDim",
+      "light": "roseDim"
+    },
+    "markdownEmph": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownStrong": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownHorizontalRule": {
+      "dark": "roseDark",
+      "light": "roseDark"
+    },
+    "markdownListItem": {
+      "dark": "#E8E0E8",
+      "light": "#E8E0E8"
+    },
+    "markdownListEnumeration": {
+      "dark": "roseDim",
+      "light": "roseDim"
+    },
+    "markdownImage": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownImageText": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "markdownCodeBlock": {
+      "dark": "#E8E0E8",
+      "light": "#E8E0E8"
+    },
+    "syntaxComment": {
+      "dark": "roseDark",
+      "light": "roseDark"
+    },
+    "syntaxKeyword": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "syntaxFunction": {
+      "dark": "rose",
+      "light": "rose"
+    },
+    "syntaxVariable": {
+      "dark": "#E8E0E8",
+      "light": "#E8E0E8"
+    },
+    "syntaxString": {
+      "dark": "roseDim",
+      "light": "roseDim"
+    },
+    "syntaxNumber": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "syntaxType": {
+      "dark": "roseBright",
+      "light": "roseBright"
+    },
+    "syntaxOperator": {
+      "dark": "roseMuted",
+      "light": "roseMuted"
+    },
+    "syntaxPunctuation": {
+      "dark": "roseDark",
+      "light": "roseDark"
+    }
+  }
+}

@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { updateGitignore, generateCopilotSettings, installCopilotHooks, ensureOnboardingWorkspace, cleanupOnboardingWorkspace } from "../copilot.js";
+import {
+  updateGitignore,
+  generateCopilotSettings,
+  installCopilotHooks,
+  ensureOnboardingWorkspace,
+  cleanupOnboardingWorkspace,
+} from "../copilot.js";
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-copilot-test-"));

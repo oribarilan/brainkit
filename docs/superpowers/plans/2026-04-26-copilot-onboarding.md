@@ -12,20 +12,21 @@
 
 ### File Map
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `core/onboarding-prompt.ts` | Create | Shared onboarding prompt builder |
+| File                                       | Action | Responsibility                    |
+| ------------------------------------------ | ------ | --------------------------------- |
+| `core/onboarding-prompt.ts`                | Create | Shared onboarding prompt builder  |
 | `core/__tests__/onboarding-prompt.test.ts` | Create | Tests for `buildOnboardingPrompt` |
-| `core/index.ts` | Modify | Add barrel export |
-| `opencode/server.ts` | Modify | Replace inline prompt with import |
-| `cli/copilot.ts` | Modify | Add onboarding flow + cleanup |
-| `cli/__tests__/copilot.test.ts` | Modify | Add onboarding workspace tests |
+| `core/index.ts`                            | Modify | Add barrel export                 |
+| `opencode/server.ts`                       | Modify | Replace inline prompt with import |
+| `cli/copilot.ts`                           | Modify | Add onboarding flow + cleanup     |
+| `cli/__tests__/copilot.test.ts`            | Modify | Add onboarding workspace tests    |
 
 ---
 
 ### Task 1: Create `core/onboarding-prompt.ts` (TDD)
 
 **Files:**
+
 - Create: `core/__tests__/onboarding-prompt.test.ts`
 - Create: `core/onboarding-prompt.ts`
 
@@ -80,6 +81,7 @@ describe("buildOnboardingPrompt", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run:
+
 ```bash
 npx vitest run core/__tests__/onboarding-prompt.test.ts
 ```
@@ -209,6 +211,7 @@ export function buildOnboardingPrompt(harness: "opencode" | "copilot"): string {
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run:
+
 ```bash
 npx vitest run core/__tests__/onboarding-prompt.test.ts
 ```
@@ -227,6 +230,7 @@ git commit -m "feat: extract shared onboarding prompt to core module"
 ### Task 2: Wire into barrel export and update OpenCode server
 
 **Files:**
+
 - Modify: `core/index.ts`
 - Modify: `opencode/server.ts`
 
@@ -288,6 +292,7 @@ With:
 - [ ] **Step 3: Verify compilation and tests**
 
 Run:
+
 ```bash
 npx tsc --noEmit && npx vitest run
 ```
@@ -306,6 +311,7 @@ git commit -m "refactor: use shared onboarding prompt in OpenCode server"
 ### Task 3: Add onboarding flow to `cli/copilot.ts` (TDD)
 
 **Files:**
+
 - Modify: `cli/__tests__/copilot.test.ts`
 - Modify: `cli/copilot.ts`
 
@@ -394,6 +400,7 @@ describe("cleanupOnboardingWorkspace", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run:
+
 ```bash
 npx vitest run cli/__tests__/copilot.test.ts
 ```
@@ -453,6 +460,7 @@ export function cleanupOnboardingWorkspace(configDir: string): void {
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run:
+
 ```bash
 npx vitest run cli/__tests__/copilot.test.ts
 ```
@@ -517,6 +525,7 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
 - [ ] **Step 6: Verify compilation and all tests**
 
 Run:
+
 ```bash
 npx tsc --project cli/tsconfig.json --noEmit && npx vitest run
 ```
@@ -537,6 +546,7 @@ git commit -m "feat(cli): add copilot first-run onboarding flow"
 - [ ] **Step 1: Build CLI**
 
 Run:
+
 ```bash
 just build-cli
 ```
@@ -546,6 +556,7 @@ Expected: compiles to `dist/` without errors.
 - [ ] **Step 2: Run all tests**
 
 Run:
+
 ```bash
 just test
 ```
@@ -555,6 +566,7 @@ Expected: all tests pass.
 - [ ] **Step 3: Run lint + typecheck**
 
 Run:
+
 ```bash
 just lint
 ```
@@ -564,6 +576,7 @@ Expected: clean.
 - [ ] **Step 4: Test help output still works**
 
 Run:
+
 ```bash
 node dist/cli/index.js --help
 ```
@@ -573,6 +586,7 @@ Expected: branded intro, boxed usage, outro.
 - [ ] **Step 5: Test version output**
 
 Run:
+
 ```bash
 node dist/cli/index.js --version
 ```

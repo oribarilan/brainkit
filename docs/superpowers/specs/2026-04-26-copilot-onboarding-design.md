@@ -56,8 +56,9 @@ Extract the onboarding prompt content from `opencode/server.ts` into a shared mo
 - **Copilot**: Append `"Setup complete! Close this session and run brainkit again to start with your full second brain."`
 
 Export:
+
 ```typescript
-function buildOnboardingPrompt(harness: "opencode" | "copilot"): string
+function buildOnboardingPrompt(harness: "opencode" | "copilot"): string;
 ```
 
 The function returns the full prompt with the appropriate closing. The prompt body comes from the existing `ONBOARDING_PROMPT` constant in `server.ts` (lines 38-133), unchanged.
@@ -65,6 +66,7 @@ The function returns the full prompt with the appropriate closing. The prompt bo
 ### Modify: `opencode/server.ts`
 
 Replace the inline `ONBOARDING_PROMPT` constant with an import:
+
 ```typescript
 import { buildOnboardingPrompt } from "../core/onboarding-prompt.js";
 ```
@@ -94,6 +96,7 @@ Add `buildOnboardingPrompt` to the barrel export.
 ## Both Launch Paths Covered
 
 Both entry points route through the same `launchCopilot()` function:
+
 - Explicit: `brainkit copilot` → `launchHarness("copilot", args, undefined)` → `launchCopilot(args, undefined)`
 - Auto-detected: `brainkit` → `detectAndLaunch(args, undefined)` → `selected.launch(args, undefined)` → `launchCopilot(args, undefined)`
 
@@ -109,20 +112,24 @@ No separate handling needed.
 ## Testing
 
 ### Unit: `buildOnboardingPrompt`
+
 - Returns string containing "First-Time Setup" header
 - OpenCode variant does NOT contain "run `brainkit` again"
 - Copilot variant DOES contain "run `brainkit` again"
 
 ### Unit: `launchCopilotOnboarding`
+
 - Creates `~/.config/brainkit/onboarding/` directory
 - Writes `AGENTS.md` to that directory
 - AGENTS.md content includes onboarding prompt
 - Spawns `copilot` with correct CWD
 
 ### Unit: Normal launch cleanup
+
 - When `~/.config/brainkit/onboarding/` exists, it is removed during normal launch
 - When it doesn't exist, no error
 
 ### Existing tests
+
 - `vault-selection.test.ts`: no changes (selectVault already handles missing config)
 - `harness-detection.test.ts`: no changes

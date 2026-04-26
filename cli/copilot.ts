@@ -2,7 +2,13 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
-import { readGlobalConfig, readVaultConfigSimple, buildSystemPrompt, buildOnboardingPrompt, getConfigDir } from "../core/index.js";
+import {
+  readGlobalConfig,
+  readVaultConfigSimple,
+  buildSystemPrompt,
+  buildOnboardingPrompt,
+  getConfigDir,
+} from "../core/index.js";
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
 import * as p from "@clack/prompts";
