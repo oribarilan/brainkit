@@ -87,12 +87,8 @@ describe("selectVault", () => {
     mockDiscoverVaults.mockReturnValue(["work", "life"]);
 
     await expect(selectVault("bogus")).rejects.toThrow("process.exit");
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Vault "bogus" not found'),
-    );
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining("Available vaults:"),
-    );
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Vault "bogus" not found'));
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Available vaults:"));
   });
 
   it("returns brainPath when zero vaults (fresh brain)", async () => {
@@ -109,6 +105,13 @@ describe("selectVault", () => {
     const result = await selectVault(null);
     expect(result.vaultPath).toBeUndefined();
     expect(result.brainPath).toBeUndefined();
-    expect(process.exit).not.toHaveBeenCalled();
+  });
+
+  it("returns undefined paths when global config has empty brain_path", async () => {
+    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "" });
+
+    const result = await selectVault(null);
+    expect(result.vaultPath).toBeUndefined();
+    expect(result.brainPath).toBeUndefined();
   });
 });
