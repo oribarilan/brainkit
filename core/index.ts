@@ -40,6 +40,9 @@ export { CURRENT_SCHEMA_VERSION, migrateConfig } from "./migrations.js";
 export { detectProjectContext, buildSystemPrompt } from "./system-prompt.js";
 export type { PromptMode } from "./system-prompt.js";
 
+// Onboarding
+export { buildOnboardingPrompt } from "./onboarding-prompt.js";
+
 // Agent prompts
 export { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from "./agent-prompts.js";
 
