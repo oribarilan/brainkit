@@ -22,6 +22,8 @@ A key design choice: brainkit does **not** define typed tools (no `brain_*` func
 
 ## Package Structure
 
+> **Note (2026-04-26):** The two-package architecture described below has been superseded. The repo now publishes a single `@oribish/brainkit` package. See `specs/07-decisions.md` for rationale.
+
 Brainkit publishes two npm packages:
 
 | Package                  | Directory | What it contains                                 |

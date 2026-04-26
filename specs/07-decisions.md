@@ -211,3 +211,11 @@ This also eliminates duplicated logic. Previously, setup lived in both a command
 **Reasoning**: Skills teach domain knowledge (conventions, judgment, formats). Tool execution is the agent's responsibility based on its environment. When skills reference specific tool names, agents without those tools get confused — they try to call nonexistent tools or hallucinate behavior. Action-oriented language works universally: the agent reads the skill, understands the convention, and uses its built-in file operations to execute. This makes skills portable across harnesses (OpenCode today, potentially Copilot CLI or others in the future) with zero transformation needed.
 
 **Alternative considered**: (a) Prepend a preamble telling agents to ignore tool references — fragile, agents forget mid-skill. (b) Strip tool references during distribution — maintenance burden, error-prone regex. Action-oriented language avoids both problems.
+
+---
+
+### Collapsed to single npm package (2026-04-26)
+
+**Decision**: Merge `@oribish/brainkit-core` into `@oribish/brainkit` as a single published package. The `core/` directory remains as an organizational boundary but is no longer a separate workspace or npm package.
+
+**Reasoning**: The separate core package added complexity (workspace protocol resolution, two-package publish ordering, version synchronization) with no external consumer. All imports changed from `@oribish/brainkit-core` to relative paths. `smol-toml` and `@types/node` moved to root package.json. _(Supersedes the two-package split decision.)_
