@@ -1,9 +1,19 @@
 # Changelog
 
-## [Unreleased]
+## [0.6.1] - 2026-04-27
+
+### Added
+- Auto-approve permissions during onboarding — OpenCode gets `permission: "allow"` in config, Copilot CLI gets `--allow-all` flag, so the agent can set up the vault without permission prompts on first run
+- Onboarding permissions documented in CLI spec and onboarding feature doc for future harness authors
+
+### Changed
+- Custom rules question removed from onboarding flow — rules are still supported in config but are now a power-user setting, not part of first-run setup
+
+## [0.6.0] - 2026-04-27
 
 ### Added
 - Harness version check — on first run or brainkit version change, checks if OpenCode/Copilot CLI is outdated via npm registry and suggests updating
+- Cross-platform support for macOS, Linux, and Windows
 
 ## [0.5.0] - 2026-04-26
 

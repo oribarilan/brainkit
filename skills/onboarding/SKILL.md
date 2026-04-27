@@ -43,7 +43,6 @@ Transition naturally — "Now let's set up the personal side too."
 ### Phase 4: Preferences
 
 - "How should I communicate with you? Direct and technical, casual, concise?" (tone)
-- "Any rules you want me to always follow?" (custom rules)
 
 ### Phase 5: Setup
 
@@ -59,7 +58,6 @@ Based on the conversation, do all of this:
      """
      ```
    - Set features (all enabled by default)
-   - Add any custom rules mentioned
 
 2. **Create the vault directory** under the brain directory (if not already created by the launcher)
 
