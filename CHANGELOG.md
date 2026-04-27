@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-04-27
+
+### Added
+- Update prompt shows changelog — when a newer version is available, brainkit fetches release notes from GitHub and displays what's new before asking you to update
+
 ## [0.7.0] - 2026-04-27
 
 ### Added

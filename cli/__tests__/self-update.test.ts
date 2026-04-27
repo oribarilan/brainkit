@@ -13,6 +13,7 @@ import {
   shouldThrottleCheck,
   writeCheckTimestamp,
   detectPackageManager,
+  formatReleaseBody,
 } from "../self-update.js";
 
 const NODE_BIN = process.argv[0] ?? "node";
@@ -159,6 +160,23 @@ describe("detectPackageManager", () => {
   });
 });
 
+describe("formatReleaseBody", () => {
+  it("converts ### headers to indented plain text", () => {
+    const result = formatReleaseBody("### Added\n- Feature one\n- Feature two");
+    expect(result).toBe("  Added\n    - Feature one\n    - Feature two");
+  });
+
+  it("strips empty lines", () => {
+    const result = formatReleaseBody("### Added\n- Feature\n\n### Fixed\n- Bug");
+    expect(result).toBe("  Added\n    - Feature\n  Fixed\n    - Bug");
+  });
+
+  it("handles body with no headers", () => {
+    const result = formatReleaseBody("- Just a bullet");
+    expect(result).toBe("    - Just a bullet");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // maybeCheckForSelfUpdate — mocked integration tests
 // ---------------------------------------------------------------------------
@@ -186,6 +204,7 @@ vi.mock("node:child_process", () => ({
 vi.mock("@clack/prompts", () => ({
   select: vi.fn(),
   isCancel: vi.fn(() => false),
+  note: vi.fn(),
   log: {
     info: vi.fn(),
     error: vi.fn(),
@@ -198,7 +217,7 @@ vi.mock("@clack/prompts", () => ({
 import { getConfigDir, readGlobalConfig, writeGlobalConfig } from "../../core/index.js";
 import { isOlderThan, getLatestNpmVersion } from "../version-utils.js";
 import * as p from "@clack/prompts";
-import { maybeCheckForSelfUpdate, cleanSkipVersions } from "../self-update.js";
+import { maybeCheckForSelfUpdate, cleanSkipVersions, formatChangelog, fetchChangelog } from "../self-update.js";
 
 const mockGetConfigDir = vi.mocked(getConfigDir);
 const mockReadGlobalConfig = vi.mocked(readGlobalConfig);
@@ -207,6 +226,7 @@ const mockIsOlderThan = vi.mocked(isOlderThan);
 const mockGetLatestNpmVersion = vi.mocked(getLatestNpmVersion);
 const mockSelect = vi.mocked(p.select);
 const mockIsCancel = vi.mocked(p.isCancel);
+const mockNote = vi.mocked(p.note);
 
 describe("cleanSkipVersions", () => {
   beforeEach(() => {
@@ -237,6 +257,108 @@ describe("cleanSkipVersions", () => {
 
   it("returns empty array when all pruned", () => {
     expect(cleanSkipVersions(["0.5.0", "0.6.1"], "0.6.1")).toEqual([]);
+  });
+});
+
+describe("formatChangelog", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockIsOlderThan.mockImplementation((a: string, b: string): boolean => {
+      const parse = (v: string): number[] => v.split(".").map(Number);
+      const [a1 = 0, a2 = 0, a3 = 0] = parse(a);
+      const [b1 = 0, b2 = 0, b3 = 0] = parse(b);
+      if (a1 !== b1) return a1 < b1;
+      if (a2 !== b2) return a2 < b2;
+      return a3 < b3;
+    });
+  });
+
+  const releases = [
+    { tag_name: "v0.7.0", body: "### Added\n- Feature A" },
+    { tag_name: "v0.8.0", body: "### Fixed\n- Bug B" },
+    { tag_name: "v0.5.0", body: "### Added\n- Old feature" },
+  ];
+
+  it("filters releases between current and latest", () => {
+    const result = formatChangelog(releases, "0.6.1", "0.8.0");
+    expect(result).toContain("v0.7.0");
+    expect(result).toContain("v0.8.0");
+    expect(result).not.toContain("v0.5.0");
+  });
+
+  it("sorts releases newest first", () => {
+    const result = formatChangelog(releases, "0.6.1", "0.8.0");
+    const v8idx = result.indexOf("v0.8.0");
+    const v7idx = result.indexOf("v0.7.0");
+    expect(v8idx).toBeLessThan(v7idx);
+  });
+
+  it("returns empty string when no releases match", () => {
+    expect(formatChangelog(releases, "0.8.0", "0.9.0")).toBe("");
+  });
+
+  it("includes the latest version in the range", () => {
+    const result = formatChangelog(releases, "0.6.1", "0.7.0");
+    expect(result).toContain("v0.7.0");
+  });
+});
+
+describe("fetchChangelog", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockIsOlderThan.mockImplementation((a: string, b: string): boolean => {
+      const parse = (v: string): number[] => v.split(".").map(Number);
+      const [a1 = 0, a2 = 0, a3 = 0] = parse(a);
+      const [b1 = 0, b2 = 0, b3 = 0] = parse(b);
+      if (a1 !== b1) return a1 < b1;
+      if (a2 !== b2) return a2 < b2;
+      return a3 < b3;
+    });
+  });
+
+  it("returns formatted changelog on success", async () => {
+    const mockResponse = {
+      ok: true,
+      json: () => Promise.resolve([{ tag_name: "v0.7.0", body: "### Added\n- Feature A" }]),
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const result = await fetchChangelog("0.6.1", "0.7.0");
+    expect(result).toContain("v0.7.0");
+    expect(result).toContain("Feature A");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns null on network failure", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
+
+    const result = await fetchChangelog("0.6.1", "0.7.0");
+    expect(result).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns null on non-OK response", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+
+    const result = await fetchChangelog("0.6.1", "0.7.0");
+    expect(result).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  it("returns null when no releases match the range", async () => {
+    const mockResponse = {
+      ok: true,
+      json: () => Promise.resolve([{ tag_name: "v0.5.0", body: "### Added\n- Old" }]),
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    const result = await fetchChangelog("0.6.1", "0.7.0");
+    expect(result).toBeNull();
+
+    vi.unstubAllGlobals();
   });
 });
 
@@ -357,6 +479,7 @@ describe("maybeCheckForSelfUpdate", () => {
     mockGetLatestNpmVersion.mockReturnValue("0.7.0");
     mockIsOlderThan.mockReturnValue(true);
     mockSelect.mockResolvedValue("later");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
 
     await maybeCheckForSelfUpdate();
 
@@ -365,6 +488,47 @@ describe("maybeCheckForSelfUpdate", () => {
         message: expect.stringContaining("0.7.0") as string,
       }),
     );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("displays changelog before prompt when available", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockImplementation((a: string, b: string): boolean => {
+      const parse = (v: string): number[] => v.split(".").map(Number);
+      const [a1 = 0, a2 = 0, a3 = 0] = parse(a);
+      const [b1 = 0, b2 = 0, b3 = 0] = parse(b);
+      if (a1 !== b1) return a1 < b1;
+      if (a2 !== b2) return a2 < b2;
+      return a3 < b3;
+    });
+    mockSelect.mockResolvedValue("later");
+
+    const mockResponse = {
+      ok: true,
+      json: () => Promise.resolve([{ tag_name: "v0.7.0", body: "### Added\n- Cool feature" }]),
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockNote).toHaveBeenCalledWith(expect.stringContaining("Cool feature"), "What's new");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("shows prompt without changelog when fetch fails", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue("later");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockNote).not.toHaveBeenCalled();
+    expect(mockSelect).toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 
   it("skip this version adds to skip_versions in config", async () => {
@@ -374,21 +538,27 @@ describe("maybeCheckForSelfUpdate", () => {
     // First call in main flow returns null (no skip_versions)
     // Second call in skip handler returns fresh config
     mockReadGlobalConfig.mockReturnValueOnce(null).mockReturnValueOnce({ version: 1, brain_path: "/brain" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
 
     await maybeCheckForSelfUpdate();
 
     expect(mockWriteGlobalConfig).toHaveBeenCalledWith(expect.objectContaining({ skip_versions: ["0.7.0"] }));
+
+    vi.unstubAllGlobals();
   });
 
   it("remind me later continues normally", async () => {
     mockGetLatestNpmVersion.mockReturnValue("0.7.0");
     mockIsOlderThan.mockReturnValue(true);
     mockSelect.mockResolvedValue("later");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
 
     // Should not throw
     await maybeCheckForSelfUpdate();
 
     expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 
   it("cancel continues normally", async () => {
@@ -396,10 +566,13 @@ describe("maybeCheckForSelfUpdate", () => {
     mockIsOlderThan.mockReturnValue(true);
     mockSelect.mockResolvedValue(Symbol("cancel"));
     mockIsCancel.mockReturnValue(true);
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
 
     // Should not throw
     await maybeCheckForSelfUpdate();
 
     expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 });
