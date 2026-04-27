@@ -7,6 +7,7 @@ import { version } from "./version.js";
 import { isHarnessAlias, launchHarness, detectAndLaunch, parseVaultFlag, selectVault } from "./launch.js";
 import { getConfigDir } from "../core/index.js";
 import { cleanupOnboardingWorkspace } from "./copilot.js";
+import { maybeCheckForSelfUpdate } from "./self-update.js";
 
 const HELP_TEXT = `Usage:
   brainkit                     Launch (auto-detects harness)
@@ -76,6 +77,8 @@ async function main(): Promise<void> {
   }
 
   p.intro("brainkit");
+
+  await maybeCheckForSelfUpdate();
 
   // Parse --vault from args (before or after harness alias)
   const { vault: vaultFlag, remaining } = parseVaultFlag(args);

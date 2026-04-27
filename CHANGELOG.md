@@ -2,11 +2,14 @@
 
 ## [Unreleased]
 
-### Fixed
-- Windows: onboarding prompt split into separate tokens by cmd.exe, causing "too many arguments" error
+## [0.7.0] - 2026-04-27
 
 ### Added
+- Self-update check — brainkit notifies you when a newer version is available on launch, with options to update now, skip this version, or be reminded later. Auto-detects your package manager and re-launches after updating.
 - Windows CI runner for unit tests
+
+### Fixed
+- Windows: onboarding prompt split into separate tokens by cmd.exe, causing "too many arguments" error
 
 ## [0.6.1] - 2026-04-27
 
