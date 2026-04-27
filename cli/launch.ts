@@ -2,10 +2,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import * as p from "@clack/prompts";
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 import { maybeCheckHarnessVersion } from "./harness-version.js";
+import { spawnHarness } from "./spawn.js";
 
 // ---------------------------------------------------------------------------
 // Harness definitions
@@ -82,7 +83,7 @@ function launchOpenCode(args: string[], vaultPath?: string): void {
   // No vault = onboarding — auto-submit initial prompt
   const launchArgs = vaultPath === undefined ? ["--prompt", "Let's set up my first brainkit vault!", ...args] : args;
 
-  const child = spawn("opencode", launchArgs, { stdio: "inherit", env, shell: process.platform === "win32" });
+  const child = spawnHarness("opencode", launchArgs, { stdio: "inherit", env });
   child.on("exit", (code) => process.exit(code ?? 0));
 }
 
