@@ -85,10 +85,10 @@ During onboarding (no vault exists), the harness must launch with auto-approved 
 
 Each harness implements this differently using its native mechanism:
 
-| Harness     | Mechanism                                                                 |
-| ----------- | ------------------------------------------------------------------------- |
+| Harness     | Mechanism                                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | OpenCode    | Config-based: `"agent": {"build": {"permission": "allow"}}` in `opencode.json` (rewritten each launch; only included when no vault exists) |
-| Copilot CLI | CLI flag: `--allow-all` passed to the `copilot` spawn command during onboarding only |
+| Copilot CLI | CLI flag: `--allow-all` passed to the `copilot` spawn command during onboarding only                                                       |
 
 When adding a new harness, find its native auto-approve mechanism (CLI flag, config option, or environment variable) and apply it only during the onboarding launch. Normal launches (vault exists) must use the harness's default permission behavior.
 
