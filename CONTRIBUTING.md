@@ -63,6 +63,8 @@ Every PR that changes behavior must add an entry under `## [Unreleased]` in `CHA
 - `Removed` — removed features
 - `Deprecated` — features marked for removal
 
+Entries should be **user-facing and concise** — describe what changed from the user's perspective, not implementation details. Don't mention internal function names, file paths, or refactors unless they're the point of the change. One line per change.
+
 ### Release process (agent-driven)
 
 **Never publish to npm manually.** All publishing happens through GitHub Actions after a release PR is merged to `main`.

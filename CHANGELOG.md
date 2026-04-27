@@ -3,12 +3,10 @@
 ## [Unreleased]
 
 ### Fixed
-- Windows: onboarding prompt string split into separate tokens by cmd.exe — `shell: true` caused `spawn` to re-tokenize args containing spaces, so Copilot CLI rejected them with "too many arguments"
+- Windows: onboarding prompt split into separate tokens by cmd.exe, causing "too many arguments" error
 
 ### Added
-- `spawnHarness()` helper that handles Windows `.cmd` shim resolution with proper arg quoting, replacing raw `spawn` + `shell: true` across all launch sites
-- Cross-platform spawn integration tests — verify args survive the shell by spawning a real child process
-- Windows CI runner — unit tests now run on `windows-latest` alongside the existing Ubuntu check
+- Windows CI runner for unit tests
 
 ## [0.6.1] - 2026-04-27
 
