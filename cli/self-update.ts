@@ -12,6 +12,7 @@ import { isOlderThan, getLatestNpmVersion } from "./version-utils.js";
 
 const TIMESTAMP_FILE = "last-update-check";
 const THROTTLE_MS = 86_400_000; // 24 hours
+const GITHUB_RELEASES_URL = "https://api.github.com/repos/oribarilan/brainkit/releases";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -78,6 +79,63 @@ export function getUpdateCommand(pm: string): { binary: string; args: string[] }
   }
 }
 
+// ---------------------------------------------------------------------------
+// Changelog
+// ---------------------------------------------------------------------------
+
+interface GitHubRelease {
+  tag_name: string;
+  body: string;
+}
+
+export function formatReleaseBody(body: string): string {
+  return body
+    .split("\n")
+    .map((line) => {
+      const headerMatch = line.match(/^###\s+(.+)/);
+      if (headerMatch) return `  ${headerMatch[1]}`;
+      if (line.startsWith("- ")) return `    ${line}`;
+      return line;
+    })
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
+}
+
+export function formatChangelog(releases: GitHubRelease[], currentVersion: string, latestVersion: string): string {
+  const relevant = releases
+    .map((r) => ({ ...r, version: r.tag_name.replace(/^v/, "") }))
+    .filter((r) => isOlderThan(currentVersion, r.version) && !isOlderThan(latestVersion, r.version))
+    .sort((a, b) => (isOlderThan(a.version, b.version) ? 1 : -1));
+
+  if (relevant.length === 0) return "";
+
+  return relevant
+    .map((r) => {
+      const body = formatReleaseBody(r.body);
+      return body.length > 0 ? `v${r.version}\n${body}` : `v${r.version}`;
+    })
+    .join("\n\n");
+}
+
+export async function fetchChangelog(currentVersion: string, latestVersion: string): Promise<string | null> {
+  try {
+    const response = await fetch(GITHUB_RELEASES_URL, {
+      headers: { Accept: "application/vnd.github+json" },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) return null;
+    const releases = (await response.json()) as GitHubRelease[];
+    const formatted = formatChangelog(releases, currentVersion, latestVersion);
+    return formatted.length > 0 ? formatted : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Update execution
+// ---------------------------------------------------------------------------
+
 function runUpdateAndRelaunch(): void {
   const pm = detectPackageManager();
   const { binary, args } = getUpdateCommand(pm);
@@ -134,6 +192,12 @@ export async function maybeCheckForSelfUpdate(): Promise<void> {
       writeGlobalConfig(config);
     }
     if (cleaned.includes(latest)) return;
+  }
+
+  // Fetch and display changelog (best-effort — don't block on failure)
+  const changelog = await fetchChangelog(current, latest);
+  if (changelog !== null) {
+    p.note(changelog, "What's new");
   }
 
   // Prompt
