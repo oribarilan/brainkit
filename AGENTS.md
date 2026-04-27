@@ -277,3 +277,7 @@ All file operations validate paths are within the vault boundary (path traversal
 ## Releasing
 
 **Never publish to npm manually.** Publishing happens automatically via GitHub Actions when a release PR is merged to `main`. See `CONTRIBUTING.md` § Releasing for the full process — version bump, changelog, PR, CI publish.
+
+### Changelog style
+
+Changelog entries are user-facing — describe what changed, not how. Keep each entry to one concise line. Don't mention internal function names, file paths, or refactors unless they're the point of the change.

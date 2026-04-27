@@ -1,0 +1,405 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as os from "node:os";
+
+// ---------------------------------------------------------------------------
+// Pure function tests (import before mocks)
+// ---------------------------------------------------------------------------
+
+import {
+  isNpx,
+  getUpdateCommand,
+  shouldThrottleCheck,
+  writeCheckTimestamp,
+  detectPackageManager,
+} from "../self-update.js";
+
+const NODE_BIN = process.argv[0] ?? "node";
+
+describe("isNpx", () => {
+  const originalArgv = [...process.argv];
+
+  afterEach(() => {
+    process.argv = [...originalArgv];
+  });
+
+  it("returns true when argv[1] contains /_npx/", () => {
+    process.argv = [NODE_BIN, "/Users/me/.npm/_npx/abc123/node_modules/.bin/brainkit"];
+    expect(isNpx()).toBe(true);
+  });
+
+  it("returns false for normal global install path", () => {
+    process.argv = [NODE_BIN, "/usr/local/lib/node_modules/@2brain/brainkit/dist/cli/index.js"];
+    expect(isNpx()).toBe(false);
+  });
+});
+
+describe("getUpdateCommand", () => {
+  it("returns npm install command for npm", () => {
+    expect(getUpdateCommand("npm")).toEqual({
+      binary: "npm",
+      args: ["install", "-g", "@2brain/brainkit@latest"],
+    });
+  });
+
+  it("returns pnpm add command for pnpm", () => {
+    expect(getUpdateCommand("pnpm")).toEqual({
+      binary: "pnpm",
+      args: ["add", "-g", "@2brain/brainkit@latest"],
+    });
+  });
+
+  it("returns yarn global add command for yarn", () => {
+    expect(getUpdateCommand("yarn")).toEqual({
+      binary: "yarn",
+      args: ["global", "add", "@2brain/brainkit@latest"],
+    });
+  });
+
+  it("returns bun add command for bun", () => {
+    expect(getUpdateCommand("bun")).toEqual({
+      binary: "bun",
+      args: ["add", "-g", "@2brain/brainkit@latest"],
+    });
+  });
+});
+
+describe("shouldThrottleCheck", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-test-"));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("returns false when timestamp file does not exist", () => {
+    expect(shouldThrottleCheck(tempDir)).toBe(false);
+  });
+
+  it("returns false when timestamp is older than 24h", () => {
+    const old = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    fs.writeFileSync(path.join(tempDir, "last-update-check"), old + "\n", "utf-8");
+    expect(shouldThrottleCheck(tempDir)).toBe(false);
+  });
+
+  it("returns true when timestamp is less than 24h old", () => {
+    const recent = new Date(Date.now() - 1000).toISOString();
+    fs.writeFileSync(path.join(tempDir, "last-update-check"), recent + "\n", "utf-8");
+    expect(shouldThrottleCheck(tempDir)).toBe(true);
+  });
+});
+
+describe("writeCheckTimestamp", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-test-"));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("writes ISO timestamp to last-update-check file", () => {
+    writeCheckTimestamp(tempDir);
+    const content = fs.readFileSync(path.join(tempDir, "last-update-check"), "utf-8").trim();
+    // Should be a valid ISO date string
+    expect(new Date(content).getTime()).not.toBeNaN();
+  });
+
+  it("creates parent dirs if needed", () => {
+    const nested = path.join(tempDir, "nested", "dir");
+    writeCheckTimestamp(nested);
+    expect(fs.existsSync(path.join(nested, "last-update-check"))).toBe(true);
+  });
+});
+
+describe("detectPackageManager", () => {
+  const originalArgv = [...process.argv];
+  const originalUA = process.env["npm_config_user_agent"];
+
+  afterEach(() => {
+    process.argv = [...originalArgv];
+    if (originalUA !== undefined) {
+      process.env["npm_config_user_agent"] = originalUA;
+    } else {
+      delete process.env["npm_config_user_agent"];
+    }
+  });
+
+  it("detects bun from binary path", () => {
+    process.argv = [NODE_BIN, "/Users/me/.bun/install/global/brainkit"];
+    expect(detectPackageManager()).toBe("bun");
+  });
+
+  it("detects pnpm from binary path", () => {
+    process.argv = [NODE_BIN, "/Users/me/.pnpm-global/brainkit"];
+    expect(detectPackageManager()).toBe("pnpm");
+  });
+
+  it("detects yarn from binary path", () => {
+    process.argv = [NODE_BIN, "/Users/me/.yarn/bin/brainkit"];
+    expect(detectPackageManager()).toBe("yarn");
+  });
+
+  it("falls back to npm_config_user_agent", () => {
+    process.argv = [NODE_BIN, "/usr/local/bin/brainkit"];
+    process.env["npm_config_user_agent"] = "pnpm/8.0.0 node/v20.0.0";
+    expect(detectPackageManager()).toBe("pnpm");
+  });
+
+  it("defaults to npm when no signals", () => {
+    process.argv = [NODE_BIN, "/usr/local/bin/brainkit"];
+    delete process.env["npm_config_user_agent"];
+    expect(detectPackageManager()).toBe("npm");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// maybeCheckForSelfUpdate — mocked integration tests
+// ---------------------------------------------------------------------------
+
+vi.mock("../../core/index.js", () => ({
+  getConfigDir: vi.fn(),
+  readGlobalConfig: vi.fn(),
+  writeGlobalConfig: vi.fn(),
+}));
+
+vi.mock("../version.js", () => ({
+  version: "0.6.1",
+}));
+
+vi.mock("../version-utils.js", () => ({
+  isOlderThan: vi.fn(),
+  getLatestNpmVersion: vi.fn(),
+}));
+
+vi.mock("node:child_process", () => ({
+  execFileSync: vi.fn(),
+  spawn: vi.fn(),
+}));
+
+vi.mock("@clack/prompts", () => ({
+  select: vi.fn(),
+  isCancel: vi.fn(() => false),
+  log: {
+    info: vi.fn(),
+    error: vi.fn(),
+    success: vi.fn(),
+    message: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
+import { getConfigDir, readGlobalConfig, writeGlobalConfig } from "../../core/index.js";
+import { isOlderThan, getLatestNpmVersion } from "../version-utils.js";
+import * as p from "@clack/prompts";
+import { maybeCheckForSelfUpdate, cleanSkipVersions } from "../self-update.js";
+
+const mockGetConfigDir = vi.mocked(getConfigDir);
+const mockReadGlobalConfig = vi.mocked(readGlobalConfig);
+const mockWriteGlobalConfig = vi.mocked(writeGlobalConfig);
+const mockIsOlderThan = vi.mocked(isOlderThan);
+const mockGetLatestNpmVersion = vi.mocked(getLatestNpmVersion);
+const mockSelect = vi.mocked(p.select);
+const mockIsCancel = vi.mocked(p.isCancel);
+
+describe("cleanSkipVersions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Control isOlderThan to simulate version comparison
+    mockIsOlderThan.mockImplementation((a: string, b: string): boolean => {
+      // Simple numeric comparison for tests
+      const parse = (v: string): number[] => v.split(".").map(Number);
+      const [a1 = 0, a2 = 0, a3 = 0] = parse(a);
+      const [b1 = 0, b2 = 0, b3 = 0] = parse(b);
+      if (a1 !== b1) return a1 < b1;
+      if (a2 !== b2) return a2 < b2;
+      return a3 < b3;
+    });
+  });
+
+  it("removes versions older than current", () => {
+    expect(cleanSkipVersions(["0.5.0", "0.7.0"], "0.6.1")).toEqual(["0.7.0"]);
+  });
+
+  it("removes versions equal to current", () => {
+    expect(cleanSkipVersions(["0.6.1", "0.8.0"], "0.6.1")).toEqual(["0.8.0"]);
+  });
+
+  it("keeps versions newer than current", () => {
+    expect(cleanSkipVersions(["0.7.0", "0.8.0"], "0.6.1")).toEqual(["0.7.0", "0.8.0"]);
+  });
+
+  it("returns empty array when all pruned", () => {
+    expect(cleanSkipVersions(["0.5.0", "0.6.1"], "0.6.1")).toEqual([]);
+  });
+});
+
+describe("maybeCheckForSelfUpdate", () => {
+  let tempDir: string;
+  const originalArgv = [...process.argv];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-test-"));
+    mockGetConfigDir.mockReturnValue(tempDir);
+    mockIsCancel.mockReturnValue(false);
+    mockReadGlobalConfig.mockReturnValue(null);
+
+    // Default: TTY
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+    // Default: not npx
+    process.argv = [NODE_BIN, "/usr/local/bin/brainkit"];
+  });
+
+  afterEach(() => {
+    process.argv = [...originalArgv];
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("skips in non-TTY mode", async () => {
+    Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockGetLatestNpmVersion).not.toHaveBeenCalled();
+  });
+
+  it("skips when running via npx", async () => {
+    process.argv = [NODE_BIN, "/Users/me/.npm/_npx/abc123/node_modules/.bin/brainkit"];
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockGetLatestNpmVersion).not.toHaveBeenCalled();
+  });
+
+  it("skips when throttled (checked < 24h ago)", async () => {
+    // Write a recent timestamp
+    const recent = new Date(Date.now() - 1000).toISOString();
+    fs.writeFileSync(path.join(tempDir, "last-update-check"), recent + "\n", "utf-8");
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockGetLatestNpmVersion).not.toHaveBeenCalled();
+  });
+
+  it("skips when npm query fails (and does NOT write timestamp)", async () => {
+    mockGetLatestNpmVersion.mockReturnValue(null);
+
+    await maybeCheckForSelfUpdate();
+
+    expect(fs.existsSync(path.join(tempDir, "last-update-check"))).toBe(false);
+  });
+
+  it("writes timestamp after successful npm query", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.6.1");
+    mockIsOlderThan.mockReturnValue(false);
+
+    await maybeCheckForSelfUpdate();
+
+    expect(fs.existsSync(path.join(tempDir, "last-update-check"))).toBe(true);
+  });
+
+  it("skips when current version is up to date", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.6.1");
+    mockIsOlderThan.mockReturnValue(false);
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockSelect).not.toHaveBeenCalled();
+  });
+
+  it("skips when latest version is in skip_versions", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockImplementation((a, b) => a === "0.6.1" && b === "0.7.0");
+    mockReadGlobalConfig.mockReturnValue({
+      version: 1,
+      brain_path: "/brain",
+      skip_versions: ["0.7.0"],
+    });
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockSelect).not.toHaveBeenCalled();
+  });
+
+  it("cleans stale skip_versions entries", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockImplementation((a: string, b: string): boolean => {
+      // 0.6.1 < 0.7.0 = true, 0.5.0 < 0.6.1 = true
+      const parse = (v: string): number[] => v.split(".").map(Number);
+      const [a1 = 0, a2 = 0, a3 = 0] = parse(a);
+      const [b1 = 0, b2 = 0, b3 = 0] = parse(b);
+      if (a1 !== b1) return a1 < b1;
+      if (a2 !== b2) return a2 < b2;
+      return a3 < b3;
+    });
+    mockReadGlobalConfig.mockReturnValue({
+      version: 1,
+      brain_path: "/brain",
+      skip_versions: ["0.5.0", "0.7.0"],
+    });
+
+    await maybeCheckForSelfUpdate();
+
+    // Should have persisted cleaned list (removed 0.5.0)
+    expect(mockWriteGlobalConfig).toHaveBeenCalledWith(expect.objectContaining({ skip_versions: ["0.7.0"] }));
+    // 0.7.0 is still skipped, so no prompt
+    expect(mockSelect).not.toHaveBeenCalled();
+  });
+
+  it("shows select prompt when update available", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue("later");
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining("0.7.0") as string,
+      }),
+    );
+  });
+
+  it("skip this version adds to skip_versions in config", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue("skip");
+    // First call in main flow returns null (no skip_versions)
+    // Second call in skip handler returns fresh config
+    mockReadGlobalConfig.mockReturnValueOnce(null).mockReturnValueOnce({ version: 1, brain_path: "/brain" });
+
+    await maybeCheckForSelfUpdate();
+
+    expect(mockWriteGlobalConfig).toHaveBeenCalledWith(expect.objectContaining({ skip_versions: ["0.7.0"] }));
+  });
+
+  it("remind me later continues normally", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue("later");
+
+    // Should not throw
+    await maybeCheckForSelfUpdate();
+
+    expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
+  });
+
+  it("cancel continues normally", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue(Symbol("cancel"));
+    mockIsCancel.mockReturnValue(true);
+
+    // Should not throw
+    await maybeCheckForSelfUpdate();
+
+    expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
+  });
+});

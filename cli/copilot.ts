@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
+import { spawnHarness } from "./spawn.js";
 import {
   readGlobalConfig,
   readVaultConfigSimple,
@@ -180,10 +180,9 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
       const onboardingDir = ensureOnboardingWorkspace(configDir);
 
       p.outro("Starting onboarding...");
-      const child = spawn("copilot", ["-i", "--allow-all", "Let's set up my first brainkit vault!", ...args], {
+      const child = spawnHarness("copilot", ["-i", "--allow-all", "Let's set up my first brainkit vault!", ...args], {
         stdio: "inherit",
         cwd: onboardingDir,
-        shell: process.platform === "win32",
       });
       child.on("exit", (code) => process.exit(code ?? 0));
       return;
@@ -217,6 +216,6 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
 
   // Spawn copilot with BRAINKIT_VAULT_PATH for status script
   const env = { ...process.env, BRAINKIT_VAULT_PATH: vaultPath };
-  const child = spawn("copilot", args, { stdio: "inherit", cwd: vaultPath, env, shell: process.platform === "win32" });
+  const child = spawnHarness("copilot", args, { stdio: "inherit", cwd: vaultPath, env });
   child.on("exit", (code) => process.exit(code ?? 0));
 }
