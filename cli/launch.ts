@@ -37,18 +37,22 @@ function isInstalled(binaries: string[]): boolean {
 // OpenCode launcher
 // ---------------------------------------------------------------------------
 
-function ensureOpenCodeConfig(): void {
+function ensureOpenCodeConfig(isOnboarding: boolean): void {
   const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
 
-  const ocConfigPath = path.join(configDir, "opencode.json");
-  if (!fs.existsSync(ocConfigPath)) {
-    const config = {
-      $schema: "https://opencode.ai/config.json",
-      plugin: ["@2brain/brainkit"],
-    };
-    fs.writeFileSync(ocConfigPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
+  // Always regenerate opencode.json — during onboarding, grant full permissions
+  // so the agent can create dirs, write config, etc. without permission prompts.
+  // On subsequent launches (with a vault), permissions revert to defaults.
+  const ocConfig: Record<string, unknown> = {
+    $schema: "https://opencode.ai/config.json",
+    plugin: ["@2brain/brainkit"],
+  };
+  if (isOnboarding) {
+    ocConfig["agent"] = { build: { permission: "allow" } };
   }
+  const ocConfigPath = path.join(configDir, "opencode.json");
+  fs.writeFileSync(ocConfigPath, JSON.stringify(ocConfig, null, 2) + "\n", "utf-8");
 
   const tuiConfigPath = path.join(configDir, "tui.json");
   if (!fs.existsSync(tuiConfigPath)) {
@@ -61,7 +65,8 @@ function ensureOpenCodeConfig(): void {
 }
 
 function launchOpenCode(args: string[], vaultPath?: string): void {
-  ensureOpenCodeConfig();
+  const isOnboarding = vaultPath === undefined;
+  ensureOpenCodeConfig(isOnboarding);
 
   const configDir = getConfigDir();
   const env: Record<string, string | undefined> = {

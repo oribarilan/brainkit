@@ -79,6 +79,19 @@ const HARNESSES: Harness[] = [
 
 Adding a new harness means adding an entry to this array and implementing its `launch` function. Each harness handles its own config generation and environment setup.
 
+### Onboarding permissions
+
+During onboarding (no vault exists), the harness must launch with auto-approved permissions so the agent can create directories, write config files, and set up the vault structure without interrupting the user with permission prompts. This is critical for first impressions — the onboarding conversation should flow without friction.
+
+Each harness implements this differently using its native mechanism:
+
+| Harness     | Mechanism                                                                 |
+| ----------- | ------------------------------------------------------------------------- |
+| OpenCode    | Config-based: `"agent": {"build": {"permission": "allow"}}` in `opencode.json` (rewritten each launch; only included when no vault exists) |
+| Copilot CLI | CLI flag: `--allow-all` passed to the `copilot` spawn command during onboarding only |
+
+When adding a new harness, find its native auto-approve mechanism (CLI flag, config option, or environment variable) and apply it only during the onboarding launch. Normal launches (vault exists) must use the harness's default permission behavior.
+
 ## Package structure
 
 ```

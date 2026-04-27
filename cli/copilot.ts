@@ -180,7 +180,7 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
       const onboardingDir = ensureOnboardingWorkspace(configDir);
 
       p.outro("Starting onboarding...");
-      const child = spawn("copilot", ["-i", "Let's set up my first brainkit vault!", ...args], {
+      const child = spawn("copilot", ["-i", "--allow-all", "Let's set up my first brainkit vault!", ...args], {
         stdio: "inherit",
         cwd: onboardingDir,
         shell: process.platform === "win32",
