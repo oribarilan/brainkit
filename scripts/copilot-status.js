@@ -3,14 +3,27 @@
 // Copilot CLI statusLine script — prints vault stats for the footer bar.
 // Called by Copilot CLI via the statusLine config in .github/copilot/settings.json.
 
-import { readGlobalConfig, readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.js";
+import {
+  readGlobalConfig,
+  readVaultConfigSimple,
+  getBragStats,
+  readContacts,
+  parseContacts,
+  stalenessCategory,
+  daysSinceLastEntry,
+} from "../core/index.js";
+
+const STALENESS_ANSI = {
+  fresh: "\x1b[32m", // green
+  warning: "\x1b[33m", // yellow
+  stale: "\x1b[31m", // red
+};
 
 function staleness(lastEntryDate) {
-  if (!lastEntryDate) return { text: "never", color: "\x1b[31m" }; // red
-  const days = Math.floor((Date.now() - new Date(lastEntryDate).getTime()) / (1000 * 60 * 60 * 24));
-  if (days <= 7) return { text: `${days}d ago`, color: "\x1b[32m" }; // green
-  if (days <= 14) return { text: `${days}d ago`, color: "\x1b[33m" }; // yellow
-  return { text: `${days}d ago`, color: "\x1b[31m" }; // red
+  const cat = stalenessCategory(lastEntryDate);
+  if (cat === "never") return { text: "never", color: "\x1b[31m" };
+  const days = daysSinceLastEntry(lastEntryDate);
+  return { text: `${days}d ago`, color: STALENESS_ANSI[cat] };
 }
 
 function resolveVaultPath() {

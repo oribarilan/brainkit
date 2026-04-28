@@ -37,4 +37,25 @@ describe("buildOnboardingPrompt", () => {
     const copilot = buildOnboardingPrompt("copilot");
     expect(copilot).toContain(opencode);
   });
+
+  it("claude variant contains restart instruction with brainkit claude command", () => {
+    const result = buildOnboardingPrompt("claude");
+    expect(result).toContain("run `brainkit claude` again");
+    expect(result).toContain("### Restart required");
+  });
+
+  it("claude variant is a superset of opencode variant", () => {
+    const opencode = buildOnboardingPrompt("opencode");
+    const claude = buildOnboardingPrompt("claude");
+    expect(claude).toContain(opencode);
+  });
+
+  it("claude variant closing does not reference brainkit copilot", () => {
+    const result = buildOnboardingPrompt("claude");
+    const closing = result.slice(
+      result.indexOf("### Restart required"),
+    );
+    expect(closing).not.toContain("brainkit copilot");
+    expect(closing).not.toContain("run `brainkit` again");
+  });
 });

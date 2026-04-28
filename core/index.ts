@@ -32,8 +32,10 @@ export {
   isVaultFresh,
   detectVaultState,
   runHealthChecks,
+  stalenessCategory,
+  daysSinceLastEntry,
 } from "./vault.js";
-export type { VaultState, Migration } from "./vault.js";
+export type { VaultState, Migration, StalenessCategory } from "./vault.js";
 
 // Migrations
 export { CURRENT_SCHEMA_VERSION, migrateConfig } from "./migrations.js";
@@ -57,3 +59,14 @@ export { scheduleAutoCommit, flushAutoCommit } from "./auto-commit.js";
 
 // Detection helpers
 export { ACCOMPLISHMENT_KEYWORDS, containsUserAccomplishment, notifyDesktop } from "./hooks.js";
+
+// Skill installation
+export { installSkills as installSkillsCore } from "./skill-installer.js";
+export type {
+  SkillInstallLayout,
+  InstallSkillsOptions,
+  CopilotFlatInstallOptions,
+  PerDirInstallOptions,
+  BuildSkillContentArgs,
+  InstallSkillsResult,
+} from "./skill-installer.js";
