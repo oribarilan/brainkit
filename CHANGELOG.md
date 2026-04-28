@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-04-28
+
 ### Changed
 - **Copilot CLI**: brainkit no longer writes files into your vault, to not conflict with any other non-brainkit harness session you may want to open there. This was already supported for OpenCode.
 - Agent announces what it's about to change before editing the vault, so you can catch wrong-target actions early.
