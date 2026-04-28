@@ -17,7 +17,7 @@ Design spec: `specs/US-claude-code.md`.
 - [ ] `SessionEnd` hook auto-commits vault changes
 - [ ] `PreCompact` hook injects vault identity into compaction summaries
 - [ ] First-time users get the onboarding flow via per-harness workspace `~/.config/brainkit/onboarding/claude/`
-- [ ] Minimum supported Claude Code version pinned in `core/harness-version.ts`
+- [ ] Minimum supported Claude Code version pinned (mirror the `cli/copilot.ts` inline `MIN_COPILOT_VERSION` pattern)
 - [ ] Auth re-prompt behavior documented for users
 - [ ] Uninstall path documented
 - [ ] `just check` passes
@@ -30,7 +30,7 @@ Design spec: `specs/US-claude-code.md`.
 2. `extract-skill-installer.md` — Refactor `cli/install-skills.ts` into reusable `core/skill-installer.ts`. Existing Copilot tests must keep passing. Unblocks Claude skill generation.
 3. `add-claude-onboarding-mode.md` — Add `"claude"` mode to `core/onboarding-prompt.ts`. Small, isolated.
 4. `extract-staleness-helper.md` — Move staleness color/threshold logic from `opencode/side.tsx` and `scripts/copilot-status.js` into `core/`. Avoids triplicate-divergence when adding the Claude statusline.
-5. `pin-claude-version.md` — Add Claude entry to `core/harness-version.ts` with a documented minimum version. Warning at launch if older.
+5. `pin-claude-version.md` — Add an inline `MIN_CLAUDE_VERSION` constant to `cli/claude.ts` (mirroring `cli/copilot.ts`'s `MIN_COPILOT_VERSION` pattern) with a documented minimum version. Warning at launch if older.
 6. `scaffold-claude-plugin.md` — Create `claude/` plugin TEMPLATE: manifest, theme, doctor skill, empty hooks file, placeholder scripts. Loadable via `--plugin-dir` even though scripts don't do real work yet. Add `claude/` to `package.json` files. NO `settings.json` in the plugin (only `agent`/`subagentStatusLine` would be honored).
 7. `implement-plugin-scripts.md` — Real `auto-commit.mjs`, `precompact.mjs`, `statusline.mjs` using `core/vault.ts` + the staleness helper. Wire `hooks/hooks.json` (SessionEnd + PreCompact). NO `inject-context.mjs` / SessionStart hook (cut from v1 — no real value beyond per-launch system-prompt regeneration).
 8. `implement-claude-launcher.md` — `cli/claude.ts`: stage plugin into `~/.config/brainkit/claude/plugin/` (version-marker for fast no-op), generate skills into staging, write `settings.json` + `system-prompt.txt`, spawn with `cwd: vaultPath` (no `--add-dir`). Onboarding workspace branch under `~/.config/brainkit/onboarding/claude/`.
@@ -40,9 +40,10 @@ Design spec: `specs/US-claude-code.md`.
 
 ## Cross-Cutting Concerns
 
-- **Harness isolation (non-negotiable):** never read or write under `~/.claude/`. All brainkit state under `~/.config/brainkit/claude/` via `CLAUDE_CONFIG_DIR`.
-- **Plugin staging required:** `<pkgRoot>/claude/` is read-only at runtime (npm node_modules can be on pnpm hard-links, owned by root, wiped on reinstall). Always copy template into `~/.config/brainkit/claude/plugin/` and operate there.
-- **Auth re-prompt is expected:** users will need to authenticate Claude Code separately under `CLAUDE_CONFIG_DIR`. Do NOT auto-copy credentials. Document clearly in `update-docs`.
+- **Harness isolation (non-negotiable):** never read or write under `~/.claude/`. All brainkit state under `~/.config/brainkit/claude/` via `CLAUDE_CONFIG_DIR`. **Reference implementation:** `cli/copilot.ts` (the `COPILOT_HOME` flow, especially the `$COPILOT_HOME setup` section ~lines 398–542). Mirror its structure — populate config dir first, spawn with isolated env. No legacy-vault migration is needed for Claude (it has never shipped a vault-writing version).
+- **Plugin staging required:** `<pkgRoot>/claude/` is read-only at runtime (npm node_modules can be on pnpm hard-links, owned by root, wiped on reinstall). Always copy template into `~/.config/brainkit/claude/plugin/` and operate there. **The staging-into-`~/.config/brainkit/<harness>/` pattern is now battle-tested in production via Copilot** — the design risk is on Claude-specific `--plugin-dir` semantics, not the staging model itself.
+- **Auth re-prompt is expected:** users will need to authenticate Claude Code separately under `CLAUDE_CONFIG_DIR`. Do NOT auto-copy credentials. Document clearly in `update-docs` (match the tone of the Copilot v0.9.0 README/CHANGELOG note).
+- **Reuse existing helpers:** `vaultIsGitRepo()` (in `cli/copilot.ts`) and `BRAINKIT_PROMPT_SENTINEL` (in `core/system-prompt.ts`) already exist. If `vaultIsGitRepo()` is needed by Claude code paths, extract it to `core/` rather than re-importing from `cli/copilot.ts`.
 - **No new runtime dependencies.** Plugin scripts are plain Node ESM importing from `core/`.
 - **Cross-platform paths.** Use `node:path` and `node:os`. Hook scripts get `+x` bit on copy into staging. Windows CI must pass.
 - **Script extension:** `.mjs` (Node ESM).

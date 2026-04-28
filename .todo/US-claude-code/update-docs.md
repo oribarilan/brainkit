@@ -25,6 +25,7 @@ Add Claude Code to the documented surface, including the auth re-prompt UX cliff
 - [ ] `README.md` lists `brainkit claude` and `brainkit cc` as supported invocations alongside `brainkit oc` and `brainkit copilot`.
 - [ ] `README.md` includes a clear note: **"First launch of `brainkit claude` will prompt you to authenticate Claude Code. This is separate from your normal `claude` authentication because brainkit uses an isolated config directory. You will need a separate Claude session token under brainkit. This is intentional — brainkit never reads or writes your global `~/.claude/`."**
 - [ ] `README.md` includes uninstall instructions: **"To remove brainkit's Claude integration: `rm -rf ~/.config/brainkit/claude/`. Your global `~/.claude/` is unaffected."**
+- [ ] `README.md` discloses: "On first launch of `brainkit claude`, Claude Code will fetch the official Anthropic plugin marketplace (~4.4 MB) into the brainkit-isolated config directory at `~/.config/brainkit/claude/plugins/marketplaces/`. This is one-time per fresh install and stays isolated from your global `~/.claude/`."
 - [ ] If `CONTRIBUTING.md` mentions harnesses (test commands, dev workflow), Claude is included.
 - [ ] No documentation lies — every mentioned command actually works after `register-claude-harness.md` lands.
 
