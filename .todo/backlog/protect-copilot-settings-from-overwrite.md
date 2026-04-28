@@ -4,7 +4,7 @@
 
 `generateCopilotSettings` in `cli/copilot.ts` rewrites `~/.config/brainkit/copilot/settings.json` from scratch on every `brainkit copilot` launch. Any user-added keys (e.g., a custom MCP server entry, a theme preference, additional hooks) are silently clobbered on the next launch.
 
-Today this is benign because `~/.config/brainkit/copilot/settings.json` is not documented as user-editable. But the path *looks* like a user config dir (under `~/.config/`), so it's a foot-gun if a user discovers and edits it. No one has reported the issue — this is preventative.
+Today this is benign because `~/.config/brainkit/copilot/settings.json` is not documented as user-editable. But the path _looks_ like a user config dir (under `~/.config/`), so it's a foot-gun if a user discovers and edits it. No one has reported the issue — this is preventative.
 
 **Value delivered:** Closes a small foot-gun in the Copilot isolation model. Either makes the brainkit-managed nature of the file explicit (cheap, documentation-only) or actually preserves user additions (slightly more code, more user-friendly).
 
