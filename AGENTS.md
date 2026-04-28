@@ -155,6 +155,16 @@ Tests live in `__tests__/` directories alongside source. Each test file maps to 
 - Never expose vault content outside the plugin context
 - When in doubt, choose the more secure option
 
+### Harness Config Isolation (non-negotiable)
+
+Brainkit must **never** modify the user's normal harness configuration. When brainkit launches a harness, it must use its own dedicated, isolated config so the user's regular setup is untouched and unaffected.
+
+- **OpenCode**: launch with `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars pointing at `~/.config/brainkit/{opencode,tui}.json`. Never read, write, or merge into `~/.config/opencode/`.
+- **Copilot CLI**: only write inside the brainkit-owned vault directory (`.github/copilot/`, `.github/hooks/`, `.agents/skills/brainkit/`, `AGENTS.md`, `.gitignore`). Never read or write the user's global Copilot config (e.g. `~/.config/github-copilot/`).
+- Any new harness integration must follow the same rule: use env vars, dedicated config dirs, or vault-scoped files. Never mutate the user's global harness config or installed plugins/extensions.
+- If a feature seems to require touching the user's harness config, stop and discuss it first — there is almost always a sandboxed alternative.
+- Add tests when adding harness integration code to confirm no writes happen outside the brainkit config dir or the vault.
+
 ### Minimal Dependencies
 
 - Avoid adding dependencies unless they make things genuinely simpler

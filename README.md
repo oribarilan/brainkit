@@ -36,6 +36,8 @@ If only one harness is installed, `brainkit` with no arguments launches it direc
 
 Run `brainkit` from anywhere. It routes to your brain directory, or walks you through setting one up on first run.
 
+Safe to try: brainkit doesn't change your existing harness config. See [Philosophy](#philosophy) for details.
+
 ## What is it
 
 I've kept a second brain for over 10 years. Brainkit packages my workflows and conventions as an agent plugin. Use it as-is, grab a skill or two, or just browse for ideas.
@@ -69,6 +71,8 @@ No commands, no formatting, no manual filing.
 **Store where you'll search, not where you found it.** Meeting notes get processed: action items go to the project, accomplishments go to the bragfile, new people go to contacts. The original note gets archived. Information should live where you'll look for it later.
 
 **Convention over configuration.** I prefer battle-tested patterns. [PARA](https://fortelabs.com/blog/para/) for organization, a bragfile for tracking accomplishments, etc. Brainkit wires them together and teaches an agent to maintain them.
+
+**Your harness config stays untouched.** Brainkit doesn't touch your normal OpenCode or Copilot CLI setup. It runs your harness with its own config, so a regular `opencode` or `copilot` in another terminal keeps working fine while brainkit is open. Stop using brainkit whenever, nothing about your harness changes.
 
 ## Contributing
 
