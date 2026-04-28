@@ -225,22 +225,48 @@ describe("maybeCheckHarnessVersion", () => {
     expect(marker).toBe("1.0.0");
   });
 
-  it("prints update command and exits when user confirms", async () => {
-    mockExecFileSync.mockImplementation((cmd) => {
-      if (cmd === "opencode") return Buffer.from("1.14.0\n");
+  it("runs update command when user confirms", async () => {
+    const calls: Array<{ cmd: string; args: readonly string[] | undefined }> = [];
+    mockExecFileSync.mockImplementation((cmd, args) => {
+      calls.push({ cmd, args });
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "--version") {
+        return Buffer.from("1.14.0\n");
+      }
       if (cmd === "npm") return Buffer.from("1.15.0\n");
-      throw new Error("unexpected");
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "upgrade") {
+        // Simulate successful update
+        return Buffer.from("");
+      }
+      throw new Error(`unexpected: ${cmd} ${JSON.stringify(args)}`);
     });
     mockConfirm.mockResolvedValue(true);
 
-    const mockExit = vi.spyOn(process, "exit").mockImplementation(() => {
-      throw new Error("process.exit called");
-    });
+    await maybeCheckHarnessVersion("OpenCode");
 
-    await expect(maybeCheckHarnessVersion("OpenCode")).rejects.toThrow("process.exit");
-
+    // Should have invoked the update command directly
+    const upgradeCall = calls.find((c) => c.cmd === "opencode" && Array.isArray(c.args) && c.args[0] === "upgrade");
+    expect(upgradeCall).toBeDefined();
     expect(p.log.info).toHaveBeenCalledWith(expect.stringContaining("opencode upgrade"));
-    expect(mockExit).toHaveBeenCalledWith(0);
+    expect(p.log.success).toHaveBeenCalledWith(expect.stringContaining("OpenCode"));
+  });
+
+  it("logs error and continues when update command fails", async () => {
+    mockExecFileSync.mockImplementation((cmd, args) => {
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "--version") {
+        return Buffer.from("1.14.0\n");
+      }
+      if (cmd === "npm") return Buffer.from("1.15.0\n");
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "upgrade") {
+        throw new Error("upgrade failed");
+      }
+      throw new Error(`unexpected: ${cmd}`);
+    });
+    mockConfirm.mockResolvedValue(true);
+
+    // Should not throw
+    await maybeCheckHarnessVersion("OpenCode");
+
+    expect(p.log.error).toHaveBeenCalledWith(expect.stringContaining("opencode upgrade"));
   });
 
   it("continues when user cancels the confirm prompt", async () => {

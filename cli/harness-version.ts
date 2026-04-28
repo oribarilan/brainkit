@@ -15,7 +15,7 @@ interface HarnessVersionMeta {
   npmPackage: string;
   versionArgs: string[];
   parseVersion: (output: string) => string;
-  updateCommand: string;
+  updateCommand: { binary: string; args: string[] };
 }
 
 // ---------------------------------------------------------------------------
@@ -28,7 +28,7 @@ const HARNESS_VERSION_META: Record<string, HarnessVersionMeta> = {
     npmPackage: "opencode-ai",
     versionArgs: ["--version"],
     parseVersion: (output) => output.trim(),
-    updateCommand: "opencode upgrade",
+    updateCommand: { binary: "opencode", args: ["upgrade"] },
   },
   "Copilot CLI": {
     binary: "copilot",
@@ -38,9 +38,13 @@ const HARNESS_VERSION_META: Record<string, HarnessVersionMeta> = {
       const match = output.match(/(\d+\.\d+\.\d+)/);
       return match?.[1] ?? output.trim();
     },
-    updateCommand: "copilot update",
+    updateCommand: { binary: "copilot", args: ["update"] },
   },
 };
+
+function formatUpdateCommand(cmd: { binary: string; args: string[] }): string {
+  return [cmd.binary, ...cmd.args].join(" ");
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -109,11 +113,21 @@ export async function maybeCheckHarnessVersion(harnessName: string): Promise<voi
 
   // Outdated — suggest update
   const shouldUpdate = await p.confirm({
-    message: `${harnessName} update available (${installed} → ${latest}). Run "${meta.updateCommand}"?`,
+    message: `${harnessName} update available (${installed} → ${latest}). Run "${formatUpdateCommand(meta.updateCommand)}"?`,
   });
 
   if (p.isCancel(shouldUpdate) || !shouldUpdate) return;
 
-  p.log.info(`Run: ${meta.updateCommand}`);
-  process.exit(0);
+  const cmdString = formatUpdateCommand(meta.updateCommand);
+  p.log.info(`Running: ${cmdString}`);
+
+  try {
+    execFileSync(meta.updateCommand.binary, meta.updateCommand.args, {
+      stdio: "inherit",
+      shell: process.platform === "win32",
+    });
+    p.log.success(`${harnessName} updated.`);
+  } catch {
+    p.log.error(`Update failed. Run manually: ${cmdString}`);
+  }
 }

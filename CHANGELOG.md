@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-04-28
+
+### Fixed
+- Harness update prompt now actually runs the update command when you confirm, instead of just printing it and exiting.
+
 ## [0.9.1] - 2026-04-28
 
 ### Changed
