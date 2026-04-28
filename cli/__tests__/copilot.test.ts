@@ -819,6 +819,12 @@ describe("launchCopilot — onboarding path (gap fill)", () => {
     expect(callArgs[1]).toContain("Let's set up my first brainkit vault!");
     expect(callArgs[1]).toContain("-i");
     expect(callArgs[1]).toContain("--allow-all");
+    // Regression guard: `-i <prompt>` must be adjacent and `--allow-all` must
+    // come before `-i`. Otherwise Copilot treats `--allow-all` as the prompt
+    // value and the real prompt as a stray positional ("too many arguments").
+    const iIdx = callArgs[1].indexOf("-i");
+    expect(callArgs[1][iIdx + 1]).toBe("Let's set up my first brainkit vault!");
+    expect(callArgs[1].indexOf("--allow-all")).toBeLessThan(iIdx);
     // cwd is the onboarding dir under config dir.
     expect(callArgs[2].cwd).toBe(path.join(mockConfigDir(), "onboarding"));
     // No COPILOT_HOME in onboarding — uses Copilot's defaults.

@@ -484,7 +484,13 @@ export function launchCopilot(args: string[], selectedVaultPath?: string): void 
       const onboardingDir = ensureOnboardingWorkspace(configDir);
 
       p.outro("Starting onboarding...");
-      const child = spawnHarness("copilot", ["-i", "--allow-all", "Let's set up my first brainkit vault!", ...args], {
+      // Order matters: `-i, --interactive <prompt>` consumes the next token as
+      // its value. `--allow-all` must come BEFORE `-i`, and the prompt string
+      // must immediately follow `-i`. Putting `--allow-all` between them makes
+      // Copilot treat `--allow-all` as the prompt and the actual prompt as a
+      // stray positional → "error: too many arguments. Expected 0 arguments
+      // but got 1."
+      const child = spawnHarness("copilot", ["--allow-all", "-i", "Let's set up my first brainkit vault!", ...args], {
         stdio: "inherit",
         cwd: onboardingDir,
       });
