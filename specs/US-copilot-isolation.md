@@ -1,6 +1,8 @@
 # US-copilot-isolation — Migrate Copilot CLI to isolated `COPILOT_HOME`
 
-Status: Approved design (post-smoke-test), ready for implementation
+> **Updated 2026-04-28**: this spec was originally written under a per-file-then-all-or-nothing detection model with an interactive prompt. The shipped behavior uses the **slim mechanical migration**: brainkit-namespaced paths (`.agents/skills/brainkit/`, `.github/hooks/`, `.github/copilot/`) are deleted unconditionally; `AGENTS.md` is content-gated (deleted only if it contains the brainkit sentinel `<!-- brainkit:generated -->` or the legacy preamble); the contiguous `.gitignore` brainkit block is stripped; recovery is via `git restore <path>`. See `.todo/done/US-copilot-isolation/rewrite-copilot-launcher.md` § Migration for the authoritative shipped behavior. The "Migration policy" table and "User notice" example below are preserved for historical context but do not reflect the shipped flow.
+
+Status: Approved design (post-smoke-test), shipped 2026-04-28
 Date: 2026-04-28
 
 ## Goal
@@ -23,13 +25,14 @@ The current implementation predates the discovery of `COPILOT_HOME` and writes s
 
 ## Smoke test results (Copilot CLI v1.0.37, 2026-04-28)
 
-| Test | Result |
-|---|---|
-| `$COPILOT_HOME/copilot-instructions.md` loaded? | ✅ Yes (marker appeared in response) |
-| `$COPILOT_HOME/AGENTS.md` loaded? | ❌ No (marker did not appear) |
-| `COPILOT_HOME` actually redirects from `~/.copilot/`? | ✅ Yes |
+| Test                                                  | Result                               |
+| ----------------------------------------------------- | ------------------------------------ |
+| `$COPILOT_HOME/copilot-instructions.md` loaded?       | ✅ Yes (marker appeared in response) |
+| `$COPILOT_HOME/AGENTS.md` loaded?                     | ❌ No (marker did not appear)        |
+| `COPILOT_HOME` actually redirects from `~/.copilot/`? | ✅ Yes                               |
 
 **Conclusions baked into this design:**
+
 - Use `COPILOT_HOME` for full isolation (instructions, skills, settings, hooks).
 - Use `copilot-instructions.md` (the documented file), not `AGENTS.md`, at `$COPILOT_HOME`.
 
@@ -42,10 +45,10 @@ The current implementation predates the discovery of `COPILOT_HOME` and writes s
 - [ ] **The user's vault is never written to during a Copilot launch.** Verified by an automated test that walks the vault dir before and after `launchCopilot` and asserts the file list is identical.
 - [ ] **The user's `~/.copilot/` directory is never read or written.** Verified by an automated test.
 - [ ] Existing brainkit users (vaults with legacy `AGENTS.md`, `.agents/`, `.github/hooks/`, `.github/copilot/`, brainkit `.gitignore` entries) are migrated automatically on the next `brainkit copilot` launch:
-   - Legacy files are removed from the vault (regardless of git-tracked status, per user decision)
-   - Brainkit `.gitignore` block is removed
-   - A clear user notice describes what changed and how to commit the deletions
-   - A `~/.config/brainkit/copilot/.migration-v1` marker prevents re-running the migration on subsequent launches
+  - Legacy files are removed from the vault (regardless of git-tracked status, per user decision)
+  - Brainkit `.gitignore` block is removed
+  - A clear user notice describes what changed and how to commit the deletions
+  - A `~/.config/brainkit/copilot/.migration-v1` marker prevents re-running the migration on subsequent launches
 - [ ] Migration is idempotent and safe: running it twice has no additional effect; partial failures don't write the marker and abort the launch with a clear error
 - [ ] Onboarding flow (`vaultPath === undefined`) continues to work unchanged via `~/.config/brainkit/onboarding/`
 - [ ] `just check` passes (lint + format + test)
@@ -100,6 +103,7 @@ The current implementation predates the discovery of `COPILOT_HOME` and writes s
 `<vault>/` — clean. No brainkit-generated files.
 
 `copilot` spawned with:
+
 - `cwd: vaultPath` (auto-commit hook works against the vault git repo, agent's working dir is the vault)
 - `env.COPILOT_HOME = ~/.config/brainkit/copilot`
 - `env.BRAINKIT_VAULT_PATH = vaultPath` (unchanged, used by status script)
@@ -170,24 +174,26 @@ New function in `cli/copilot.ts`. Runs **before** any other side-effecting launc
 
 **Migration policy** (per user decision: delete regardless of git-tracked status, with notice):
 
-| Vault artifact | Detection | Action |
-|---|---|---|
-| `<vault>/AGENTS.md` | See "Brainkit AGENTS.md detection" below | Delete on match; preserve on mismatch |
-| `<vault>/.agents/skills/brainkit/` | `.brainkit-version` file present inside | Recursively delete; then `rmdir` `.agents/skills/` and `.agents/` (failures = leave alone) |
-| `<vault>/.github/hooks/hooks.json` | Parse JSON; deep-equal to current `HOOKS_CONFIG` constant | Delete on match; preserve on mismatch |
-| `<vault>/.github/hooks/scripts/auto-commit.js` | Read file content; equal to current `AUTO_COMMIT_SCRIPT` constant (whitespace-tolerant: trim trailing newlines on both sides before compare) | Delete on match; preserve on mismatch |
-| `<vault>/.github/hooks/scripts/`, `.github/hooks/` | Try `rmdir` after the above (succeeds only if empty) | Remove if empty; leave on failure |
-| `<vault>/.github/copilot/settings.json` | Parse JSON; `Object.keys(parsed).sort()` exactly equals `["companyAnnouncements", "statusLine"]` | Delete on match; preserve on mismatch |
-| `<vault>/.github/copilot/` | Try `rmdir` after the above | Remove if empty; leave on failure |
-| `<vault>/.github/` | Try `rmdir` after all of the above | Remove if empty; leave on failure. **Never use recursive delete** — would destroy `.github/workflows/`, `.github/CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, etc. |
-| `<vault>/.gitignore` | See ".gitignore detection" below | Remove block on match; preserve on mismatch |
+| Vault artifact                                     | Detection                                                                                                                                    | Action                                                                                                                                                         |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<vault>/AGENTS.md`                                | See "Brainkit AGENTS.md detection" below                                                                                                     | Delete on match; preserve on mismatch                                                                                                                          |
+| `<vault>/.agents/skills/brainkit/`                 | `.brainkit-version` file present inside                                                                                                      | Recursively delete; then `rmdir` `.agents/skills/` and `.agents/` (failures = leave alone)                                                                     |
+| `<vault>/.github/hooks/hooks.json`                 | Parse JSON; deep-equal to current `HOOKS_CONFIG` constant                                                                                    | Delete on match; preserve on mismatch                                                                                                                          |
+| `<vault>/.github/hooks/scripts/auto-commit.js`     | Read file content; equal to current `AUTO_COMMIT_SCRIPT` constant (whitespace-tolerant: trim trailing newlines on both sides before compare) | Delete on match; preserve on mismatch                                                                                                                          |
+| `<vault>/.github/hooks/scripts/`, `.github/hooks/` | Try `rmdir` after the above (succeeds only if empty)                                                                                         | Remove if empty; leave on failure                                                                                                                              |
+| `<vault>/.github/copilot/settings.json`            | Parse JSON; `Object.keys(parsed).sort()` exactly equals `["companyAnnouncements", "statusLine"]`                                             | Delete on match; preserve on mismatch                                                                                                                          |
+| `<vault>/.github/copilot/`                         | Try `rmdir` after the above                                                                                                                  | Remove if empty; leave on failure                                                                                                                              |
+| `<vault>/.github/`                                 | Try `rmdir` after all of the above                                                                                                           | Remove if empty; leave on failure. **Never use recursive delete** — would destroy `.github/workflows/`, `.github/CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, etc. |
+| `<vault>/.gitignore`                               | See ".gitignore detection" below                                                                                                             | Remove block on match; preserve on mismatch                                                                                                                    |
 
 **Brainkit `AGENTS.md` detection** (belt-and-suspenders to handle both new and legacy files):
+
 - **Sentinel match (preferred)**: file contains the literal string `<!-- brainkit:generated -->` anywhere in its content. This sentinel SHOULD be added by the new launcher to any future generated `AGENTS.md` (defensive — we don't write `AGENTS.md` anymore, but if a future feature does, it'll inherit the marker).
 - **Legacy preamble match (fallback)**: file content (with leading whitespace trimmed) starts with the exact string `## Brainkit\n\nBrainkit is a personal second brain — a structured markdown vault organized with the PARA method.` This string has been the first section of `buildPreamble()` since the function existed (verified by reading `core/prompt-sections.ts:55-63`). Match either condition → file is brainkit-generated → safe to delete.
 - Mismatch on both → preserve and add to "preserved" notice.
 
 **`.gitignore` detection**:
+
 - Look for the four `GITIGNORE_ENTRIES` lines (`# brainkit — generated files`, `.agents/skills/brainkit/`, `.github/hooks/`, `.github/copilot/`) appearing contiguously in that order, anywhere in the file. Normalize line endings (`\r\n` → `\n`) before matching.
 - On match: remove only the four lines themselves. Don't try to clean up surrounding blank lines — leave them; the user can tidy if they care.
 - On mismatch (block split, lines reordered, or any line modified): preserve `.gitignore` entirely, add to "preserved" notice.
@@ -221,6 +227,7 @@ New function in `cli/copilot.ts`. Runs **before** any other side-effecting launc
 ```
 
 **Notice rules:**
+
 - Show specific paths in the `git add` command — never `git add -A` (would sweep up unrelated uncommitted user work).
 - Only list items that were actually removed.
 - Items in a separate "preserved" block are listed if the migration left them in place (e.g., user-modified `AGENTS.md`), so the user knows it was deliberate.
@@ -254,26 +261,26 @@ These are low-risk verifications. None of them block the design. They're mechani
 ## Handled at launch time (not deferred)
 
 1. **`--config-dir` in user args defeats isolation.** Per Copilot docs, `--config-dir` takes precedence over `COPILOT_HOME`. If a user passes `--config-dir` to `brainkit copilot`, our isolation breaks. The launcher must detect this in `args` and either strip it (with a warning) or abort with an error. Decision: **abort with a clear error message** — silently stripping a user-provided flag is surprising. See `rewrite-copilot-launcher.md` AC.
-2. **`COPILOT_CUSTOM_INSTRUCTIONS_DIRS` user override is benign.** If a user has this env var set globally, additional instruction dirs get *added* to brainkit's `copilot-instructions.md`, not replacing them. Extra context never hurts brainkit's behavior, and stripping user env vars violates "user is in control." No code change needed; documented in `update-docs.md` as a one-line note in the `AGENTS.md` isolation section.
+2. **`COPILOT_CUSTOM_INSTRUCTIONS_DIRS` user override is benign.** If a user has this env var set globally, additional instruction dirs get _added_ to brainkit's `copilot-instructions.md`, not replacing them. Extra context never hurts brainkit's behavior, and stripping user env vars violates "user is in control." No code change needed; documented in `update-docs.md` as a one-line note in the `AGENTS.md` isolation section.
 
 ## Migration risks and mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Migration deletes a user-customized `AGENTS.md` | Marker-string check on file content; if marker absent, leave + notice |
-| Migration deletes user's hand-written `.github/hooks/hooks.json` | Exact-content match against current `HOOKS_CONFIG` JSON; if different, leave + notice |
+| Risk                                                                     | Mitigation                                                                                            |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Migration deletes a user-customized `AGENTS.md`                          | Marker-string check on file content; if marker absent, leave + notice                                 |
+| Migration deletes user's hand-written `.github/hooks/hooks.json`         | Exact-content match against current `HOOKS_CONFIG` JSON; if different, leave + notice                 |
 | Migration deletes user's `.github/copilot/settings.json` with extra keys | Parse JSON, check keys equal exactly `["companyAnnouncements", "statusLine"]`; if not, leave + notice |
-| `.gitignore` block was split / modified | Look for the four-line block as a contiguous substring; if not found, leave + notice |
-| User has non-brainkit files under `.github/hooks/` or `.github/copilot/` | Only delete our specific files; clean up parent dirs only if empty after our deletions |
-| Migration partially fails midway | Wrap in try/catch; abort launch on failure; do not write marker; user can retry after fixing |
-| Future need to re-run migration (e.g., a v2 cleanup) | Marker is versioned (`.migration-v1`, `.migration-v2`, ...); each migration checks its own marker |
-| Windows path handling differs | Use `path.join` everywhere; existing `cross-platform.test.ts` patterns apply |
+| `.gitignore` block was split / modified                                  | Look for the four-line block as a contiguous substring; if not found, leave + notice                  |
+| User has non-brainkit files under `.github/hooks/` or `.github/copilot/` | Only delete our specific files; clean up parent dirs only if empty after our deletions                |
+| Migration partially fails midway                                         | Wrap in try/catch; abort launch on failure; do not write marker; user can retry after fixing          |
+| Future need to re-run migration (e.g., a v2 cleanup)                     | Marker is versioned (`.migration-v1`, `.migration-v2`, ...); each migration checks its own marker     |
+| Windows path handling differs                                            | Use `path.join` everywhere; existing `cross-platform.test.ts` patterns apply                          |
 
 ## Out of Scope
 
 - **Onboarding flow refactor** — `~/.config/brainkit/onboarding/` stays as-is. Could be unified into `COPILOT_HOME` later, but adds complexity for no immediate benefit.
 - **Doc cleanup pass on `docs/*.md`** — many docs reference `AGENTS.md` as the brainkit system prompt for Copilot. A separate small follow-up task can update those references to "the brainkit system prompt (delivered via `copilot-instructions.md` in `$COPILOT_HOME`)". Not blocking.
-- **Migrating `companyAnnouncements` or `statusLine` schema changes** — keep the same content/shape as today. This US is purely about *location*.
+- **Migrating `companyAnnouncements` or `statusLine` schema changes** — keep the same content/shape as today. This US is purely about _location_.
 - **Removing `updateGitignore` function entirely** — keep it for the migration's gitignore-cleanup logic; can be deleted later in a cleanup commit.
 
 ## Task Breakdown

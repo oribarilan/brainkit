@@ -2,7 +2,7 @@
 
 ## Context
 
-User feedback: when asking brainkit to update a task, the agent responds with bare tool calls like "Update README.md" without saying *which* project or area is being modified. The user can't confirm the agent is targeting the right place.
+User feedback: when asking brainkit to update a task, the agent responds with bare tool calls like "Update README.md" without saying _which_ project or area is being modified. The user can't confirm the agent is targeting the right place.
 
 This task adds a behavioral rule to the client-side system prompt that requires the agent to briefly announce its intended vault change — with concrete context (project name, contact name, file area) — before performing it. Read-only operations stay silent.
 
@@ -20,7 +20,7 @@ This task adds a behavioral rule to the client-side system prompt that requires 
 
 ## Implementation Guidance
 
-The recommended shape is a short `### Before editing` subsection appended to the output of `buildBehavioralRules`, *not* another bullet in the existing list. Reason: the surrounding bullets are all *vault* behavior (how to manipulate files); this rule is *meta*-behavior (how to talk to the user). A small subsection reads cleaner and signals the distinction.
+The recommended shape is a short `### Before editing` subsection appended to the output of `buildBehavioralRules`, _not_ another bullet in the existing list. Reason: the surrounding bullets are all _vault_ behavior (how to manipulate files); this rule is _meta_-behavior (how to talk to the user). A small subsection reads cleaner and signals the distinction.
 
 The rule must convey, at minimum:
 

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Improve how the brainkit agent communicates intent to the user before acting on the vault. Today, the agent often jumps straight to a tool call (e.g. "Update README.md") without telling the user *what* is being changed and *where* — leaving the user without enough context to confirm the action is correct.
+Improve how the brainkit agent communicates intent to the user before acting on the vault. Today, the agent often jumps straight to a tool call (e.g. "Update README.md") without telling the user _what_ is being changed and _where_ — leaving the user without enough context to confirm the action is correct.
 
 This story adds a behavioral rule to the client-side system prompt requiring the agent to briefly announce what it is about to do, with concrete context (which project, which contact, which file area) before performing vault **edits** (writes only, not reads).
 
@@ -29,7 +29,7 @@ This story adds a behavioral rule to the client-side system prompt requiring the
 
 - **Client-side, not dev-side**: this changes runtime behavior for brainkit users (see `AGENTS.md` § Dev-Side vs Client-Side). The change belongs in `core/prompt-sections.ts` — not in `.opencode/`, not in `skills/`, not in this repo's `AGENTS.md`.
 - **One source of truth**: keep the rule in the system prompt only. Don't duplicate into `skills/brainkit/SKILL.md` — skills are pulled on demand, the system prompt is always present, and duplication invites drift.
-- **Keep it brief**: the rule must encourage a *short* one-line announcement, not a verbose plan. Brainkit is a personal vault tool — verbosity is friction.
+- **Keep it brief**: the rule must encourage a _short_ one-line announcement, not a verbose plan. Brainkit is a personal vault tool — verbosity is friction.
 - **Don't double-up with existing tooling**: OpenCode already shows tool calls in the UI. The announcement is a natural-language preface ("Adding John as a new contact"), not a re-statement of the tool call.
 - **Scope (writes only)**: announcements apply to vault-modifying actions only. Reads, searches, and listings stay silent — otherwise we'd contradict the existing "Search the vault before answering" rule and add the very friction we're trying to remove.
 - **Scope (out)**: post-action summaries are explicitly out of scope. If users want them later, that's a separate story.

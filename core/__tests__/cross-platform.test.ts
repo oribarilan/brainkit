@@ -67,6 +67,57 @@ describe("getConfigDir", () => {
 });
 
 // ---------------------------------------------------------------------------
+// getCopilotConfigDir — isolated Copilot config dir
+// ---------------------------------------------------------------------------
+
+describe("getCopilotConfigDir", () => {
+  const originalPlatform = process.platform;
+  let originalAppData: string | undefined;
+  let originalConfigDir: string | undefined;
+
+  beforeEach(() => {
+    originalAppData = process.env["APPDATA"];
+    originalConfigDir = process.env["BRAINKIT_CONFIG_DIR"];
+    delete process.env["BRAINKIT_CONFIG_DIR"];
+    delete process.env["APPDATA"];
+  });
+
+  afterEach(() => {
+    Object.defineProperty(process, "platform", { value: originalPlatform });
+    if (originalAppData !== undefined) {
+      process.env["APPDATA"] = originalAppData;
+    } else {
+      delete process.env["APPDATA"];
+    }
+    if (originalConfigDir !== undefined) {
+      process.env["BRAINKIT_CONFIG_DIR"] = originalConfigDir;
+    } else {
+      delete process.env["BRAINKIT_CONFIG_DIR"];
+    }
+    vi.resetModules();
+  });
+
+  it("returns ~/.config/brainkit/copilot on macOS/Linux", async () => {
+    Object.defineProperty(process, "platform", { value: "darwin" });
+    const { getCopilotConfigDir } = await import("../vault.js");
+    expect(getCopilotConfigDir()).toBe(path.join(os.homedir(), ".config", "brainkit", "copilot"));
+  });
+
+  it("returns %APPDATA%/brainkit/copilot on Windows", async () => {
+    Object.defineProperty(process, "platform", { value: "win32" });
+    process.env["APPDATA"] = "C:\\Users\\Test\\AppData\\Roaming";
+    const { getCopilotConfigDir } = await import("../vault.js");
+    expect(getCopilotConfigDir()).toBe(path.join("C:\\Users\\Test\\AppData\\Roaming", "brainkit", "copilot"));
+  });
+
+  it("respects BRAINKIT_CONFIG_DIR override", async () => {
+    process.env["BRAINKIT_CONFIG_DIR"] = "/custom/dir";
+    const { getCopilotConfigDir } = await import("../vault.js");
+    expect(getCopilotConfigDir()).toBe(path.join("/custom/dir", "copilot"));
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Tilde expansion — path normalization
 // ---------------------------------------------------------------------------
 

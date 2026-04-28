@@ -131,6 +131,7 @@ BRAINKIT_VAULT_PATH=<vault> \
 ```
 
 Notes vs. v1:
+
 - **`cwd: vaultPath`** (mirrors Copilot's `copilot.ts:219`) — Claude treats the vault as the project, creating one stable `$CLAUDE_CONFIG_DIR/projects/<vault-hash>/` entry instead of scattering entries based on whatever shell pwd the user happened to be in.
 - **`--add-dir <vault>` is dropped.** Redundant when `cwd: vaultPath`.
 - **`--plugin-dir` points at the staging copy**, not `<pkgRoot>/claude`.
@@ -167,12 +168,8 @@ disable-model-invocation: false
 ```json
 {
   "hooks": {
-    "SessionEnd": [
-      { "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/auto-commit.mjs" }] }
-    ],
-    "PreCompact": [
-      { "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/precompact.mjs" }] }
-    ]
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/auto-commit.mjs" }] }],
+    "PreCompact": [{ "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/precompact.mjs" }] }]
   }
 }
 ```
@@ -232,17 +229,17 @@ Exact `enabledPlugins` key format depends on smoke-test findings. `companyAnnoun
 
 ### UI parity (honest about limits)
 
-| OpenCode                  | Claude Code                                     | Status                                                       |
-| ------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
-| `brainkit` theme (~50 tokens) | `themes/brainkit.json` (~5 tokens — Claude schema limits) | Brand color only, not a full port                            |
-| Sidebar with vault stats  | Statusline with vault stats                     | Functional parity (one line vs panel)                        |
-| Brain ASCII home logo     | none available                                  | Skipped — no slot exists                                     |
-| Custom prompt placeholders / hints | none available                         | Skipped — no slot exists                                     |
-| Rotating tips at home (9, 8s rotation) | `companyAnnouncements` (TBD per smoke test) | Likely degraded — defaulting to single best tip until verified |
-| `/doctor` slash command   | `/brainkit:doctor` skill                        | Full parity                                                  |
-| Accomplishment toast      | UserPromptSubmit hook (deferred)                | Deferred — re-evaluate after smoke test confirms whether stdout reaches user |
-| Auto-commit               | `SessionEnd` hook                               | End-of-session only, vs OpenCode's debounced in-session (Copilot pattern) |
-| Compaction identity       | `PreCompact` hook                               | Full parity                                                  |
+| OpenCode                               | Claude Code                                               | Status                                                                       |
+| -------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `brainkit` theme (~50 tokens)          | `themes/brainkit.json` (~5 tokens — Claude schema limits) | Brand color only, not a full port                                            |
+| Sidebar with vault stats               | Statusline with vault stats                               | Functional parity (one line vs panel)                                        |
+| Brain ASCII home logo                  | none available                                            | Skipped — no slot exists                                                     |
+| Custom prompt placeholders / hints     | none available                                            | Skipped — no slot exists                                                     |
+| Rotating tips at home (9, 8s rotation) | `companyAnnouncements` (TBD per smoke test)               | Likely degraded — defaulting to single best tip until verified               |
+| `/doctor` slash command                | `/brainkit:doctor` skill                                  | Full parity                                                                  |
+| Accomplishment toast                   | UserPromptSubmit hook (deferred)                          | Deferred — re-evaluate after smoke test confirms whether stdout reaches user |
+| Auto-commit                            | `SessionEnd` hook                                         | End-of-session only, vs OpenCode's debounced in-session (Copilot pattern)    |
+| Compaction identity                    | `PreCompact` hook                                         | Full parity                                                                  |
 
 ### Onboarding
 
