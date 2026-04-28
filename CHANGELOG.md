@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-04-28
+
+### Changed
+- `brainkit reset` now removes all brainkit config (including Copilot auth and conversation history); vaults and your global harness configs are not touched.
+
+### Fixed
+- **OpenCode**: fixed onboarding crash where the generated config was rejected with `Expected PermissionActionConfig, got "a"` (and similar), preventing OpenCode from launching after a fresh install or update.
+
 ## [0.9.0] - 2026-04-28
 
 ### Changed

@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 
-import * as fs from "node:fs";
-import * as path from "node:path";
 import * as p from "@clack/prompts";
 import { version } from "./version.js";
 import { isHarnessAlias, launchHarness, detectAndLaunch, parseVaultFlag, selectVault } from "./launch.js";
-import { getConfigDir } from "../core/index.js";
-import { cleanupOnboardingWorkspace } from "./copilot.js";
+import { factoryReset } from "./reset.js";
 import { maybeCheckForSelfUpdate } from "./self-update.js";
 
 const HELP_TEXT = `Usage:
@@ -15,7 +12,7 @@ const HELP_TEXT = `Usage:
   brainkit opencode [args...]  Launch with OpenCode
   brainkit copilot [args...]   Launch with Copilot CLI
   brainkit cp [args...]        Launch with Copilot CLI
-  brainkit reset               Factory reset (removes config, re-triggers onboarding)
+  brainkit reset               Factory reset (removes all brainkit config; vaults untouched)
 
 Options:
   --vault <name>  Pick which vault to open
@@ -25,33 +22,6 @@ Options:
 Extra args are passed through to the harness.
 Example: brainkit oc --model anthropic/claude-sonnet-4-5
 Example: brainkit --vault work`;
-
-async function factoryReset(): Promise<void> {
-  p.intro("brainkit reset");
-
-  const shouldReset = await p.confirm({
-    message: "This will remove your brainkit config and re-trigger onboarding. Continue?",
-  });
-
-  if (p.isCancel(shouldReset) || !shouldReset) {
-    p.cancel("Reset cancelled.");
-    process.exit(0);
-  }
-
-  const configDir = getConfigDir();
-  const configPath = path.join(configDir, "config.toml");
-
-  try {
-    fs.unlinkSync(configPath);
-  } catch {
-    // Already gone
-  }
-
-  cleanupOnboardingWorkspace(configDir);
-
-  p.log.success("Config removed.");
-  p.outro("Run `brainkit` to start fresh.");
-}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
