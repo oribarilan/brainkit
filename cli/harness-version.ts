@@ -121,13 +121,60 @@ export async function maybeCheckHarnessVersion(harnessName: string): Promise<voi
   const cmdString = formatUpdateCommand(meta.updateCommand);
   p.log.info(`Running: ${cmdString}`);
 
+  runUpdateCommand(meta.updateCommand, cmdString, harnessName);
+}
+
+/**
+ * Run an update command that may itself manipulate the TTY (raw mode, alt
+ * screen, etc.). Wraps `execFileSync` with stdio handover/restore + a no-op
+ * stdin error listener to swallow the spurious EIO Node throws when the child
+ * returns the TTY in a transient state. See:
+ *   - https://github.com/google-gemini/gemini-cli/pull/15410
+ *   - https://github.com/nodejs/node/issues/51238
+ *   - https://github.com/nodejs/node/issues/12101
+ */
+function runUpdateCommand(cmd: { binary: string; args: string[] }, cmdString: string, harnessName: string): void {
+  // Hand the TTY cleanly to the child: stop reading, drop raw mode (clack
+  // leaves it on between prompts), and don't keep the loop alive on fd 0.
+  const wasRaw = process.stdin.isTTY ? process.stdin.isRaw : false;
+  if (process.stdin.isTTY) {
+    try {
+      process.stdin.setRawMode(false);
+    } catch {
+      // Not a TTY; ignore.
+    }
+  }
+  process.stdin.pause();
+  if (typeof process.stdin.unref === "function") process.stdin.unref();
+
+  // Swallow spurious EIO/EPIPE from the parent's stdin after the child exits.
+  // The error often fires asynchronously (next tick or later), so leave the
+  // listener attached for the rest of the process lifetime.
+  const swallowTtyError = (err: NodeJS.ErrnoException): void => {
+    if (err.code === "EIO" || err.code === "EPIPE" || err.code === "ENOTCONN") return;
+    throw err;
+  };
+  process.stdin.on("error", swallowTtyError);
+
   try {
-    execFileSync(meta.updateCommand.binary, meta.updateCommand.args, {
+    execFileSync(cmd.binary, cmd.args, {
       stdio: "inherit",
       shell: process.platform === "win32",
     });
     p.log.success(`${harnessName} updated.`);
   } catch {
     p.log.error(`Update failed. Run manually: ${cmdString}`);
+  } finally {
+    // Restore raw mode if it was on before, and re-attach stdin so subsequent
+    // prompts (or the spawned harness) can read input. Wrapped in try/catch
+    // because the child may have closed the TTY in unexpected ways.
+    if (process.stdin.isTTY) {
+      try {
+        process.stdin.setRawMode(wasRaw);
+      } catch {
+        // Best effort.
+      }
+    }
+    if (typeof process.stdin.ref === "function") process.stdin.ref();
   }
 }

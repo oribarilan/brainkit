@@ -269,6 +269,95 @@ describe("maybeCheckHarnessVersion", () => {
     expect(p.log.error).toHaveBeenCalledWith(expect.stringContaining("opencode upgrade"));
   });
 
+  it("disables raw mode and pauses stdin before running update, restores after", async () => {
+    mockExecFileSync.mockImplementation((cmd, args) => {
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "--version") {
+        return Buffer.from("1.14.0\n");
+      }
+      if (cmd === "npm") return Buffer.from("1.15.0\n");
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "upgrade") {
+        return Buffer.from("");
+      }
+      throw new Error(`unexpected: ${cmd}`);
+    });
+    mockConfirm.mockResolvedValue(true);
+
+    // Pretend stdin was in raw mode (clack does this between prompts).
+    Object.defineProperty(process.stdin, "isRaw", { value: true, configurable: true });
+    const setRawMode = vi.fn();
+    const pause = vi.spyOn(process.stdin, "pause").mockImplementation(() => process.stdin);
+    Object.defineProperty(process.stdin, "setRawMode", { value: setRawMode, configurable: true });
+
+    await maybeCheckHarnessVersion("OpenCode");
+
+    // Raw mode disabled before exec
+    expect(setRawMode).toHaveBeenCalledWith(false);
+    // Stdin paused before exec
+    expect(pause).toHaveBeenCalled();
+    // Raw mode restored to previous value after exec
+    expect(setRawMode).toHaveBeenCalledWith(true);
+  });
+
+  it("attaches a stdin error listener that swallows EIO/EPIPE", async () => {
+    mockExecFileSync.mockImplementation((cmd, args) => {
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "--version") {
+        return Buffer.from("1.14.0\n");
+      }
+      if (cmd === "npm") return Buffer.from("1.15.0\n");
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "upgrade") {
+        return Buffer.from("");
+      }
+      throw new Error(`unexpected: ${cmd}`);
+    });
+    mockConfirm.mockResolvedValue(true);
+
+    const onSpy = vi.spyOn(process.stdin, "on");
+
+    await maybeCheckHarnessVersion("OpenCode");
+
+    // Find the error listener we attached
+    const errorCall = onSpy.mock.calls.find((c) => c[0] === "error");
+    expect(errorCall).toBeDefined();
+    const listener = errorCall?.[1] as ((err: NodeJS.ErrnoException) => void) | undefined;
+    expect(listener).toBeDefined();
+
+    // Should swallow EIO, EPIPE, ENOTCONN
+    expect(() => listener?.({ code: "EIO" } as NodeJS.ErrnoException)).not.toThrow();
+    expect(() => listener?.({ code: "EPIPE" } as NodeJS.ErrnoException)).not.toThrow();
+    expect(() => listener?.({ code: "ENOTCONN" } as NodeJS.ErrnoException)).not.toThrow();
+
+    // Should re-throw anything else
+    expect(() => listener?.({ code: "EACCES", message: "denied" } as NodeJS.ErrnoException)).toThrow();
+
+    // Cleanup
+    if (listener) process.stdin.removeListener("error", listener);
+  });
+
+  it("still attaches stdin cleanup even when update command fails", async () => {
+    mockExecFileSync.mockImplementation((cmd, args) => {
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "--version") {
+        return Buffer.from("1.14.0\n");
+      }
+      if (cmd === "npm") return Buffer.from("1.15.0\n");
+      if (cmd === "opencode" && Array.isArray(args) && args[0] === "upgrade") {
+        throw new Error("upgrade failed");
+      }
+      throw new Error(`unexpected: ${cmd}`);
+    });
+    mockConfirm.mockResolvedValue(true);
+
+    const setRawMode = vi.fn();
+    Object.defineProperty(process.stdin, "isRaw", { value: false, configurable: true });
+    Object.defineProperty(process.stdin, "setRawMode", { value: setRawMode, configurable: true });
+
+    // Should not throw
+    await maybeCheckHarnessVersion("OpenCode");
+
+    // setRawMode called for both pre-exec disable and post-exec restore
+    expect(setRawMode).toHaveBeenCalledWith(false);
+    expect(p.log.error).toHaveBeenCalledWith(expect.stringContaining("opencode upgrade"));
+  });
+
   it("continues when user cancels the confirm prompt", async () => {
     mockExecFileSync.mockImplementation((cmd) => {
       if (cmd === "opencode") return Buffer.from("1.14.0\n");
