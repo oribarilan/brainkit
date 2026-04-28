@@ -13,6 +13,7 @@ export {
   PARA,
   KEY_FILES,
   getConfigDir,
+  getCopilotConfigDir,
   readGlobalConfig,
   writeGlobalConfig,
   discoverVaults,

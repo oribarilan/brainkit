@@ -6,14 +6,14 @@ Brainkit checks for its own updates on launch and gives users three choices: upd
 
 ## Definition of Done
 
-- [ ] `brainkit` checks npm for a newer version of `@2brain/brainkit` on launch (at most once per 24h)
-- [ ] When outdated, a 3-option prompt appears: Update now / Skip this version / Remind me later
-- [ ] "Update now" auto-detects the package manager, runs the update, and re-launches brainkit
-- [ ] "Skip this version" persists the version in `skip_versions` in global config; that version is never prompted again
-- [ ] "Remind me later" dismisses for 24h (timestamp-based throttle)
-- [ ] npx and non-TTY environments are silently skipped
-- [ ] All existing tests pass, including harness version check tests
-- [ ] `just check` passes
+- [x] `brainkit` checks npm for a newer version of `@2brain/brainkit` on launch (at most once per 24h)
+- [x] When outdated, a 3-option prompt appears: Update now / Skip this version / Remind me later
+- [x] "Update now" auto-detects the package manager, runs the update, and re-launches brainkit
+- [x] "Skip this version" persists the version in `skip_versions` in global config; that version is never prompted again
+- [x] "Remind me later" dismisses for 24h (timestamp-based throttle)
+- [x] npx and non-TTY environments are silently skipped
+- [x] All existing tests pass, including harness version check tests
+- [x] `just check` passes _(verified retroactively; shipped in v0.7.0 / v0.8.0)_
 
 ## Task Priority
 

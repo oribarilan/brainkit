@@ -56,6 +56,14 @@ export function getConfigDir(): string {
   return path.join(os.homedir(), ".config", "brainkit");
 }
 
+/**
+ * Path to brainkit's isolated Copilot config dir. Passed to Copilot CLI via the
+ * `COPILOT_HOME` env var so brainkit never touches the user's `~/.copilot/`.
+ */
+export function getCopilotConfigDir(): string {
+  return path.join(getConfigDir(), "copilot");
+}
+
 function getGlobalConfigPath(): string {
   return path.join(getConfigDir(), "config.toml");
 }

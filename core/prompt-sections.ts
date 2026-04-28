@@ -159,6 +159,18 @@ export function buildBehavioralRules(_ctx: SectionContext): string {
     "- Cite which file information came from when summarizing.",
     "- Do not modify files in the archive directory unless explicitly asked.",
     "- Never delete vault content — archive instead.",
+    "",
+    "### Before editing",
+    "",
+    "Before you write, edit, create, move, or delete anything in the vault, say one short natural-language line stating what you're about to change and where — name the concrete project, contact, area, or file. This lets the user catch a wrong-target action before it happens.",
+    "",
+    "- Applies to vault-modifying actions only. Read-only operations (search, read, list) stay silent — don't narrate them.",
+    "- One announcement per user-visible change, not one per tool call. Batched edits get a single line up front.",
+    "- During first-run onboarding, one upfront line covers the whole setup (e.g. \"I'll set up your PARA directories and a starter README\") — don't announce each file.",
+    "- Phrase it naturally; don't restate the tool call. Examples:",
+    '  - "Updating project _Acme Redesign_ with the new Q3 deadline"',
+    '  - "Adding John Doe as a new contact"',
+    '  - "Logging today\'s standup notes under _Team Sync_"',
   ].join("\n");
 }
 

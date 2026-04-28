@@ -18,6 +18,14 @@ import {
   buildProfileNudge,
 } from "./prompt-sections.js";
 
+/**
+ * HTML-comment sentinel emitted as the first line of every brainkit-generated
+ * system prompt. Lets future-us (and the Copilot-isolation migration) reliably
+ * identify a brainkit-generated `AGENTS.md` / `copilot-instructions.md` without
+ * relying on text-content matching. Invisible when rendered as markdown.
+ */
+export const BRAINKIT_PROMPT_SENTINEL = "<!-- brainkit:generated -->";
+
 export function buildSystemPrompt(
   config: BrainkitConfig,
   vaultPath: string,
@@ -31,6 +39,7 @@ export function buildSystemPrompt(
   };
 
   return joinSections([
+    BRAINKIT_PROMPT_SENTINEL,
     buildPreamble(ctx),
     buildIdentity(ctx),
     buildVaultStructure(),

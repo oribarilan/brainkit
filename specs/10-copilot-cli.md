@@ -1,6 +1,50 @@
 # Copilot CLI harness
 
-## Overview
+> **Updated 2026-04-28 — superseded sections below.** This spec was originally written under a vault-write architecture (brainkit installed `AGENTS.md`, `.agents/skills/brainkit/`, `.github/hooks/`, `.github/copilot/`, `.gitignore` entries into the user's vault). The shipped behavior now uses **`COPILOT_HOME` isolation**: brainkit launches Copilot CLI with the `COPILOT_HOME` env var pointing at `~/.config/brainkit/copilot/`, and writes nothing into the vault. See `specs/US-copilot-isolation.md` for the new design and `.todo/done/US-copilot-isolation/` for the implementation tasks. The "Isolation model", "Launcher", "Skill installation", "AGENTS.md generation", "Hooks", "Visual touches", and ".gitignore handling" sections below are **deprecated** and preserved for historical context.
+
+## Config isolation (current architecture)
+
+Brainkit's Copilot integration uses Copilot CLI's `COPILOT_HOME` env var to redirect Copilot's entire config dir at a brainkit-owned location:
+
+```
+~/.config/brainkit/copilot/          # passed via COPILOT_HOME
+├── .migration-v1                    # one-shot migration marker
+├── settings.json                    # statusLine + companyAnnouncements + inline hooks
+├── copilot-instructions.md          # brainkit system prompt (replaces vault AGENTS.md)
+├── skills/brainkit/
+│   ├── .brainkit-version
+│   ├── SKILL.md
+│   └── references/                  # PARA, bragfile, contacts, meeting-notes, maintenance, onboarding
+└── hooks/scripts/auto-commit.js     # referenced by inline hooks in settings.json
+```
+
+The launcher spawns `copilot` with:
+
+- `cwd: vaultPath` — agent's working dir is the vault; auto-commit hook runs against the vault git repo.
+- `env.COPILOT_HOME = ~/.config/brainkit/copilot` — full isolation from `~/.copilot/`.
+- `env.BRAINKIT_VAULT_PATH = vaultPath` — read by `auto-commit.js` and the status script.
+
+The launcher rejects `--config-dir` in user args (would override `COPILOT_HOME` per Copilot's precedence rules and defeat isolation) and prints a defensive warning if `copilot --version` reports below the verified-good floor (`MIN_COPILOT_VERSION = 1.0.37` — smoke-tested with inline hooks and instruction-file loading).
+
+## Migration from v0.x
+
+Existing brainkit users have legacy artifacts in their vaults from prior versions. On the first `brainkit copilot` launch after upgrading, a slim mechanical migration runs once:
+
+- Brainkit-namespaced paths deleted unconditionally: `<vault>/.agents/skills/brainkit/`, `<vault>/.github/hooks/`, `<vault>/.github/copilot/`. (No real collision risk with non-brainkit user content at these paths.)
+- `<vault>/AGENTS.md` is **content-gated**: deleted only if it contains the brainkit sentinel `<!-- brainkit:generated -->` or the legacy preamble (`Brainkit is a personal second brain`). A non-brainkit `AGENTS.md` (e.g., from another agent harness) is preserved untouched. This is the load-bearing safety check.
+- The contiguous brainkit `.gitignore` block is stripped (line-ending-normalized). Split / interleaved blocks are preserved (suggests user customization).
+- Empty parent dirs (`.agents/skills/`, `.agents/`, `.github/`) are `rmdir`'d if empty. **Never** recursive-delete `.github/` — it contains user-owned `workflows/`, `CODEOWNERS`, etc.
+- Migration is atomic: failures abort the launch without writing the marker (safe retry).
+- Marker `<copilotHome>/.migration-v1` gates re-runs. Deleting it re-triggers migration.
+- Recovery: nothing is auto-committed. After the first launch, `git status` shows the deletions; `git restore <path>` recovers any file.
+
+A single user notice prints if anything was actually removed; clean vaults are silent.
+
+The original spec (`specs/US-copilot-isolation.md`) was written under a more elaborate detection model with per-artifact shape comparison and an interactive prompt. The shipped behavior is the slim mechanical version — scoped down because the audience was ~2 known beta testers in direct contact and git provides the safety net. See `.todo/done/US-copilot-isolation/rewrite-copilot-launcher.md` § Migration for the authoritative shipped behavior.
+
+---
+
+## Overview (deprecated — describes the old vault-write model)
 
 Add GitHub Copilot CLI as a second harness alongside OpenCode. The brainkit CLI launcher gains a `copilot` entry in its harness registry. Users run `brainkit copilot` (or `brainkit cp`) to get a brainkit-infused Copilot experience. Running `copilot` directly remains vanilla — brainkit files live in the vault, not in `~/.copilot/`.
 

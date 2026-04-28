@@ -10,6 +10,7 @@ import {
   buildConventions,
   buildCustomRules,
   buildProfileNudge,
+  buildBehavioralRules,
 } from "../prompt-sections.js";
 import { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from "../agent-prompts.js";
 
@@ -177,6 +178,39 @@ describe("buildProfileNudge", () => {
       }),
     });
     expect(buildProfileNudge(ctx)).toBeNull();
+  });
+});
+
+describe("buildBehavioralRules — pre-action announcement rule", () => {
+  const result = buildBehavioralRules(makeCtx());
+
+  it("includes a 'Before editing' (or equivalent) subsection", () => {
+    // Subsection header — locks in the structural placement so it can't get
+    // silently demoted to a buried bullet.
+    expect(result).toMatch(/###\s+Before editing/i);
+  });
+
+  it("uses announce/say/state semantics", () => {
+    expect(result).toMatch(/\b(announce|say|state|tell)\b/i);
+  });
+
+  it("references at least one context noun (project / contact / file / where)", () => {
+    expect(result).toMatch(/\b(project|contact|file|where)\b/i);
+  });
+
+  it("scopes itself to write/edit/modify actions, not all actions", () => {
+    // Must mention modifying actions...
+    expect(result).toMatch(/\b(write|edit|modif|create|delete|move)/i);
+    // ...and explicitly exclude read-only ones, so the rule doesn't get
+    // generalized to "always announce" (which would contradict
+    // "Search the vault before answering" and add noise).
+    expect(result).toMatch(/\b(read|search|list)/i);
+  });
+
+  it("includes at least one of the example phrasings", () => {
+    const examples = [/Acme Redesign/i, /John Doe/i, /Team Sync/i];
+    const matched = examples.some((re) => re.test(result));
+    expect(matched).toBe(true);
   });
 });
 
