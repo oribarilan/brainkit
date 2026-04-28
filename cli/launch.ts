@@ -7,6 +7,7 @@ import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } fro
 import { launchCopilot } from "./copilot.js";
 import { maybeCheckHarnessVersion } from "./harness-version.js";
 import { spawnHarness } from "./spawn.js";
+import { resetBrainkitConfig } from "./reset.js";
 
 // ---------------------------------------------------------------------------
 // Harness definitions
@@ -38,20 +39,37 @@ function isInstalled(binaries: string[]): boolean {
 // OpenCode launcher
 // ---------------------------------------------------------------------------
 
-function ensureOpenCodeConfig(isOnboarding: boolean): void {
-  const configDir = getConfigDir();
-  fs.mkdirSync(configDir, { recursive: true });
-
-  // Always regenerate opencode.json — during onboarding, grant full permissions
-  // so the agent can create dirs, write config, etc. without permission prompts.
-  // On subsequent launches (with a vault), permissions revert to defaults.
-  const ocConfig: Record<string, unknown> = {
+/**
+ * Build the opencode.json config object brainkit writes to its isolated config dir.
+ *
+ * During onboarding we grant full permissions ("yolo mode") so the agent can
+ * create dirs, write config, etc. without permission prompts. The top-level
+ * `permission: "allow"` shortcut is the documented OpenCode form for this
+ * (https://opencode.ai/docs/permissions/#configuration). The previous
+ * agent-scoped form (`agent.build.permission: "allow"`) is invalid — nested
+ * permissions require an object, and OpenCode's validator rejected the string
+ * character-by-character.
+ *
+ * On subsequent launches (with a vault), permissions revert to OpenCode defaults.
+ */
+export function buildOpenCodeConfig(isOnboarding: boolean): Record<string, unknown> {
+  const config: Record<string, unknown> = {
     $schema: "https://opencode.ai/config.json",
     plugin: ["@2brain/brainkit"],
   };
   if (isOnboarding) {
-    ocConfig["agent"] = { build: { permission: "allow" } };
+    config["permission"] = "allow";
   }
+  return config;
+}
+
+function ensureOpenCodeConfig(isOnboarding: boolean): void {
+  const configDir = getConfigDir();
+  fs.mkdirSync(configDir, { recursive: true });
+
+  // Always regenerate opencode.json so any stale/broken config from a prior
+  // brainkit version gets overwritten on the next launch.
+  const ocConfig = buildOpenCodeConfig(isOnboarding);
   const ocConfigPath = path.join(configDir, "opencode.json");
   fs.writeFileSync(ocConfigPath, JSON.stringify(ocConfig, null, 2) + "\n", "utf-8");
 
@@ -167,7 +185,7 @@ export async function selectVault(
 
     if (process.stdin.isTTY) {
       const shouldReset = await p.confirm({
-        message: "Reset brainkit config and start fresh?",
+        message: "Remove all brainkit config and start fresh? (Includes Copilot auth/history; vaults are not touched.)",
       });
 
       if (p.isCancel(shouldReset) || !shouldReset) {
@@ -175,19 +193,19 @@ export async function selectVault(
         process.exit(1);
       }
 
-      // Remove config to trigger onboarding on next launch
-      const configPath = path.join(getConfigDir(), "config.toml");
+      // Wipe the entire brainkit config dir to trigger onboarding on next launch.
       try {
-        fs.unlinkSync(configPath);
-      } catch {
-        // Already gone
+        resetBrainkitConfig();
+      } catch (err) {
+        p.cancel(err instanceof Error ? err.message : String(err));
+        process.exit(1);
       }
 
-      p.log.success("Config reset. Restarting onboarding...");
+      p.log.success("Brainkit config removed. Restarting onboarding...");
       return { vaultPath: undefined, brainPath: undefined };
     }
 
-    p.cancel(`Brain directory not found. Delete ${path.join(getConfigDir(), "config.toml")} to reset.`);
+    p.cancel(`Brain directory not found. Run \`brainkit reset\` to clear config and re-onboard.`);
     process.exit(1);
   }
 
