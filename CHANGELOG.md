@@ -3,11 +3,11 @@
 ## [Unreleased]
 
 ### Changed
-- **Copilot CLI**: brainkit no longer writes files into your vault. Skills, instructions, hooks, and Copilot settings now live in a dedicated config directory (`~/.config/brainkit/copilot/`), passed to Copilot via the `COPILOT_HOME` environment variable. Existing vaults are auto-cleaned on first launch — files brainkit previously generated (`.agents/skills/brainkit/`, `.github/hooks/`, `.github/copilot/`, the brainkit block in `.gitignore`, and a brainkit-generated `AGENTS.md`) are removed from the working tree. Run `git status` after the first launch to review; recover any file with `git restore <path>`. A non-brainkit `AGENTS.md` is preserved.
-- Agent now announces what it's about to change before editing the vault — a short contextual one-liner like "Updating project _Acme Redesign_ with the new Q3 deadline" so you can catch wrong-target actions before they happen. Read-only operations stay silent.
+- **Copilot CLI**: brainkit no longer writes files into your vault, to not conflict with any other non-brainkit harness session you may want to open there. This was already supported for OpenCode.
+- Agent announces what it's about to change before editing the vault, so you can catch wrong-target actions early.
 
 ### Fixed
-- **Copilot CLI**: onboarding crashed with `error: too many arguments. Expected 0 arguments but got 1.` because `--allow-all` was placed between `-i` and the prompt, making Copilot treat the flag as the prompt value.
+- **Copilot CLI**: fixed onboarding crash: `error: too many arguments. Expected 0 arguments but got 1.`.
 
 ## [0.8.0] - 2026-04-27
 
