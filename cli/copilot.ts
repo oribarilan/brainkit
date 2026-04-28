@@ -1,8 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { spawnHarness } from "./spawn.js";
+import { findPackageRoot } from "./package-root.js";
 import {
   readGlobalConfig,
   readVaultConfigSimple,
@@ -59,26 +59,6 @@ try {
   execSync(\`git commit -m "brainkit: auto-save \${date}"\`, { stdio: "pipe" });
 } catch { /* commit failed — skip silently */ }
 `;
-
-// ---------------------------------------------------------------------------
-// Package root resolution
-// ---------------------------------------------------------------------------
-
-function findPackageRoot(): string {
-  let dir = path.dirname(fileURLToPath(import.meta.url));
-  for (;;) {
-    const candidate = path.join(dir, "package.json");
-    try {
-      const content = JSON.parse(fs.readFileSync(candidate, "utf-8")) as { name?: string };
-      if (content.name === "@2brain/brainkit") return dir;
-    } catch {
-      // not found or not parseable, keep walking
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) throw new Error("Could not find @2brain/brainkit package root");
-    dir = parent;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // `--config-dir` rejection
