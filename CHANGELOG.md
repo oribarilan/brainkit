@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-04-28
+
+### Fixed
+- Fixed `Error: read EIO` crash that could appear after running a harness update — brainkit now hands the terminal to the update command cleanly and restores it afterwards.
+
 ## [0.9.2] - 2026-04-28
 
 ### Fixed
