@@ -170,7 +170,10 @@ function extractDescriptionFromFrontmatter(content: string): string | null {
   // Match either `description: foo` or `description: >\n  foo bar` (YAML folded).
   const folded = /description:\s*>[^\n]*\n((?:\s+[^\n]*\n?)+)/.exec(fm);
   if (folded !== null) {
-    const lines = (folded[1] ?? "").split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+    const lines = (folded[1] ?? "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
     return lines.join(" ");
   }
   const single = /description:\s*(.+)/.exec(fm);
@@ -223,11 +226,7 @@ export function generateClaudeSettings(claudeConfigDir: string, statusScriptPath
       brainkit: true,
     },
   };
-  fs.writeFileSync(
-    path.join(claudeConfigDir, "settings.json"),
-    JSON.stringify(settings, null, 2) + "\n",
-    "utf-8",
-  );
+  fs.writeFileSync(path.join(claudeConfigDir, "settings.json"), JSON.stringify(settings, null, 2) + "\n", "utf-8");
 }
 
 // ---------------------------------------------------------------------------

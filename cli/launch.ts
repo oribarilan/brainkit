@@ -5,6 +5,7 @@ import * as p from "@clack/prompts";
 import { execFileSync } from "node:child_process";
 import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
+import { launchClaude } from "./claude.js";
 import { maybeCheckHarnessVersion } from "./harness-version.js";
 import { spawnHarness } from "./spawn.js";
 import { resetBrainkitConfig } from "./reset.js";
@@ -121,6 +122,12 @@ const HARNESSES: Harness[] = [
     binaries: ["copilot"],
     aliases: ["copilot", "cp"],
     launch: launchCopilot,
+  },
+  {
+    name: "Claude Code",
+    binaries: ["claude"],
+    aliases: ["claude", "cc"],
+    launch: launchClaude,
   },
 ];
 
@@ -269,7 +276,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
   const available = HARNESSES.filter((h) => isInstalled(h.binaries));
 
   if (available.length === 0) {
-    p.cancel("No supported harness found. Install OpenCode or Copilot CLI.");
+    p.cancel("No supported harness found. Install OpenCode, Copilot CLI, or Claude Code.");
     process.exit(1);
   }
 
@@ -298,7 +305,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
 
   // Non-TTY — can't prompt
   if (!process.stdin.isTTY) {
-    p.cancel("Multiple harnesses found. Specify one: brainkit oc | brainkit copilot");
+    p.cancel("Multiple harnesses found. Specify one: brainkit oc | brainkit copilot | brainkit claude");
     process.exit(1);
   }
 

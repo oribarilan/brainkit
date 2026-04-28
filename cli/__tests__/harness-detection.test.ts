@@ -50,6 +50,14 @@ vi.mock("../copilot.js", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock claude launcher to avoid filesystem side effects
+// ---------------------------------------------------------------------------
+
+vi.mock("../claude.js", () => ({
+  launchClaude: vi.fn(),
+}));
+
+// ---------------------------------------------------------------------------
 // Mock @clack/prompts
 // ---------------------------------------------------------------------------
 
@@ -180,5 +188,46 @@ describe("detectAndLaunch", () => {
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
     }
+  });
+
+  it("auto-detects claude when only it is installed", async () => {
+    setInstalled(["claude"]);
+
+    // Should not throw — should auto-launch Claude
+    await detectAndLaunch([]);
+  });
+
+  it("includes claude as an option when all three harnesses are installed (non-TTY error)", async () => {
+    setInstalled(["opencode", "copilot", "claude"]);
+    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+
+    const origIsTTY = process.stdin.isTTY;
+    Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
+
+    try {
+      await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+      expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("brainkit claude"));
+    } finally {
+      Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
+    }
+  });
+
+  it("respects saved default of claude when multiple harnesses installed", async () => {
+    setInstalled(["opencode", "claude"]);
+    mockReadGlobalConfig.mockReturnValue({
+      version: 1,
+      brain_path: "/brain",
+      default_harness: "claude",
+    });
+
+    await detectAndLaunch([]);
+    expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
+  });
+
+  it("error message lists all three harnesses when none are installed", async () => {
+    setInstalled([]);
+
+    await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("Claude Code"));
   });
 });
