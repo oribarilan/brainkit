@@ -104,6 +104,7 @@ Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishe
 ```
 core/               # TypeScript — shared vault logic
 opencode/           # TypeScript/TSX — OpenCode plugin (server + TUI)
+claude/             # Claude Code plugin (read-only template; staged at launch)
 cli/                # TypeScript — CLI entry point
 skills/             # Markdown — domain knowledge for the agent
 specs/              # Design documents — read before architectural changes

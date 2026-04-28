@@ -393,11 +393,7 @@ describe("staging layout: $CONFIG_DIR/claude/ contains all expected artifacts", 
     }
 
     // Harness config files OUTSIDE the plugin/ subdir but inside claude/.
-    const harnessFiles = [
-      "settings.json",
-      "system-prompt.txt",
-      path.join("themes", "brainkit.json"),
-    ];
+    const harnessFiles = ["settings.json", "system-prompt.txt", path.join("themes", "brainkit.json")];
     for (const rel of harnessFiles) {
       const abs = path.join(cfg, rel);
       if (!fs.existsSync(abs)) {

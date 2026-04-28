@@ -31,12 +31,22 @@ Brainkit is a plugin for AI coding agents. It detects which harness you have, or
 | ----------------------------------------------------------- | ------------------ |
 | [OpenCode](https://opencode.ai)                             | `brainkit oc`      |
 | [GitHub Copilot CLI](https://github.com/github/copilot-cli) | `brainkit copilot` |
+| [Claude Code](https://docs.claude.com/en/docs/claude-code)  | `brainkit claude`  |
 
 If only one harness is installed, `brainkit` with no arguments launches it directly. With multiple, it asks you to pick a default on first run.
 
 Run `brainkit` from anywhere. It routes to your brain directory, or walks you through setting one up on first run.
 
 Safe to try: brainkit doesn't change your existing harness config. See [Philosophy](#philosophy) for details.
+
+### First launch with Claude Code
+
+Two things to expect the first time you run `brainkit claude` (or the short alias `brainkit cc`):
+
+- **Separate authentication.** Claude Code will prompt you to authenticate. This is separate from your normal `claude` authentication because brainkit uses an isolated config directory at `~/.config/brainkit/claude/`. You will need a separate Claude session under brainkit. This is intentional — brainkit never reads or writes your global `~/.claude/`.
+- **Plugin marketplace fetch (~4.4 MB).** Claude Code fetches the official Anthropic plugin marketplace into `~/.config/brainkit/claude/plugins/marketplaces/` on first launch. This is one-time per fresh install and stays inside the brainkit-isolated config directory.
+
+To remove brainkit's Claude integration: `rm -rf ~/.config/brainkit/claude/`. Your global `~/.claude/` is unaffected.
 
 ## What is it
 
@@ -72,7 +82,7 @@ No commands, no formatting, no manual filing.
 
 **Convention over configuration.** I prefer battle-tested patterns. [PARA](https://fortelabs.com/blog/para/) for organization, a bragfile for tracking accomplishments, etc. Brainkit wires them together and teaches an agent to maintain them.
 
-**Your harness config stays untouched.** Brainkit doesn't touch your normal OpenCode or Copilot CLI setup. It runs your harness with its own config, so a regular `opencode` or `copilot` in another terminal keeps working fine while brainkit is open. Stop using brainkit whenever, nothing about your harness changes.
+**Your harness config stays untouched.** Brainkit doesn't touch your normal OpenCode, Copilot CLI, or Claude Code setup. It runs your harness with its own config, so a regular `opencode`, `copilot`, or `claude` in another terminal keeps working fine while brainkit is open. Stop using brainkit whenever, nothing about your harness changes.
 
 ## Contributing
 
