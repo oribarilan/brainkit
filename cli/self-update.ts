@@ -136,7 +136,7 @@ export async function fetchChangelog(currentVersion: string, latestVersion: stri
 // Update execution
 // ---------------------------------------------------------------------------
 
-function runUpdateAndRelaunch(): void {
+function runUpdateAndRelaunch(): Promise<void> {
   const pm = detectPackageManager();
   const { binary, args } = getUpdateCommand(pm);
 
@@ -147,13 +147,31 @@ function runUpdateAndRelaunch(): void {
     });
   } catch {
     p.log.error(`Update failed. Run manually: ${binary} ${args.join(" ")}`);
-    return;
+    return Promise.resolve();
   }
 
   p.log.success("Updated! Restarting...");
-  const nodeBin = process.argv[0] ?? process.execPath;
-  const child = spawn(nodeBin, process.argv.slice(1), { stdio: "inherit" });
-  child.on("exit", (code) => process.exit(code ?? 0));
+
+  // Spawn the new brainkit child and HALT the parent until it exits. Without
+  // this await, control returns to main() in the parent process, which then
+  // races the child for stdin (showing duplicate prompts) and corrupts the
+  // user's session. We must not let the parent do anything else after the
+  // relaunch — the child fully owns the rest of the user interaction.
+  return new Promise((resolve) => {
+    const nodeBin = process.argv[0] ?? process.execPath;
+    const child = spawn(nodeBin, process.argv.slice(1), { stdio: "inherit" });
+    child.on("exit", (code) => {
+      // Exit the parent with the child's status. resolve() is unreachable in
+      // practice (process.exit terminates first) but kept for type safety.
+      process.exit(code ?? 0);
+      resolve();
+    });
+    child.on("error", (err) => {
+      p.log.error(`Failed to relaunch brainkit: ${err.message}`);
+      process.exit(1);
+      resolve();
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -223,5 +241,5 @@ export async function maybeCheckForSelfUpdate(): Promise<void> {
   }
 
   // action === "update"
-  runUpdateAndRelaunch();
+  await runUpdateAndRelaunch();
 }

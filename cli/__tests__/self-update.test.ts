@@ -575,4 +575,95 @@ describe("maybeCheckForSelfUpdate", () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("update path: blocks parent until relaunched child exits (regression: duplicate prompts)", async () => {
+    // Regression test for the bug where the parent process kept running
+    // (showing harness selection prompts) while the relaunched child was
+    // also running, racing for stdin.
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue("update");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
+
+    const { execFileSync, spawn } = await import("node:child_process");
+    const mockExecFileSync = vi.mocked(execFileSync);
+    const mockSpawnFn = vi.mocked(spawn);
+
+    // npm update succeeds
+    mockExecFileSync.mockReturnValue(Buffer.from(""));
+
+    // Spawn returns a fake child whose exit handler we'll trigger manually
+    let exitHandler: ((code: number | null) => void) | undefined;
+    const fakeChild = {
+      on: vi.fn((event: string, handler: (code: number | null) => void) => {
+        if (event === "exit") exitHandler = handler;
+      }),
+    };
+    mockSpawnFn.mockReturnValue(fakeChild as unknown as ReturnType<typeof spawn>);
+
+    // process.exit must be intercepted so the test doesn't kill vitest.
+    // Track the exit code instead of throwing.
+    let exitCode: number | string | null | undefined;
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((code?: number | string | null) => {
+      exitCode = code;
+      // Don't throw — just record. Caller proceeds normally.
+      return undefined as never;
+    });
+
+    // Track whether maybeCheckForSelfUpdate has resolved before the child exits
+    let resolved = false;
+    const promise = maybeCheckForSelfUpdate().then(() => {
+      resolved = true;
+    });
+
+    // Yield several times so any sync work after the await runs and
+    // microtasks/setImmediates settle.
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+
+    // The function MUST NOT have resolved yet — it should be waiting for the child
+    expect(resolved).toBe(false);
+    expect(mockSpawnFn).toHaveBeenCalled();
+    expect(exitHandler).toBeDefined();
+
+    // Now simulate the child exiting — the parent should call process.exit(0)
+    // and then the inner Promise resolves.
+    exitHandler?.(0);
+    await promise;
+    expect(resolved).toBe(true);
+    expect(exitCode).toBe(0);
+
+    exitSpy.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
+  it("update path: returns silently on update failure (no relaunch, no exit)", async () => {
+    mockGetLatestNpmVersion.mockReturnValue("0.7.0");
+    mockIsOlderThan.mockReturnValue(true);
+    mockSelect.mockResolvedValue("update");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
+
+    const { execFileSync, spawn } = await import("node:child_process");
+    const mockExecFileSync = vi.mocked(execFileSync);
+    const mockSpawnFn = vi.mocked(spawn);
+
+    // npm update fails
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error("npm install failed");
+    });
+
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((code?: number | string | null) => {
+      throw new Error(`process.exit(${String(code)})`);
+    });
+
+    // Should not throw, should not spawn relaunch, should not exit
+    await maybeCheckForSelfUpdate();
+
+    expect(mockSpawnFn).not.toHaveBeenCalled();
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(p.log.error).toHaveBeenCalledWith(expect.stringContaining("Update failed"));
+
+    exitSpy.mockRestore();
+    vi.unstubAllGlobals();
+  });
 });
