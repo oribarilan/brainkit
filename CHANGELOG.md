@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-04-28
+
+### Fixed
+- Fixed duplicate prompts that could appear right after a brainkit self-update.
+
 ## [0.9.3] - 2026-04-28
 
 ### Fixed
