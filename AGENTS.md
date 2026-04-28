@@ -135,6 +135,18 @@ Tests live in `__tests__/` directories alongside source. Each test file maps to 
 - Mock external dependencies (filesystem, network)
 - Tests should be fast, deterministic, and independent of each other
 
+### Cross-Platform
+
+- Code must work on Windows, macOS, and Linux
+- Use `node:path` (`path.join`, `path.resolve`) instead of hardcoded `/` separators
+- Use `node:os` (`os.homedir()`, `os.tmpdir()`, `os.platform()`) instead of assuming Unix conventions
+- Never hardcode paths like `/home/`, `~/.config/`, or `C:\` — derive them from platform APIs
+- Be aware of case-sensitive vs case-insensitive filesystems
+- Use `node:child_process` with `shell: true` carefully — shell syntax differs across platforms
+- Test path-sensitive logic with both `/` and `\` separators in mind
+- CI runs tests on Windows (`test-windows` job) — OS-sensitive code (especially `cli/` and `core/vault.ts`) must have test coverage that will surface failures there
+- Avoid OS-specific assertions in tests (e.g. exact path strings with `/`); use `path.join` or `path.sep`-aware comparisons
+
 ### Security
 
 - Never store secrets in code, logs, or error messages
