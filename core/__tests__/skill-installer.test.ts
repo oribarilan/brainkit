@@ -57,15 +57,7 @@ describe("installSkills (per-dir layout)", () => {
       buildSkillContent,
     });
 
-    for (const name of [
-      "brainkit",
-      "para",
-      "bragfile",
-      "contacts",
-      "meeting-notes",
-      "maintenance",
-      "onboarding",
-    ]) {
+    for (const name of ["brainkit", "para", "bragfile", "contacts", "meeting-notes", "maintenance", "onboarding"]) {
       expect(fs.existsSync(path.join(targetDir, name, "SKILL.md"))).toBe(true);
     }
   });

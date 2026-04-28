@@ -52,9 +52,7 @@ describe("buildOnboardingPrompt", () => {
 
   it("claude variant closing does not reference brainkit copilot", () => {
     const result = buildOnboardingPrompt("claude");
-    const closing = result.slice(
-      result.indexOf("### Restart required"),
-    );
+    const closing = result.slice(result.indexOf("### Restart required"));
     expect(closing).not.toContain("brainkit copilot");
     expect(closing).not.toContain("run `brainkit` again");
   });

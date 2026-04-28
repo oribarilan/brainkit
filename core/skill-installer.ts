@@ -114,9 +114,7 @@ function stripFrontmatter(content: string): string {
 }
 
 function buildReferenceLinksSection(): string {
-  const links = REFERENCE_SKILLS.map(
-    (s) => `- [${s.label}](references/${s.referenceFileName})`,
-  );
+  const links = REFERENCE_SKILLS.map((s) => `- [${s.label}](references/${s.referenceFileName})`);
   return "\n\n## Reference skills\n\n" + links.join("\n") + "\n";
 }
 
@@ -138,25 +136,14 @@ function installCopilotFlat(skillsSourceDir: string, targetDir: string): void {
   const refsDir = path.join(targetDir, "references");
   fs.mkdirSync(refsDir, { recursive: true });
 
-  const rootSource = fs.readFileSync(
-    path.join(skillsSourceDir, ROOT_SKILL.dir, "SKILL.md"),
-    "utf-8",
-  );
-  fs.writeFileSync(
-    path.join(targetDir, "SKILL.md"),
-    transformCopilotRootSkill(rootSource),
-    "utf-8",
-  );
+  const rootSource = fs.readFileSync(path.join(skillsSourceDir, ROOT_SKILL.dir, "SKILL.md"), "utf-8");
+  fs.writeFileSync(path.join(targetDir, "SKILL.md"), transformCopilotRootSkill(rootSource), "utf-8");
 
   for (const skill of REFERENCE_SKILLS) {
     const sourcePath = path.join(skillsSourceDir, skill.dir, "SKILL.md");
     if (!fs.existsSync(sourcePath)) continue;
     const content = fs.readFileSync(sourcePath, "utf-8");
-    fs.writeFileSync(
-      path.join(refsDir, skill.referenceFileName),
-      stripFrontmatter(content),
-      "utf-8",
-    );
+    fs.writeFileSync(path.join(refsDir, skill.referenceFileName), stripFrontmatter(content), "utf-8");
   }
 }
 

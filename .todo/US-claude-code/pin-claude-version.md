@@ -4,7 +4,7 @@
 
 Brainkit warns Copilot users when their installed version is below a smoke-tested floor (`MIN_COPILOT_VERSION = "1.0.37"` in `cli/copilot.ts`, with an inline check that warns and proceeds). Claude Code needs the equivalent: without it, a Claude version upgrade can break brainkit silently (hooks JSON schema, settings.json keys, `--plugin-dir` semantics, theme schema, etc. are all version-dependent).
 
-**Note on architecture:** `cli/harness-version.ts` is a *different* concern — it handles npm-update-prompt UX (suggesting `copilot update` when a newer version exists). The minVersion floor lives inline in each launcher (`cli/copilot.ts` warns at v < 1.0.37). Claude follows the inline pattern.
+**Note on architecture:** `cli/harness-version.ts` is a _different_ concern — it handles npm-update-prompt UX (suggesting `copilot update` when a newer version exists). The minVersion floor lives inline in each launcher (`cli/copilot.ts` warns at v < 1.0.37). Claude follows the inline pattern.
 
 **Value delivered:** Brainkit warns users on launch if their Claude Code version is older than the minimum brainkit was tested against. Catches breakage early.
 
@@ -37,4 +37,4 @@ Brainkit warns Copilot users when their installed version is below a smoke-teste
 
 Match the existing inline pattern from `cli/copilot.ts` exactly — don't invent a new shape. If after looking at both Copilot and (eventually) Claude there's an obvious abstraction worth extracting (e.g. `checkMinHarnessVersion(binary, minVersion, displayName)`), file a follow-up; don't expand this task's scope.
 
-The `cli/harness-version.ts` module (npm-update-prompt) is a *separate* concern and can be extended in a follow-up to also surface Claude in update prompts — it is NOT required for this task's DoD.
+The `cli/harness-version.ts` module (npm-update-prompt) is a _separate_ concern and can be extended in a follow-up to also surface Claude in update prompts — it is NOT required for this task's DoD.

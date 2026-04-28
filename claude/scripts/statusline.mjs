@@ -29,14 +29,8 @@ if (!vaultPath || !pkgRoot) process.exit(0);
 
 try {
   const corePath = pathToFileURL(path.join(pkgRoot, "dist", "core", "index.js")).href;
-  const {
-    readVaultConfigSimple,
-    getBragStats,
-    readContacts,
-    parseContacts,
-    stalenessCategory,
-    daysSinceLastEntry,
-  } = await import(corePath);
+  const { readVaultConfigSimple, getBragStats, readContacts, parseContacts, stalenessCategory, daysSinceLastEntry } =
+    await import(corePath);
 
   const config = readVaultConfigSimple(vaultPath);
   if (!config) process.exit(0);

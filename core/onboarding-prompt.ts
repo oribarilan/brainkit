@@ -118,9 +118,7 @@ const CLAUDE_CLOSING = `
 
 After creating all files, tell the user: "Setup complete! Close this session (use \`/exit\` or Ctrl+D) and run \`brainkit claude\` again to start with your full second brain — all skills, vault tools, and personalized settings will be loaded."`;
 
-export function buildOnboardingPrompt(
-  harness: "opencode" | "copilot" | "claude",
-): string {
+export function buildOnboardingPrompt(harness: "opencode" | "copilot" | "claude"): string {
   const body = buildOnboardingPromptBody();
   if (harness === "copilot") {
     return body + COPILOT_CLOSING;

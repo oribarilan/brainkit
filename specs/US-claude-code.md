@@ -218,17 +218,17 @@ Regenerated on each launch:
 
 ### UI parity (honest about limits)
 
-| OpenCode                               | Claude Code                                               | Status                                                                       |
-| -------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `brainkit` theme (~50 tokens)          | user theme at `$CLAUDE_CONFIG_DIR/themes/brainkit.json`   | Accent + status + diff + syntax only; bg/text host-controlled                |
-| Sidebar with vault stats               | Statusline with vault stats                               | Functional parity (one line vs panel)                                        |
-| Brain ASCII home logo                  | none available                                            | Skipped — no slot exists                                                     |
-| Custom prompt placeholders / hints     | none available                                            | Skipped — no slot exists                                                     |
-| Rotating tips at home (9, 8s rotation) | `companyAnnouncements` (single entry confirmed)           | Degraded — Claude always shows entry 0; ship one well-chosen tip             |
-| `/doctor` slash command                | `/brainkit:doctor` skill                                  | Full parity                                                                  |
-| Accomplishment toast                   | UserPromptSubmit hook (deferred)                          | Deferred — re-evaluate after smoke test confirms whether stdout reaches user |
-| Auto-commit                            | `SessionEnd` hook                                         | End-of-session only, vs OpenCode's debounced in-session (Copilot pattern)    |
-| Compaction identity                    | `PreCompact` hook                                         | Full parity                                                                  |
+| OpenCode                               | Claude Code                                             | Status                                                                       |
+| -------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `brainkit` theme (~50 tokens)          | user theme at `$CLAUDE_CONFIG_DIR/themes/brainkit.json` | Accent + status + diff + syntax only; bg/text host-controlled                |
+| Sidebar with vault stats               | Statusline with vault stats                             | Functional parity (one line vs panel)                                        |
+| Brain ASCII home logo                  | none available                                          | Skipped — no slot exists                                                     |
+| Custom prompt placeholders / hints     | none available                                          | Skipped — no slot exists                                                     |
+| Rotating tips at home (9, 8s rotation) | `companyAnnouncements` (single entry confirmed)         | Degraded — Claude always shows entry 0; ship one well-chosen tip             |
+| `/doctor` slash command                | `/brainkit:doctor` skill                                | Full parity                                                                  |
+| Accomplishment toast                   | UserPromptSubmit hook (deferred)                        | Deferred — re-evaluate after smoke test confirms whether stdout reaches user |
+| Auto-commit                            | `SessionEnd` hook                                       | End-of-session only, vs OpenCode's debounced in-session (Copilot pattern)    |
+| Compaction identity                    | `PreCompact` hook                                       | Full parity                                                                  |
 
 ### Onboarding
 
