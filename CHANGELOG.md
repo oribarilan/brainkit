@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Agent now announces what it's about to change before editing the vault — a short contextual one-liner like "Updating project _Acme Redesign_ with the new Q3 deadline" so you can catch wrong-target actions before they happen. Read-only operations stay silent.
+
 ## [0.8.0] - 2026-04-27
 
 ### Added
