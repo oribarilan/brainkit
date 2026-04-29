@@ -3,16 +3,24 @@
 import type { TuiPlugin } from "@opencode-ai/plugin/tui";
 import * as path from "node:path";
 import { createMemo } from "solid-js";
-import { readVaultConfigSimple, getBragStats, readContacts, parseContacts } from "../core/index.ts";
+import {
+  readVaultConfigSimple,
+  getBragStats,
+  readContacts,
+  parseContacts,
+  stalenessCategory,
+  daysSinceLastEntry,
+} from "../core/index.ts";
 
 type Api = Parameters<import("@opencode-ai/plugin/tui").TuiPlugin>[0];
 
+const STALENESS_COLORS = { fresh: "#50E850", warning: "#E8E850", stale: "#E85050" } as const;
+
 const staleness = (lastEntryDate: string | null): { label: string; color: string } => {
-  if (!lastEntryDate) return { label: "never", color: "#E85050" };
-  const days = Math.floor((Date.now() - new Date(lastEntryDate).getTime()) / (1000 * 60 * 60 * 24));
-  if (days <= 7) return { label: `${days}d ago`, color: "#50E850" };
-  if (days <= 14) return { label: `${days}d ago`, color: "#E8E850" };
-  return { label: `${days}d ago`, color: "#E85050" };
+  const cat = stalenessCategory(lastEntryDate);
+  if (cat === "never") return { label: "never", color: "#E85050" };
+  const days = daysSinceLastEntry(lastEntryDate)!;
+  return { label: `${days}d ago`, color: STALENESS_COLORS[cat] };
 };
 
 export const Sidebar = (props: { api: Api }) => {

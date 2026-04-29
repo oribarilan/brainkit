@@ -48,7 +48,7 @@ brainkit/
 │   │   ├── auto-commit.mjs                   SessionEnd → git auto-commit
 │   │   ├── precompact.mjs                    PreCompact → vault identity into summary
 │   │   └── statusline.mjs                    vault stats statusline
-│   └── themes/brainkit.json                  brand color + status colors only (~5 tokens)
+│   └── (no themes/ — theme is launcher-written into CLAUDE_CONFIG_DIR; see runtime layout)
 ├── cli/
 │   ├── claude.ts                             NEW — analog of cli/copilot.ts
 │   ├── launch.ts                             register claude harness
@@ -66,6 +66,8 @@ brainkit/
 ~/.config/brainkit/claude/                   CLAUDE_CONFIG_DIR
 ├── settings.json                            theme + statusLine + companyAnnouncements (regenerated each launch)
 ├── system-prompt.txt                        buildSystemPrompt() output (regenerated each launch)
+├── themes/
+│   └── brainkit.json                        launcher-written user theme (referenced by settings.json `theme`)
 ├── plugin/                                  STAGING COPY of the plugin (writable)
 │   ├── .claude-plugin/plugin.json           copied from <pkgRoot>/claude
 │   ├── skills/
@@ -79,7 +81,6 @@ brainkit/
 │   │   └── onboarding/SKILL.md              generated
 │   ├── hooks/hooks.json                     copied from template
 │   ├── scripts/*.mjs                        copied from template (with +x bit)
-│   ├── themes/brainkit.json                 copied from template
 │   └── .brainkit-version                    skip-marker for fast no-op on repeat launches
 └── onboarding/                              ONLY when no vault yet
     └── CLAUDE.md                            buildOnboardingPrompt("claude")
@@ -184,21 +185,9 @@ disable-model-invocation: false
 
 All scripts reuse `core/vault.ts` — no business logic in scripts.
 
-**`themes/brainkit.json`** — Claude's theme schema is small. Realistic port is brand color + status colors only:
+**No `themes/` in the plugin (v1).** Smoke test confirmed Claude Code's plugin theme registration path (`theme: "custom:<plugin>:<slug>"` in settings, plugin-shipped `themes/<slug>.json`) does not auto-apply via launcher-written settings and is more complex than the user-themes path. Instead, the launcher writes the theme JSON directly to `$CLAUDE_CONFIG_DIR/themes/brainkit.json` and sets `theme: "brainkit"` in `$CLAUDE_CONFIG_DIR/settings.json` — this auto-applies on launch and decouples theme from plugin lifecycle. See § Launcher-written user settings.
 
-```json
-{
-  "name": "brainkit",
-  "base": "dark",
-  "overrides": {
-    "claude": "#E8A0BF",
-    "success": "#50E880",
-    "error": "#E85050"
-  }
-}
-```
-
-Markdown / syntax / diff tokens that OpenCode's theme defines (~50 tokens) have no Claude equivalent. Honest parity: brand color presence, not a full theme port.
+**Brand-able tokens are limited.** Smoke test confirmed `claude` token works (table borders, headers, accents). Background/text tokens (`background`, `bg`, `surface`, `panel`, `text`, etc.) do NOT paint terminal background or default text color — Claude Code respects host terminal colors. Brand comes through via accent + status (`success`/`error`) + diff + syntax tokens only.
 
 **No `settings.json` in the plugin.** Per Claude Code docs, only `agent` and `subagentStatusLine` plugin settings are honored. Anything else (theme, statusLine command, companyAnnouncements) goes in the launcher-written user `settings.json`. Putting them in the plugin would be dead config.
 
@@ -214,12 +203,12 @@ Regenerated on each launch:
     "command": "${CLAUDE_PLUGIN_ROOT}/scripts/statusline.mjs",
     "padding": 2
   },
-  "companyAnnouncements": ["..."],
-  "enabledPlugins": { "brainkit@local": true }
+  "companyAnnouncements": ["<single, well-chosen tip — Claude only ever shows entry 0>"],
+  "enabledPlugins": { "brainkit": true }
 }
 ```
 
-Exact `enabledPlugins` key format depends on smoke-test findings. `companyAnnouncements` content + count depends on smoke-test findings (open question #4 below).
+`theme: "brainkit"` references `$CLAUDE_CONFIG_DIR/themes/brainkit.json`, which the launcher also writes (the brainkit theme JSON itself). Format confirmed: bare `"brainkit": true`. Single-entry `companyAnnouncements` confirmed (Claude always displays entry 0).
 
 ### System prompt strategy
 
@@ -229,17 +218,17 @@ Exact `enabledPlugins` key format depends on smoke-test findings. `companyAnnoun
 
 ### UI parity (honest about limits)
 
-| OpenCode                               | Claude Code                                               | Status                                                                       |
-| -------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `brainkit` theme (~50 tokens)          | `themes/brainkit.json` (~5 tokens — Claude schema limits) | Brand color only, not a full port                                            |
-| Sidebar with vault stats               | Statusline with vault stats                               | Functional parity (one line vs panel)                                        |
-| Brain ASCII home logo                  | none available                                            | Skipped — no slot exists                                                     |
-| Custom prompt placeholders / hints     | none available                                            | Skipped — no slot exists                                                     |
-| Rotating tips at home (9, 8s rotation) | `companyAnnouncements` (TBD per smoke test)               | Likely degraded — defaulting to single best tip until verified               |
-| `/doctor` slash command                | `/brainkit:doctor` skill                                  | Full parity                                                                  |
-| Accomplishment toast                   | UserPromptSubmit hook (deferred)                          | Deferred — re-evaluate after smoke test confirms whether stdout reaches user |
-| Auto-commit                            | `SessionEnd` hook                                         | End-of-session only, vs OpenCode's debounced in-session (Copilot pattern)    |
-| Compaction identity                    | `PreCompact` hook                                         | Full parity                                                                  |
+| OpenCode                               | Claude Code                                             | Status                                                                       |
+| -------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `brainkit` theme (~50 tokens)          | user theme at `$CLAUDE_CONFIG_DIR/themes/brainkit.json` | Accent + status + diff + syntax only; bg/text host-controlled                |
+| Sidebar with vault stats               | Statusline with vault stats                             | Functional parity (one line vs panel)                                        |
+| Brain ASCII home logo                  | none available                                          | Skipped — no slot exists                                                     |
+| Custom prompt placeholders / hints     | none available                                          | Skipped — no slot exists                                                     |
+| Rotating tips at home (9, 8s rotation) | `companyAnnouncements` (single entry confirmed)         | Degraded — Claude always shows entry 0; ship one well-chosen tip             |
+| `/doctor` slash command                | `/brainkit:doctor` skill                                | Full parity                                                                  |
+| Accomplishment toast                   | UserPromptSubmit hook (deferred)                        | Deferred — re-evaluate after smoke test confirms whether stdout reaches user |
+| Auto-commit                            | `SessionEnd` hook                                       | End-of-session only, vs OpenCode's debounced in-session (Copilot pattern)    |
+| Compaction identity                    | `PreCompact` hook                                       | Full parity                                                                  |
 
 ### Onboarding
 
@@ -264,19 +253,18 @@ This diverges from OpenCode's pattern (which swaps system prompt mid-session via
 - **Script extension:** use `.mjs` (Node ESM).
 - **Skill installer reuse:** extract the existing `installSkills()` from `cli/install-skills.ts` into `core/skill-installer.ts` with a per-target options object. Both Copilot and Claude consume it. Existing Copilot tests must keep passing unchanged.
 - **Statusline staleness logic:** extract to `core/` so OpenCode sidebar, Copilot status, and Claude statusline share one implementation. Avoids drift in thresholds/colors.
-- **Verify before plumbing.** Smoke-test the unknowns with the actual `claude` binary first. See open questions below.
+- **Disclosed disk usage:** Claude Code auto-fetches the official Anthropic plugin marketplace (~4.4 MB) into `$CLAUDE_CONFIG_DIR/plugins/marketplaces/claude-plugins-official/` on first launch. Network call required on first launch with a fresh `CLAUDE_CONFIG_DIR`. Not an isolation violation (stays inside our isolated dir). Document in user-facing README.
+- **Verify before plumbing.** Smoke-test resolved all seven design unknowns against Claude Code 2.1.109. See § Smoke Test Findings below.
 
-## Open Questions / Items to Verify Early
+## Smoke Test Findings (Claude Code 2.1.109)
 
-1. **`--plugin-dir` from staged config-dir copy** — confirm Claude reads from this path correctly; confirm Claude doesn't try to "install" or "cache" the plugin elsewhere; confirm plugin auto-update behavior under `CLAUDE_CONFIG_DIR`.
-2. **`enabledPlugins` exact key format** — `"brainkit@local"`? `"brainkit"`? Something else? Determines what the launcher-written `settings.json` ships.
-3. **Theme registration via launcher-written settings** — confirm `theme: "brainkit"` in user `settings.json` actually selects the plugin's theme on launch (not just makes it selectable via `/theme`).
-4. **`companyAnnouncements`** — does it cycle across multiple entries? If not, we ship one well-chosen tip. If yes, we port more.
-5. **Cross-platform script invocation** — how Claude invokes `${CLAUDE_PLUGIN_ROOT}/scripts/foo.mjs` on macOS/Linux vs. Windows; whether `.cmd` shims are needed.
-6. **`UserPromptSubmit` hook stdout visibility** — does its stdout reach the user (toast-equivalent) or only the agent (context)? Determines whether brag-detection is cheap to ship in v1 or genuinely needs deferral.
-7. **`PreCompact` stdout-as-summary behavior** — confirm stdout from PreCompact is incorporated into the compaction summary (not just logged), matching the design intent.
-
-These are the first thing to smoke-test in the implementation phase. Several design assumptions depend on findings; if any is wrong, the design changes before code is written. **Fallback if `--plugin-dir` proves unworkable for any reason:** drop the plugin model entirely, write skills/hooks/scripts directly into `$CLAUDE_CONFIG_DIR/{skills,hooks}/` (loses `/brainkit:` namespace, gains simplicity).
+1. **`--plugin-dir` from staged config-dir copy** — ✅ PASS. Plugin loads correctly, staged plugin tree is byte-identical after session, `~/.claude/` untouched. **One discovery:** Claude auto-fetches the official Anthropic marketplace into `$CLAUDE_CONFIG_DIR/plugins/marketplaces/claude-plugins-official/` on first launch (~4.4 MB, network call required). Not an isolation violation (stays inside our isolated dir). Should be disclosed in user docs.
+2. **`enabledPlugins` exact key format** — Bare `"brainkit": true` works. The `@<suffix>` form (e.g. `"brainkit@local"`, `"brainkit@brainkit"`) is interpreted as a marketplace reference and FAILS to load when no such marketplace exists. `--plugin-dir`-loaded plugins appear under their bare name as "inline" plugins. Original assumption (`brainkit@local`) was wrong; design now uses bare name.
+3. **Theme registration via launcher-written settings** — Plugin themes path (`plugin/themes/<slug>.json` + `theme: "<slug>"`) does NOT work. The plugin theme is not registered, not even visible in `/theme`. **Working path:** write the theme directly into `$CLAUDE_CONFIG_DIR/themes/brainkit.json` (user-themes path) and `theme: "brainkit"` in settings — this auto-applies on launch and decouples theme from plugin lifecycle. Per docs, plugin themes use `theme: "custom:<plugin>:<slug>"` settings key, but the user-themes path is simpler and more aligned with brainkit's existing harness-config-isolation pattern. **Token catalog limits:** `claude` token works (table borders, headers, accents). Background/text tokens (`background`, `bg`, `surface`, `panel`, `text`, etc.) do NOT paint terminal background or default text color — Claude Code respects host terminal colors. Brand can come through via accent + status + diff + syntax tokens only. Original assumption (plugin themes auto-apply) was wrong; design switched to user-themes path.
+4. **`companyAnnouncements`** — Always shows entry 0 (no cycling, no randomization). Ship one well-chosen announcement; entries 1+ are wasted. Original assumption (TBD cycling) resolved as "always-first"; design ships one entry.
+5. **Cross-platform script invocation** — macOS/Linux: `${CLAUDE_PLUGIN_ROOT}/scripts/foo.mjs` invoked via shebang works. Statusline receives rich JSON: `session_id, transcript_path, cwd, model, workspace, version, output_style, cost, context_window, exceeds_200k_tokens`. **Implication:** statusline can use `cwd` for vault path — no need for `BRAINKIT_VAULT_PATH` env var for the statusline script (still needed for hook scripts like auto-commit/precompact). Windows behavior not tested locally; defer to CI.
+6. **`UserPromptSubmit` stdout visibility** — Stdout is injected as system context for the model, NOT shown to the user in the TUI. Cannot use `UserPromptSubmit` for user-facing toasts. Brag-detection toast feature remains deferred (matches plan). Original assumption (TBD) resolved as agent-context-only.
+7. **`PreCompact` stdout-as-summary behavior** — ✅ PASS. Stdout is incorporated into the compaction summary visible to both user (success log line) and model (summary content). Ship `precompact.mjs` as planned. Matches original assumption.
 
 ## Task Breakdown
 

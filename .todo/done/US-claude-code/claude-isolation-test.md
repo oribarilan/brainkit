@@ -33,3 +33,7 @@ AGENTS.md § Harness Config Isolation states: "Brainkit must **never** modify th
 ## Notes
 
 Test 2 (snapshot of `<pkgRoot>/claude/`) is the test future contributors will be most thankful for. The "stage into `~/.config/brainkit/claude/plugin/`" pattern is non-obvious; without this test, someone WILL eventually write directly into the template "for simplicity" and brainkit will break for pnpm users silently.
+
+**Reference precedent:** `cli/__tests__/copilot.test.ts` already contains analogous isolation tests for `COPILOT_HOME` (the `~/.copilot/` is never touched assertions). Mirror that structure.
+
+**No legacy-vault migration test needed** — unlike the Copilot v0.9.0 work, Claude Code has never shipped a vault-writing version of brainkit. There are no legacy files in user vaults to migrate. If that ever changes, add a migration test then.

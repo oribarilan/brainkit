@@ -1,0 +1,8 @@
+{
+  "name": "brainkit",
+  "version": "0.9.4",
+  "description": "Personal second brain that lives next to your work. Manages a structured PARA-organized markdown vault with automated bragfile, contacts, and meeting notes.",
+  "homepage": "https://github.com/oribarilan/brainkit",
+  "repository": "https://github.com/oribarilan/brainkit",
+  "license": "MIT"
+}

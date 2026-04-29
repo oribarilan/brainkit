@@ -12,6 +12,8 @@ const HELP_TEXT = `Usage:
   brainkit opencode [args...]  Launch with OpenCode
   brainkit copilot [args...]   Launch with Copilot CLI
   brainkit cp [args...]        Launch with Copilot CLI
+  brainkit claude [args...]    Launch with Claude Code
+  brainkit cc [args...]        Launch with Claude Code
   brainkit reset               Factory reset (removes all brainkit config; vaults untouched)
 
 Options:

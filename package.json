@@ -33,7 +33,8 @@
     "!core/__tests__/",
     "opencode/",
     "skills/",
-    "scripts/"
+    "scripts/",
+    "claude/"
   ],
   "scripts": {
     "prepack": "rm -rf dist && npx tsc --project cli/tsconfig.json"

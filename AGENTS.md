@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Brainkit is an OpenCode plugin that provides a persistent second brain. It's a structured markdown vault organized with the PARA method, with skills that teach the agent domain knowledge and a TUI that keeps you connected to your vault.
+Brainkit is a second-brain plugin for AI coding agents. It runs against three harnesses — OpenCode, GitHub Copilot CLI, and Claude Code — and provides a structured markdown vault organized with the PARA method, with skills that teach the agent domain knowledge and (on OpenCode) a TUI that keeps you connected to your vault.
 
 Design specs live in `specs/`. Feature definitions live in `docs/features.md`. Read them before making architectural decisions.
 
@@ -37,6 +37,12 @@ opencode/           # TypeScript/TSX — OpenCode plugin
 cli/                # TypeScript — CLI entry point for npx @2brain/brainkit
   index.ts          # Entry point, routes to harness launcher
   launch.ts         # Harness detection, config setup, spawn opencode
+  claude.ts         # Claude Code launcher (staging dir, theme, settings, isolation)
+claude/             # Claude Code plugin (read-only template; copied into `~/.config/brainkit/claude/plugin/` at launch)
+  .claude-plugin/   # Plugin manifest
+  hooks/            # Hook config consumed by Claude
+  scripts/          # statusline, auto-commit, precompact (run by Claude)
+  skills/           # Claude-native skill stubs (e.g. doctor)
 skills/             # Markdown — client-side domain knowledge for the user's agent
   brainkit/         # Root skill (conventions, setup flow, overview)
   para/             # PARA method
@@ -161,6 +167,7 @@ Brainkit must **never** modify the user's normal harness configuration. When bra
 
 - **OpenCode**: launch with `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars pointing at `~/.config/brainkit/{opencode,tui}.json`. Never read, write, or merge into `~/.config/opencode/`.
 - **Copilot CLI**: launch with `COPILOT_HOME` env var pointing at `~/.config/brainkit/copilot/`. Never read, write, or merge into `~/.copilot/` (the user's global Copilot config). The vault is the agent's `cwd` but brainkit must not write any files inside the vault. The launcher must reject `--config-dir` in user args (it would override `COPILOT_HOME` per Copilot's precedence rules and defeat isolation). The `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` env var, if set by the user, is left alone. The only exception to the "no vault writes" rule is the one-time mechanical migration that removes legacy brainkit-generated files from vaults created with prior brainkit versions.
+- **Claude Code**: launch with `CLAUDE_CONFIG_DIR` env var pointing at `~/.config/brainkit/claude/`. Never read or write `~/.claude/` (the user's global Claude config). Never write to `<pkgRoot>/claude/` — it is a read-only template; copy it into `~/.config/brainkit/claude/plugin/` at launch instead.
 - Any new harness integration must follow the same rule: use env vars, dedicated config dirs, or vault-scoped files. Never mutate the user's global harness config or installed plugins/extensions.
 - If a feature seems to require touching the user's harness config, stop and discuss it first — there is almost always a sandboxed alternative.
 - Add tests when adding harness integration code to confirm no writes happen outside the brainkit config dir or the vault.

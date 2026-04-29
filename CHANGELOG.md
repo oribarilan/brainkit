@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- **Claude Code**: `brainkit claude` (or `cc`) launches Claude Code with brainkit's vault context, skills, brand theme, and statusline. See README for first-launch notes (separate auth, one-time marketplace fetch).
+
 ## [0.9.4] - 2026-04-28
 
 ### Fixed

@@ -18,6 +18,22 @@ reset:
     rm -rf {{justfile_directory()}}/.dev/user-config
     @echo "Dev config reset. Run 'just run' for a fresh start."
 
+# Wipes brainkit-side state under .dev/user-config/ each run. Your real
+# ~/.config/brainkit/ and ~/.claude/ stay untouched. Claude auth comes from
+# your real ~/.claude/ — no need to re-authenticate per run.
+#
+# Usage:
+#   just fresh              # auto-detect harness like bare `brainkit`
+#   just fresh oc           # or 'opencode'
+#   just fresh cp           # or 'copilot'
+#   just fresh claude       # or 'cc'
+#
+# factory-reset dev config and launch a harness for a true first-run test
+fresh *args:
+    rm -rf {{justfile_directory()}}/.dev/user-config
+    @echo "Dev config reset. Launching fresh first-run experience..."
+    BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config npx tsx cli/index.ts {{args}}
+
 # launch opencode with the local brainkit plugin
 oc:
     OPENCODE_CONFIG={{justfile_directory()}}/.dev/opencode.json OPENCODE_TUI_CONFIG={{justfile_directory()}}/.dev/tui.json opencode

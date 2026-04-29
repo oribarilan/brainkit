@@ -304,6 +304,39 @@ export function getBragStats(vaultPath: string): BragStats {
 }
 
 // ---------------------------------------------------------------------------
+// Staleness helpers (pure)
+// ---------------------------------------------------------------------------
+
+export type StalenessCategory = "never" | "fresh" | "warning" | "stale";
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+/**
+ * Days since the given ISO date string. Returns null if input is null.
+ * Floored to whole days.
+ */
+export function daysSinceLastEntry(lastEntryDate: string | null): number | null {
+  if (lastEntryDate === null || lastEntryDate === "") return null;
+  return Math.floor((Date.now() - new Date(lastEntryDate).getTime()) / MS_PER_DAY);
+}
+
+/**
+ * Categorize staleness:
+ * - "never": no entry ever (input is null)
+ * - "fresh": ≤7 days
+ * - "warning": 8-14 days
+ * - "stale": >14 days
+ * Pure function; consumers map category → their own colors.
+ */
+export function stalenessCategory(lastEntryDate: string | null): StalenessCategory {
+  const days = daysSinceLastEntry(lastEntryDate);
+  if (days === null) return "never";
+  if (days <= 7) return "fresh";
+  if (days <= 14) return "warning";
+  return "stale";
+}
+
+// ---------------------------------------------------------------------------
 // Contacts operations
 // ---------------------------------------------------------------------------
 
