@@ -517,7 +517,7 @@ describe("launchClaude — onboarding path", () => {
     mockReadGlobalConfig.mockReturnValue(null);
   });
 
-  it("no vault configured → spawns claude in onboarding dir without --plugin-dir or --append-system-prompt-file", () => {
+  it("no vault configured → spawns claude in onboarding dir with kickoff prompt and skip-permissions", () => {
     launchClaude(["--some-user-arg"]);
 
     expect(mockSpawnHarness).toHaveBeenCalledTimes(1);
@@ -530,7 +530,19 @@ describe("launchClaude — onboarding path", () => {
     // Onboarding skips the plugin entirely — Claude reads CLAUDE.md from cwd.
     expect(callArgs[1]).not.toContain("--plugin-dir");
     expect(callArgs[1]).not.toContain("--append-system-prompt-file");
+    // User args still passed through.
     expect(callArgs[1]).toContain("--some-user-arg");
+    // --dangerously-skip-permissions removes the per-write permission wall so
+    // the agent can create config.toml + vault dirs without interrupting the
+    // user (mirrors OpenCode's permission: 'allow' during onboarding).
+    expect(callArgs[1]).toContain("--dangerously-skip-permissions");
+    // Positional kickoff prompt auto-submits the first user message so the
+    // agent immediately starts the brainkit setup conversation rather than
+    // waiting for the user to type something (mirrors OpenCode's --prompt
+    // and Copilot's -i in their onboarding paths).
+    expect(callArgs[1]).toContain("Let's set up my first brainkit vault!");
+    // The kickoff prompt is the LAST argument (positional, per `claude --help`).
+    expect(callArgs[1][callArgs[1].length - 1]).toBe("Let's set up my first brainkit vault!");
     expect(callArgs[2].cwd).toBe(path.join(mockConfigDir(), "onboarding"));
     // No CLAUDE_CONFIG_DIR in onboarding — uses Claude defaults so users can authenticate.
     expect(callArgs[2].env?.["CLAUDE_CONFIG_DIR"]).toBeUndefined();
