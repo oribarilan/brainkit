@@ -56,4 +56,23 @@ describe("buildOnboardingPrompt", () => {
     expect(closing).not.toContain("brainkit copilot");
     expect(closing).not.toContain("run `brainkit` again");
   });
+
+  it("includes safety rules against overwriting existing brainkit data", () => {
+    const result = buildOnboardingPrompt("opencode");
+    // Must explicitly tell the agent not to clobber an existing brainkit.toml.
+    expect(result).toContain("NEVER overwrite an existing");
+    expect(result).toContain("brainkit.toml");
+  });
+
+  it("includes the existing-brain detection branch (Scenario B)", () => {
+    const result = buildOnboardingPrompt("opencode");
+    // The prompt must instruct the agent to inspect the brain dir before
+    // creating anything — and to skip re-onboarding if a configured vault
+    // is already there. Otherwise users with prior brainkit data lose it.
+    expect(result).toContain("existing vault");
+    // The three-scenario branching must be documented (no scratch-only flow).
+    expect(result).toContain("Scenario A");
+    expect(result).toContain("Scenario B");
+    expect(result).toContain("Scenario C");
+  });
 });
