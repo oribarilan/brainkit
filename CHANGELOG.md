@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Added
-- Claude Code support — `brainkit claude` (or `cc`) launches Claude Code with brainkit's vault context, skills, and brand theme. First launch authenticates separately from your global `~/.claude/` and fetches Anthropic's plugin marketplace (~4.4 MB) into the brainkit-isolated config dir at `~/.config/brainkit/claude/`.
+- **Claude Code**: `brainkit claude` (or `cc`) launches Claude Code with brainkit's vault context, skills, brand theme, and statusline. See README for first-launch notes (separate auth, one-time marketplace fetch).
 
 ## [0.9.4] - 2026-04-28
 
