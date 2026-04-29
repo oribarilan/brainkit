@@ -5,6 +5,10 @@
 ### Added
 - **Claude Code**: `brainkit claude` (or `cc`) launches Claude Code with brainkit's vault context, skills, brand theme, and statusline. See README for first-launch notes (separate auth, one-time marketplace fetch).
 
+### Fixed
+- **OpenCode**: brainkit's custom theme, brain logo, sidebar, rotating tips, and `/doctor` command no longer disappear when launching from outside the brainkit repo (the normal user flow). The plugin now resolves its theme file relative to its own install location instead of the process working directory.
+- **OpenCode**: theme load failures now surface a visible error toast and a log line, instead of silently disabling the entire brainkit TUI.
+
 ## [0.9.4] - 2026-04-28
 
 ### Fixed

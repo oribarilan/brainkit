@@ -5,8 +5,13 @@ import { createMemo } from "solid-js";
 import { Tips } from "./tips.tsx";
 import { Sidebar } from "./side.tsx";
 import { logoLarge } from "./logo.ts";
+import { themePath } from "./theme-path.ts";
 
 const id = "brainkit";
+
+// Re-export so the regression test can import it without pulling in JSX deps.
+// (See ./theme-path.ts for why path resolution lives in its own module.)
+export { themePath };
 
 type Api = Parameters<TuiPlugin>[0];
 
@@ -45,13 +50,24 @@ const brainkitPlaceholders = {
 };
 
 const tui: TuiPlugin = async (api) => {
-  await api.theme.install("./opencode/brainkit.json");
-  api.theme.set("brainkit");
-
-  // Disable built-in tips — we show our own
-  const builtinTips = api.plugins.list().find((entry) => entry.id === "internal:home-tips");
-  if (builtinTips?.enabled && builtinTips.active) {
-    await api.plugins.deactivate("internal:home-tips");
+  // Theme load is best-effort. If it fails (missing file, schema mismatch,
+  // OpenCode API change), log + toast the user, and continue registering
+  // everything else so the TUI degrades to default colors instead of
+  // disappearing entirely.
+  try {
+    await api.theme.install(themePath);
+    api.theme.set("brainkit");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[brainkit] failed to load custom theme: ${msg}`);
+    if (typeof api.ui?.toast === "function") {
+      api.ui.toast({
+        variant: "error",
+        title: "brainkit",
+        message: "Failed to load custom theme; using default colors. See opencode logs for details.",
+        duration: 8000,
+      });
+    }
   }
 
   api.slots.register({
@@ -116,6 +132,16 @@ const tui: TuiPlugin = async (api) => {
       },
     },
   ]);
+
+  // All our slots/commands are registered. Now safe to deactivate the built-in
+  // tips — if any registration above had thrown, we'd never reach here and the
+  // built-in tips would remain as a fallback. The user always has *some* tips,
+  // never zero. (This invariant relies on slot/command registration being
+  // synchronous on the API surface.)
+  const builtinTips = api.plugins.list().find((entry) => entry.id === "internal:home-tips");
+  if (builtinTips?.enabled && builtinTips.active) {
+    await api.plugins.deactivate("internal:home-tips");
+  }
 
   // Restore built-in tips on plugin dispose
   api.lifecycle.onDispose(async () => {
