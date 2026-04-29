@@ -122,7 +122,28 @@ export function stagePluginIfNeeded(packageRoot: string, stagingDir: string, pkg
   const sourceDir = path.join(packageRoot, "claude");
   fs.cpSync(sourceDir, stagingDir, { recursive: true, force: true });
 
+  // Sync the staged plugin.json's `version` field with brainkit's package
+  // version. The shipped plugin.json has a hardcoded version that drifts on
+  // every release; rewriting it here at staging time keeps it in lockstep
+  // with `cli/version.ts` and avoids `claude /plugin` reporting a stale
+  // version after upgrade.
+  rewriteStagedPluginVersion(stagingDir, pkgVersion);
+
   return true;
+}
+
+function rewriteStagedPluginVersion(stagingDir: string, pkgVersion: string): void {
+  const manifestPath = path.join(stagingDir, ".claude-plugin", "plugin.json");
+  try {
+    const content = JSON.parse(fs.readFileSync(manifestPath, "utf-8")) as Record<string, unknown>;
+    content["version"] = pkgVersion;
+    fs.writeFileSync(manifestPath, JSON.stringify(content, null, 2) + "\n", "utf-8");
+  } catch {
+    // Best-effort: if the manifest is unreadable for any reason, the staged
+    // copy still works (`enabledPlugins` keys off the bare name, not the
+    // version). Logging here would just spam non-actionable output to the
+    // user before they even open Claude.
+  }
 }
 
 /**
@@ -251,6 +272,11 @@ export function ensureClaudeOnboardingWorkspace(configDir: string): string {
 }
 
 export function cleanupClaudeOnboardingWorkspace(configDir: string): void {
+  // The onboarding workspace at $CONFIG_DIR/onboarding/ is shared across all
+  // brainkit harnesses (Copilot's AGENTS.md, Claude's CLAUDE.md, etc.).
+  // Wiping the whole directory is intentional: it removes any leftover from a
+  // prior partial onboarding session, regardless of which harness ran it.
+  // Narrow concurrent-onboarding race accepted as a known limitation per spec.
   const onboardingDir = path.join(configDir, "onboarding");
   try {
     fs.rmSync(onboardingDir, { recursive: true, force: true });

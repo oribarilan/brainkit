@@ -441,6 +441,11 @@ export function ensureOnboardingWorkspace(configDir: string): string {
 }
 
 export function cleanupOnboardingWorkspace(configDir: string): void {
+  // The onboarding workspace at $CONFIG_DIR/onboarding/ is shared across all
+  // brainkit harnesses (Copilot's AGENTS.md, Claude's CLAUDE.md, etc.).
+  // Wiping the whole directory is intentional: it removes any leftover from a
+  // prior partial onboarding session, regardless of which harness ran it.
+  // Narrow concurrent-onboarding race accepted as a known limitation per spec.
   const onboardingDir = path.join(configDir, "onboarding");
   try {
     fs.rmSync(onboardingDir, { recursive: true, force: true });

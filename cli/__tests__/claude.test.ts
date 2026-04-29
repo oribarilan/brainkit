@@ -371,6 +371,14 @@ describe("stagePluginIfNeeded", () => {
     expect(fs.existsSync(path.join(mockStagingDir(), "stale-file"))).toBe(false);
     expect(fs.existsSync(path.join(mockStagingDir(), ".claude-plugin", "plugin.json"))).toBe(true);
   });
+
+  it("syncs the staged plugin.json's version field with brainkit's package version", () => {
+    stagePluginIfNeeded(hoisted.state.packageRoot, mockStagingDir(), "9.9.9");
+    const manifestRaw = fs.readFileSync(path.join(mockStagingDir(), ".claude-plugin", "plugin.json"), "utf-8");
+    const manifest = JSON.parse(manifestRaw) as { name?: string; version?: string };
+    expect(manifest.name).toBe("brainkit");
+    expect(manifest.version).toBe("9.9.9");
+  });
 });
 
 // ---------------------------------------------------------------------------
