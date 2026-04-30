@@ -25,7 +25,7 @@ npm install -g @2brain/brainkit
 
 Works on macOS, Linux, and Windows.
 
-Brainkit is a plugin for AI coding agents. It detects which harness you have, or you can pick one:
+Brainkit is a plugin for AI coding agents. It runs on top of an existing harness (it doesn't replace one) and adds skills, system prompts, hooks, and some visualizations. It detects which harness you have, or you can pick one:
 
 | Harness                                                     | Command            |
 | ----------------------------------------------------------- | ------------------ |
@@ -83,6 +83,12 @@ No commands, no formatting, no manual filing.
 **Convention over configuration.** I prefer battle-tested patterns. [PARA](https://fortelabs.com/blog/para/) for organization, a bragfile for tracking accomplishments, etc. Brainkit wires them together and teaches an agent to maintain them.
 
 **Your harness config stays untouched.** Brainkit doesn't touch your normal OpenCode, Copilot CLI, or Claude Code setup. It runs your harness with its own config, so a regular `opencode`, `copilot`, or `claude` in another terminal keeps working fine while brainkit is open. Stop using brainkit whenever, nothing about your harness changes.
+
+## Your data
+
+- **No telemetry, no data collection.** Brainkit doesn't phone home. The only outbound request it makes is a version check against the GitHub releases API.
+- **Plain files in a directory you choose.** Your vault is markdown and TOML on your disk. No database, no cloud, no account.
+- **Recommended: a private git repo you own.** Pair the vault with a private GitHub/GitLab/self-hosted repo for backup and history. `brainkit doctor` warns you if your remote is public.
 
 ## Contributing
 
