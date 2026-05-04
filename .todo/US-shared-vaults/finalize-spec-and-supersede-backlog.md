@@ -37,7 +37,8 @@ After Phases 0–2 ship and Phase 2 has been used in at least one real shared-va
 ## Verification
 
 **Ad-hoc:**
-- Read `specs/US-shared-vaults.md` end-to-end. Confirm it captures every locked-in decision from the council and the non-goals list. Confirm a future contributor reading only this spec could understand both *what* was built and *what was deliberately not built*.
+
+- Read `specs/US-shared-vaults.md` end-to-end. Confirm it captures every locked-in decision from the council and the non-goals list. Confirm a future contributor reading only this spec could understand both _what_ was built and _what was deliberately not built_.
 - `ls .todo/backlog/team-vault.md` returns "no such file."
 - `ls .todo/US-shared-vaults/` returns empty (or only files that need to also move).
 - `ls .todo/done/US-shared-vaults/` contains `main.md` and all four phase task files.
@@ -46,5 +47,5 @@ After Phases 0–2 ship and Phase 2 has been used in at least one real shared-va
 ## Notes
 
 - This is bookkeeping with teeth. The spec file is the single most important deliverable for the long-term health of this feature — without it, the next "let's add team member roles" PR has no anchor to be rejected against.
-- If real usage in Phase 2 surfaced surprises that diverged from the original plan, the spec must reflect what was *actually built*, not what was *originally planned*. Be honest about deviations.
+- If real usage in Phase 2 surfaced surprises that diverged from the original plan, the spec must reflect what was _actually built_, not what was _originally planned_. Be honest about deviations.
 - Do not write the spec earlier (e.g., during Phase 2). Specs written before usage are speculation; specs written after are documentation. We want documentation.

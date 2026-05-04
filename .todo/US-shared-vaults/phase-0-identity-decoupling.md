@@ -43,6 +43,7 @@ This is the only phase that can begin immediately. Phases 1–3 are gated on val
 ## Verification
 
 **Automated (preferred):**
+
 - New test file `core/__tests__/identity.test.ts` covering each branch of `resolveAgentIdentity`.
 - Existing `core/__tests__/prompt-sections.test.ts` (if present) continues to pass; add cases for "identity sourced from env" and "identity sourced from identity.toml" in `buildIdentity`.
 - `just test` passes locally.
@@ -50,6 +51,7 @@ This is the only phase that can begin immediately. Phases 1–3 are gated on val
 - `just check` passes (lint + format + test).
 
 **Ad-hoc:**
+
 - Create `~/.config/brainkit/identity.toml` with a name. Run `just dev`. Confirm the system prompt (visible via the agent) reflects the identity-file name, not the vault's `[user].name`.
 - Set `BRAINKIT_IDENTITY_NAME=Override` and re-run. Confirm the override wins.
 - Delete `identity.toml`, unset env var. Confirm the vault's `[user].name` is used (existing behavior preserved).
