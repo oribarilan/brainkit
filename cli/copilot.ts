@@ -160,6 +160,25 @@ function safeRemove(target: string): boolean {
 }
 
 /**
+ * Write `content` to `target` only if the existing file's content differs.
+ * Returns `true` if a write occurred, `false` if skipped. Creates parent
+ * directories implicitly via `fs.writeFileSync`'s default behavior — caller
+ * is responsible for `mkdirSync` of the directory if it may not exist.
+ *
+ * Used to avoid per-launch I/O rewriting unchanged brainkit-managed files.
+ */
+export function writeIfChanged(target: string, content: string): boolean {
+  try {
+    const existing = fs.readFileSync(target, "utf-8");
+    if (existing === content) return false;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+  fs.writeFileSync(target, content, "utf-8");
+  return true;
+}
+
+/**
  * True if AGENTS.md content is brainkit-generated. Two gates:
  * 1. **Sentinel** (preferred, primary gate going forward): contains
  *    `<!-- brainkit:generated -->` anywhere. Emitted as the first line of every
@@ -385,14 +404,14 @@ export function writeCopilotInstructions(
 ): void {
   fs.mkdirSync(copilotHome, { recursive: true });
   const prompt = buildSystemPrompt(config, vaultPath, { mode: "cli" });
-  fs.writeFileSync(path.join(copilotHome, "copilot-instructions.md"), prompt + "\n", "utf-8");
+  writeIfChanged(path.join(copilotHome, "copilot-instructions.md"), prompt + "\n");
 }
 
 export function installCopilotHooks(copilotHome: string): string {
   const scriptsDir = path.join(copilotHome, "hooks", "scripts");
   fs.mkdirSync(scriptsDir, { recursive: true });
   const scriptPath = path.join(scriptsDir, "auto-commit.js");
-  fs.writeFileSync(scriptPath, AUTO_COMMIT_SCRIPT, "utf-8");
+  writeIfChanged(scriptPath, AUTO_COMMIT_SCRIPT);
   return scriptPath;
 }
 

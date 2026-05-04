@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import * as fs from "node:fs";
+import fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 
@@ -75,6 +75,7 @@ import {
   ensureOnboardingWorkspace,
   cleanupOnboardingWorkspace,
   vaultHasLegacyBrainkitFiles,
+  writeIfChanged,
 } from "../copilot.js";
 import { readGlobalConfig } from "../../core/index.js";
 
@@ -370,6 +371,44 @@ describe("installCopilotHooks", () => {
   });
 });
 
+describe("writeIfChanged", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = makeTempDir("write-if-changed");
+  });
+  afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it("writes when file does not exist", () => {
+    const target = path.join(tmp, "f.txt");
+    const wrote = writeIfChanged(target, "hello");
+    expect(wrote).toBe(true);
+    expect(fs.readFileSync(target, "utf-8")).toBe("hello");
+  });
+
+  it("skips write when content is byte-identical", () => {
+    const target = path.join(tmp, "f.txt");
+    fs.writeFileSync(target, "hello", "utf-8");
+    const writeSpy = vi.spyOn(fs, "writeFileSync");
+    try {
+      const wrote = writeIfChanged(target, "hello");
+      expect(wrote).toBe(false);
+      expect(writeSpy).not.toHaveBeenCalled();
+    } finally {
+      writeSpy.mockRestore();
+    }
+  });
+
+  it("writes when content differs", () => {
+    const target = path.join(tmp, "f.txt");
+    fs.writeFileSync(target, "hello", "utf-8");
+    const wrote = writeIfChanged(target, "world");
+    expect(wrote).toBe(true);
+    expect(fs.readFileSync(target, "utf-8")).toBe("world");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Onboarding (regression: still works, no migration / version check / config-dir reject)
 // ---------------------------------------------------------------------------
@@ -427,6 +466,24 @@ describe("launchCopilot — isolation", () => {
     const opts = callArgs[2];
     expect(opts.env["COPILOT_HOME"]).toBe(mockCopilotHome());
     expect(opts.env["BRAINKIT_VAULT_PATH"]).toBe(vault);
+  });
+
+  it("second launch on unchanged state skips writes for instructions and auto-commit script", () => {
+    // First launch: populates everything.
+    launchCopilot([], vault);
+    const instrPath = path.join(mockCopilotHome(), "copilot-instructions.md");
+    const hookPath = path.join(mockCopilotHome(), "hooks", "scripts", "auto-commit.js");
+
+    // Second launch: spy on fs.writeFileSync and assert these two paths are not written.
+    const writeSpy = vi.spyOn(fs, "writeFileSync");
+    try {
+      launchCopilot([], vault);
+      const writtenPaths = writeSpy.mock.calls.map((call) => String(call[0]));
+      expect(writtenPaths).not.toContain(instrPath);
+      expect(writtenPaths).not.toContain(hookPath);
+    } finally {
+      writeSpy.mockRestore();
+    }
   });
 });
 
