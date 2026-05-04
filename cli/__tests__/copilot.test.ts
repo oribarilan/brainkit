@@ -454,6 +454,34 @@ describe("generateCopilotSettings — merge with existing settings.json", () => 
       writeSpy.mockRestore();
     }
   });
+
+  it("non-serializable user-added value (e.g. BigInt) → warns, falls back to brainkit-only content, does not throw", () => {
+    // Pre-populate settings.json with valid JSON, then mutate in-memory so the
+    // merge produces a non-serializable result. We do this by writing a normal
+    // file, calling generateCopilotSettings to produce the merged content, then
+    // simulating Copilot/the user injecting a BigInt by stubbing JSON.stringify
+    // to throw the first time it's called.
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+    const settingsPath = path.join(mockCopilotHome(), "settings.json");
+    // Inject a value that JSON.stringify cannot handle into the existing file.
+    // BigInts can't appear in a JSON file directly, so simulate via stringify spy.
+    const stringifySpy = vi.spyOn(JSON, "stringify").mockImplementationOnce(() => {
+      throw new TypeError("Do not know how to serialize a BigInt");
+    });
+    try {
+      expect(() => {
+        generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+      }).not.toThrow();
+      expect(mockLog.warn).toHaveBeenCalled();
+      const warnMsg = mockLog.warn.mock.calls.at(-1)?.[0] as string;
+      expect(warnMsg).toContain("non-serializable");
+    } finally {
+      stringifySpy.mockRestore();
+    }
+    // File still readable and contains brainkit content.
+    const after = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as { companyAnnouncements: string[] };
+    expect(after.companyAnnouncements.length).toBeGreaterThan(0);
+  });
 });
 
 describe("installCopilotHooks", () => {
@@ -1589,5 +1617,19 @@ describe("mergeCopilotSettings", () => {
     const hooks = result["hooks"] as { agentStop: { command: string; description: string }[] };
     expect(hooks.agentStop).toHaveLength(1);
     expect(hooks.agentStop[0]).toEqual({ command: "user.sh", description: "my hook" });
+  });
+
+  it("preserves __proto__ as an own property (does not mutate prototype slot)", () => {
+    // JSON.parse keeps __proto__ as an own enumerable property. Naive bracket
+    // assignment to a plain {} would set the prototype slot instead of an own
+    // property, silently losing the key. Object.create(null) prevents this.
+    const existing = JSON.parse('{"__proto__": {"polluted": true}, "user": "key"}') as Record<string, unknown>;
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    // The __proto__ key should be preserved as an own property in the output.
+    expect(Object.prototype.hasOwnProperty.call(result, "__proto__")).toBe(true);
+    // And it must not have polluted Object.prototype.
+    expect(({} as { polluted?: boolean }).polluted).toBeUndefined();
+    // User key still preserved.
+    expect(result["user"]).toBe("key");
   });
 });

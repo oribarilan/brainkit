@@ -191,9 +191,8 @@ function safeRemove(target: string): boolean {
 
 /**
  * Write `content` to `target` only if the existing file's content differs.
- * Returns `true` if a write occurred, `false` if skipped. Creates parent
- * directories implicitly via `fs.writeFileSync`'s default behavior — caller
- * is responsible for `mkdirSync` of the directory if it may not exist.
+ * Returns `true` if a write occurred, `false` if skipped. Caller is responsible
+ * for `mkdirSync` of the parent directory if it may not exist.
  *
  * Used to avoid per-launch I/O rewriting unchanged brainkit-managed files.
  */
@@ -494,7 +493,7 @@ export function mergeCopilotSettings(
     hooks: Record<string, HookEntry[]>;
   },
 ): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
+  const result: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
 
   // 1. Carry over all non-brainkit-owned keys from existing FIRST, preserving
   //    their insertion order.
@@ -515,7 +514,7 @@ export function mergeCopilotSettings(
     existing !== null && typeof existing["hooks"] === "object" && existing["hooks"] !== null
       ? (existing["hooks"] as Record<string, unknown>)
       : {};
-  const mergedHooks: Record<string, HookEntry[]> = {};
+  const mergedHooks: Record<string, HookEntry[]> = Object.create(null) as Record<string, HookEntry[]>;
 
   // 3a. Carry over user-only event keys (not managed by brainkit).
   for (const [event, entries] of Object.entries(existingHooks)) {
@@ -607,7 +606,17 @@ export function generateCopilotSettings(
   }
 
   const merged = mergeCopilotSettings(existing, brainkitOwned);
-  writeIfChanged(settingsPath, JSON.stringify(merged, null, 2) + "\n");
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(merged, null, 2) + "\n";
+  } catch (err) {
+    // A user-added key contained a non-serializable value (BigInt, circular ref, etc).
+    // Fall back to brainkit-owned content only — symmetric with the parse-side
+    // overwrite-on-malformed strategy. Better to lose user keys than crash launch.
+    warnOverwrite(`contains non-serializable values (${(err as Error).message})`);
+    serialized = JSON.stringify(mergeCopilotSettings(null, brainkitOwned), null, 2) + "\n";
+  }
+  writeIfChanged(settingsPath, serialized);
 }
 
 // ---------------------------------------------------------------------------
