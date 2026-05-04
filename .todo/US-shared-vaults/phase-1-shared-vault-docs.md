@@ -36,6 +36,7 @@ This phase is **not** a feature. It is a deliberate "wait and watch" gate.
 ## Verification
 
 **Ad-hoc (only verification possible — this is docs):**
+
 - Read `docs/shared-vaults.md` end-to-end and confirm a new user could follow it without prior context.
 - Confirm every command in the recipe works as written (test the recipe yourself with a throwaway repo).
 - Confirm `git diff --stat` between this phase's branch and main shows only `docs/` and possibly `README.md` and `.todo/` changes — no source code.

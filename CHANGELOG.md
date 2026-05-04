@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- **Copilot CLI**: settings you change inside a brainkit Copilot session (MCP servers, approved tools, theme) now persist across launches.
+
 ## [0.10.0] - 2026-04-29
 
 ### Added

@@ -48,6 +48,36 @@ const COMPANY_ANNOUNCEMENTS = [
   "ask me to check vault health",
 ];
 
+/**
+ * Prefix on `description` field of brainkit-managed hook entries. The merge
+ * uses this to identify and replace stale brainkit hook entries on re-launch
+ * while preserving user-added entries under the same hook event.
+ */
+const BRAINKIT_HOOK_DESCRIPTION_PREFIX = "brainkit:";
+
+/**
+ * Exact descriptions used by brainkit hook entries in versions BEFORE the
+ * `brainkit:` prefix was introduced. The merge strips entries matching any
+ * of these too, so users upgrading from older brainkit versions don't end up
+ * with duplicate auto-commit hooks (vault committed twice per agent turn).
+ *
+ * Do NOT add new brainkit descriptions here — only legacy strings that
+ * shipped in earlier versions and could exist in users' settings.json today.
+ */
+const LEGACY_BRAINKIT_HOOK_DESCRIPTIONS: ReadonlySet<string> = new Set([
+  "Auto-commit vault changes after agent turns",
+  "Commit any remaining vault changes on session end",
+]);
+
+/**
+ * Top-level keys in `settings.json` that brainkit owns and may overwrite on
+ * launch. Any key NOT in this list is preserved verbatim across launches —
+ * including keys Copilot CLI writes itself (e.g. `mcpServers`, `theme`,
+ * approved-tools entries).
+ */
+const BRAINKIT_OWNED_SETTINGS_KEYS = ["companyAnnouncements", "statusLine", "hooks"] as const;
+const BRAINKIT_OWNED_SETTINGS_KEY_SET: ReadonlySet<string> = new Set(BRAINKIT_OWNED_SETTINGS_KEYS);
+
 const AUTO_COMMIT_SCRIPT = `#!/usr/bin/env node
 const { execSync } = require("child_process");
 try { execSync("git rev-parse --git-dir", { stdio: "pipe" }); } catch { process.exit(0); }
@@ -156,6 +186,24 @@ function safeRemove(target: string): boolean {
   } else {
     fs.unlinkSync(target);
   }
+  return true;
+}
+
+/**
+ * Write `content` to `target` only if the existing file's content differs.
+ * Returns `true` if a write occurred, `false` if skipped. Caller is responsible
+ * for `mkdirSync` of the parent directory if it may not exist.
+ *
+ * Used to avoid per-launch I/O rewriting unchanged brainkit-managed files.
+ */
+export function writeIfChanged(target: string, content: string): boolean {
+  try {
+    const existing = fs.readFileSync(target, "utf-8");
+    if (existing === content) return false;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+  fs.writeFileSync(target, content, "utf-8");
   return true;
 }
 
@@ -385,15 +433,120 @@ export function writeCopilotInstructions(
 ): void {
   fs.mkdirSync(copilotHome, { recursive: true });
   const prompt = buildSystemPrompt(config, vaultPath, { mode: "cli" });
-  fs.writeFileSync(path.join(copilotHome, "copilot-instructions.md"), prompt + "\n", "utf-8");
+  writeIfChanged(path.join(copilotHome, "copilot-instructions.md"), prompt + "\n");
 }
 
 export function installCopilotHooks(copilotHome: string): string {
   const scriptsDir = path.join(copilotHome, "hooks", "scripts");
   fs.mkdirSync(scriptsDir, { recursive: true });
   const scriptPath = path.join(scriptsDir, "auto-commit.js");
-  fs.writeFileSync(scriptPath, AUTO_COMMIT_SCRIPT, "utf-8");
+  writeIfChanged(scriptPath, AUTO_COMMIT_SCRIPT);
   return scriptPath;
+}
+
+// ---------------------------------------------------------------------------
+// settings.json merge (preserves user / Copilot-runtime additions)
+// ---------------------------------------------------------------------------
+
+interface HookEntry {
+  command: string;
+  description?: string;
+}
+
+/**
+ * Merge brainkit-owned settings into existing settings.json content.
+ *
+ * Behavior:
+ * - All keys NOT in `BRAINKIT_OWNED_SETTINGS_KEYS` are preserved verbatim
+ *   from `existing` (preserves `mcpServers`, `theme`, etc. that Copilot CLI
+ *   may write at runtime). They appear FIRST in the output object, in their
+ *   existing insertion order.
+ * - `companyAnnouncements`, `statusLine`, `hooks` are appended in that fixed
+ *   order at the END of the output object. Replace-wholesale for the first
+ *   two; per-event merge for `hooks` (see below).
+ * - `hooks` is merged per-event:
+ *   - For each event key in `brainkitOwned.hooks`: strip entries identified
+ *     as brainkit-owned (description starts with
+ *     `BRAINKIT_HOOK_DESCRIPTION_PREFIX` OR matches an entry in
+ *     `LEGACY_BRAINKIT_HOOK_DESCRIPTIONS`) from the existing array, then
+ *     append brainkit's fresh entries. Preserves user entries; idempotent
+ *     across N launches; safe across upgrades from prior brainkit versions
+ *     that used unprefixed descriptions.
+ *   - User-added event keys not present in `brainkitOwned.hooks` are
+ *     preserved untouched.
+ *   - If existing event value is not an array (malformed), brainkit
+ *     overwrites it.
+ *
+ * **Canonical key order is load-bearing:** `JSON.stringify` preserves
+ * insertion order, and the skip-on-unchanged check is byte-equality based.
+ * If the output key order varied across launches, the file would be
+ * rewritten on every launch even when content was semantically identical.
+ *
+ * Pure function — no I/O. Pass `null` for `existing` when the file doesn't
+ * exist or was unparseable.
+ */
+export function mergeCopilotSettings(
+  existing: Record<string, unknown> | null,
+  brainkitOwned: {
+    companyAnnouncements: string[];
+    statusLine: { command: string };
+    hooks: Record<string, HookEntry[]>;
+  },
+): Record<string, unknown> {
+  const result: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+
+  // 1. Carry over all non-brainkit-owned keys from existing FIRST, preserving
+  //    their insertion order.
+  if (existing !== null) {
+    for (const [key, value] of Object.entries(existing)) {
+      if (!BRAINKIT_OWNED_SETTINGS_KEY_SET.has(key)) {
+        result[key] = value;
+      }
+    }
+  }
+
+  // 2. Brainkit-owned scalar keys: replace wholesale, fixed order.
+  result["companyAnnouncements"] = brainkitOwned.companyAnnouncements;
+  result["statusLine"] = brainkitOwned.statusLine;
+
+  // 3. Hooks: per-event merge.
+  const existingHooks: Record<string, unknown> =
+    existing !== null && typeof existing["hooks"] === "object" && existing["hooks"] !== null
+      ? (existing["hooks"] as Record<string, unknown>)
+      : {};
+  const mergedHooks: Record<string, HookEntry[]> = Object.create(null) as Record<string, HookEntry[]>;
+
+  // 3a. Carry over user-only event keys (not managed by brainkit).
+  for (const [event, entries] of Object.entries(existingHooks)) {
+    if (!(event in brainkitOwned.hooks) && Array.isArray(entries)) {
+      mergedHooks[event] = entries as HookEntry[];
+    }
+  }
+
+  // 3b. Per brainkit-managed event: strip brainkit-owned, append fresh.
+  for (const [event, brainkitEntries] of Object.entries(brainkitOwned.hooks)) {
+    const existingEntries = existingHooks[event];
+    const userEntries: HookEntry[] = Array.isArray(existingEntries)
+      ? (existingEntries as HookEntry[]).filter((entry) => !isBrainkitOwnedHookEntry(entry))
+      : [];
+    mergedHooks[event] = [...userEntries, ...brainkitEntries];
+  }
+
+  result["hooks"] = mergedHooks;
+  return result;
+}
+
+/**
+ * True if a hook entry is brainkit-owned (current `brainkit:` prefix or any
+ * legacy exact-match description from prior versions).
+ */
+function isBrainkitOwnedHookEntry(entry: unknown): boolean {
+  if (typeof entry !== "object" || entry === null) return false;
+  const desc = (entry as { description?: unknown }).description;
+  if (typeof desc !== "string") return false;
+  if (desc.startsWith(BRAINKIT_HOOK_DESCRIPTION_PREFIX)) return true;
+  if (LEGACY_BRAINKIT_HOOK_DESCRIPTIONS.has(desc)) return true;
+  return false;
 }
 
 export function generateCopilotSettings(
@@ -402,8 +555,12 @@ export function generateCopilotSettings(
   autoCommitScriptPath: string,
 ): void {
   fs.mkdirSync(copilotHome, { recursive: true });
+
+  // Brainkit-owned content. Hook entries get the `brainkit:` description
+  // prefix so the merge can identify and refresh them on re-launch without
+  // touching user-added entries under the same event.
   // Schema verified 2026-04-28 against Copilot CLI v1.0.37 (event-keyed inline hooks).
-  const settings = {
+  const brainkitOwned = {
     companyAnnouncements: COMPANY_ANNOUNCEMENTS,
     statusLine: {
       command: `node ${statusScriptPath.replace(/\\/g, "/")}`,
@@ -412,18 +569,54 @@ export function generateCopilotSettings(
       agentStop: [
         {
           command: `node ${autoCommitScriptPath.replace(/\\/g, "/")}`,
-          description: "Auto-commit vault changes after agent turns",
+          description: `${BRAINKIT_HOOK_DESCRIPTION_PREFIX} auto-commit vault changes after agent turns`,
         },
       ],
       sessionEnd: [
         {
           command: `node ${autoCommitScriptPath.replace(/\\/g, "/")}`,
-          description: "Commit any remaining vault changes on session end",
+          description: `${BRAINKIT_HOOK_DESCRIPTION_PREFIX} commit any remaining vault changes on session end`,
         },
       ],
     },
   };
-  fs.writeFileSync(path.join(copilotHome, "settings.json"), JSON.stringify(settings, null, 2) + "\n", "utf-8");
+
+  // Read existing settings if present, parse defensively. Malformed JSON
+  // falls back to overwrite — we don't want a corrupt file to permanently
+  // break launches.
+  const settingsPath = path.join(copilotHome, "settings.json");
+  const warnOverwrite = (reason: string): void => {
+    p.log.warn(`${settingsPath} ${reason} — overwriting with brainkit-managed content. Any prior content is lost.`);
+  };
+  let existing: Record<string, unknown> | null = null;
+  try {
+    const raw = fs.readFileSync(settingsPath, "utf-8");
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        existing = parsed as Record<string, unknown>;
+      } else {
+        warnOverwrite("is not a JSON object");
+      }
+    } catch {
+      warnOverwrite("is not valid JSON");
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+
+  const merged = mergeCopilotSettings(existing, brainkitOwned);
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(merged, null, 2) + "\n";
+  } catch (err) {
+    // A user-added key contained a non-serializable value (BigInt, circular ref, etc).
+    // Fall back to brainkit-owned content only — symmetric with the parse-side
+    // overwrite-on-malformed strategy. Better to lose user keys than crash launch.
+    warnOverwrite(`contains non-serializable values (${(err as Error).message})`);
+    serialized = JSON.stringify(mergeCopilotSettings(null, brainkitOwned), null, 2) + "\n";
+  }
+  writeIfChanged(settingsPath, serialized);
 }
 
 // ---------------------------------------------------------------------------

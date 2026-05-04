@@ -40,7 +40,7 @@ These were decided in council review. Captured here so each task can reference t
 
 - **Property, not type.** Use `features.shared = true` (a boolean feature flag), **never** `kind = "team"` (a vault type discriminator). This prevents `if (isTeam)` branches from proliferating across the codebase and keeps the change additive.
 - **Word "team" is banned in code, config, and skill names.** Use "shared." Rationale: "team" implies orchestration (members, roles, permissions, onboarding flows for joiners) that we explicitly will not build. "Shared" describes the actual property: this vault is co-edited.
-- **Identity is per-machine, not per-vault.** Identity lives in `~/.config/brainkit/identity.toml` (under brainkit's owned config dir, preserving harness isolation). The vault knows *about* people via a `shared-vault` skill convention; it does not *own* an identity.
+- **Identity is per-machine, not per-vault.** Identity lives in `~/.config/brainkit/identity.toml` (under brainkit's owned config dir, preserving harness isolation). The vault knows _about_ people via a `shared-vault` skill convention; it does not _own_ an identity.
 - **Identity resolution order:** (1) `BRAINKIT_IDENTITY_*` env vars → (2) `~/.config/brainkit/identity.toml` → (3) personal vault's `[user].name` (only for non-shared vaults) → (4) `git config user.name` as last-resort fallback.
 - **Git is the sync layer. Brainkit is not.** No auto-pull, no auto-push, no merge UI, no conflict resolution, no permissions. Document the manual git workflow in the `shared-vault` skill.
 - **No subcommand. No separate CLI.** Brainkit deliberately has no subcommands today; this US does not introduce one. No `teamkit`, no `brainkit team`, no `brainkit share`.
@@ -76,6 +76,7 @@ These were decided in council review. Captured here so each task can reference t
 ### System prompt sections affected (Phase 2)
 
 In `core/prompt-sections.ts`:
+
 - `buildIdentity` — branch on `features.shared`. Shared mode reads from machine identity, names the vault's purpose, names other contributors if discoverable, warns about personal data.
 - `buildConventions` — shared mode replaces "use first person" with "use neutral or attributed voice; name people explicitly".
 - `buildBragReminder` — return empty string when shared.
@@ -85,6 +86,7 @@ In `core/prompt-sections.ts`:
 ### Health checks (Phase 2)
 
 In `runHealthChecks`:
+
 - If `features.shared === true`, warn if a `bragfile.md` exists at any conventional path (likely a leftover from a personal vault).
 - If `features.shared === true`, error if the vault is not a git repo with a remote.
 - Demote the existing GitHub privacy check (`vault.ts:656-689`) from error to warn when shared (deliberately-public OSS knowledge bases are valid).

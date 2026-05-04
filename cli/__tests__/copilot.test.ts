@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import * as fs from "node:fs";
+import fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 
@@ -75,6 +75,8 @@ import {
   ensureOnboardingWorkspace,
   cleanupOnboardingWorkspace,
   vaultHasLegacyBrainkitFiles,
+  writeIfChanged,
+  mergeCopilotSettings,
 } from "../copilot.js";
 import { readGlobalConfig } from "../../core/index.js";
 
@@ -349,12 +351,136 @@ describe("generateCopilotSettings", () => {
     const settings = JSON.parse(fs.readFileSync(path.join(mockCopilotHome(), "settings.json"), "utf-8")) as {
       companyAnnouncements: string[];
       statusLine: { command: string };
-      hooks: { agentStop: { command: string }[]; sessionEnd: { command: string }[] };
+      hooks: {
+        agentStop: { command: string; description: string }[];
+        sessionEnd: { command: string; description: string }[];
+      };
     };
     expect(settings.companyAnnouncements.length).toBeGreaterThan(0);
     expect(settings.statusLine.command).toContain("/abs/status.js");
     expect(settings.hooks.agentStop[0]?.command).toContain("/abs/auto-commit.js");
     expect(settings.hooks.sessionEnd[0]?.command).toContain("/abs/auto-commit.js");
+    expect(settings.hooks.agentStop[0]?.description).toMatch(/^brainkit:/);
+    expect(settings.hooks.sessionEnd[0]?.description).toMatch(/^brainkit:/);
+  });
+});
+
+describe("generateCopilotSettings — merge with existing settings.json", () => {
+  beforeEach(() => {
+    fs.mkdirSync(mockCopilotHome(), { recursive: true });
+  });
+
+  it("preserves user-added top-level keys (e.g. mcpServers) across regeneration", () => {
+    fs.writeFileSync(
+      path.join(mockCopilotHome(), "settings.json"),
+      JSON.stringify({ mcpServers: { foo: { command: "bar" } }, theme: "dark" }),
+      "utf-8",
+    );
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+
+    const after = JSON.parse(fs.readFileSync(path.join(mockCopilotHome(), "settings.json"), "utf-8")) as {
+      mcpServers: unknown;
+      theme: string;
+      companyAnnouncements: string[];
+      statusLine: { command: string };
+    };
+    expect(after.mcpServers).toEqual({ foo: { command: "bar" } });
+    expect(after.theme).toBe("dark");
+    expect(after.companyAnnouncements.length).toBeGreaterThan(0);
+    expect(after.statusLine.command).toContain("/abs/status.js");
+  });
+
+  it("preserves user-added hook entries while refreshing brainkit hook entries", () => {
+    fs.writeFileSync(
+      path.join(mockCopilotHome(), "settings.json"),
+      JSON.stringify({
+        hooks: {
+          agentStop: [{ command: "user.sh", description: "my hook" }],
+          sessionStart: [{ command: "start.sh", description: "user start" }],
+        },
+      }),
+      "utf-8",
+    );
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+
+    const after = JSON.parse(fs.readFileSync(path.join(mockCopilotHome(), "settings.json"), "utf-8")) as {
+      hooks: {
+        agentStop: { command: string; description: string }[];
+        sessionEnd: { command: string; description: string }[];
+        sessionStart: { command: string; description: string }[];
+      };
+    };
+    expect(after.hooks.agentStop).toHaveLength(2);
+    expect(after.hooks.agentStop[0]).toEqual({ command: "user.sh", description: "my hook" });
+    expect(after.hooks.agentStop[1]?.description).toMatch(/^brainkit:/);
+    expect(after.hooks.sessionEnd).toHaveLength(1);
+    expect(after.hooks.sessionEnd[0]?.description).toMatch(/^brainkit:/);
+    expect(after.hooks.sessionStart).toEqual([{ command: "start.sh", description: "user start" }]);
+  });
+
+  it("idempotent: running generateCopilotSettings twice does not duplicate brainkit hook entries", () => {
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+    const firstContent = fs.readFileSync(path.join(mockCopilotHome(), "settings.json"), "utf-8");
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+    const secondContent = fs.readFileSync(path.join(mockCopilotHome(), "settings.json"), "utf-8");
+    expect(secondContent).toBe(firstContent);
+  });
+
+  it("malformed existing settings.json → logs warning, overwrites with brainkit content, does not throw", () => {
+    fs.writeFileSync(path.join(mockCopilotHome(), "settings.json"), "{not valid json", "utf-8");
+    expect(() => {
+      generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+    }).not.toThrow();
+    expect(mockLog.warn).toHaveBeenCalled();
+    const warnMsg = mockLog.warn.mock.calls[0]?.[0] as string;
+    expect(warnMsg).toContain(path.join(mockCopilotHome(), "settings.json"));
+    expect(warnMsg).toContain("is not valid JSON");
+
+    const after = JSON.parse(fs.readFileSync(path.join(mockCopilotHome(), "settings.json"), "utf-8")) as {
+      companyAnnouncements: string[];
+    };
+    expect(after.companyAnnouncements.length).toBeGreaterThan(0);
+  });
+
+  it("skips file write when content is unchanged (idempotent at I/O level)", () => {
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+    const settingsPath = path.join(mockCopilotHome(), "settings.json");
+    const writeSpy = vi.spyOn(fs, "writeFileSync");
+    try {
+      generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+      const writtenPaths = writeSpy.mock.calls.map((call) => String(call[0]));
+      expect(writtenPaths).not.toContain(settingsPath);
+    } finally {
+      writeSpy.mockRestore();
+    }
+  });
+
+  it("non-serializable user-added value (e.g. BigInt) → warns, falls back to brainkit-only content, does not throw", () => {
+    // Pre-populate settings.json with valid JSON, then mutate in-memory so the
+    // merge produces a non-serializable result. We do this by writing a normal
+    // file, calling generateCopilotSettings to produce the merged content, then
+    // simulating Copilot/the user injecting a BigInt by stubbing JSON.stringify
+    // to throw the first time it's called.
+    generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+    const settingsPath = path.join(mockCopilotHome(), "settings.json");
+    // Inject a value that JSON.stringify cannot handle into the existing file.
+    // BigInts can't appear in a JSON file directly, so simulate via stringify spy.
+    const stringifySpy = vi.spyOn(JSON, "stringify").mockImplementationOnce(() => {
+      throw new TypeError("Do not know how to serialize a BigInt");
+    });
+    try {
+      expect(() => {
+        generateCopilotSettings(mockCopilotHome(), "/abs/status.js", "/abs/auto-commit.js");
+      }).not.toThrow();
+      expect(mockLog.warn).toHaveBeenCalled();
+      const warnMsg = mockLog.warn.mock.calls.at(-1)?.[0] as string;
+      expect(warnMsg).toContain("non-serializable");
+    } finally {
+      stringifySpy.mockRestore();
+    }
+    // File still readable and contains brainkit content.
+    const after = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as { companyAnnouncements: string[] };
+    expect(after.companyAnnouncements.length).toBeGreaterThan(0);
   });
 });
 
@@ -367,6 +493,44 @@ describe("installCopilotHooks", () => {
     const content = fs.readFileSync(scriptPath, "utf-8");
     expect(content).toContain("git add -A");
     expect(content).toContain("brainkit: auto-save");
+  });
+});
+
+describe("writeIfChanged", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = makeTempDir("write-if-changed");
+  });
+  afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it("writes when file does not exist", () => {
+    const target = path.join(tmp, "f.txt");
+    const wrote = writeIfChanged(target, "hello");
+    expect(wrote).toBe(true);
+    expect(fs.readFileSync(target, "utf-8")).toBe("hello");
+  });
+
+  it("skips write when content is byte-identical", () => {
+    const target = path.join(tmp, "f.txt");
+    fs.writeFileSync(target, "hello", "utf-8");
+    const writeSpy = vi.spyOn(fs, "writeFileSync");
+    try {
+      const wrote = writeIfChanged(target, "hello");
+      expect(wrote).toBe(false);
+      expect(writeSpy).not.toHaveBeenCalled();
+    } finally {
+      writeSpy.mockRestore();
+    }
+  });
+
+  it("writes when content differs", () => {
+    const target = path.join(tmp, "f.txt");
+    fs.writeFileSync(target, "hello", "utf-8");
+    const wrote = writeIfChanged(target, "world");
+    expect(wrote).toBe(true);
+    expect(fs.readFileSync(target, "utf-8")).toBe("world");
   });
 });
 
@@ -427,6 +591,41 @@ describe("launchCopilot — isolation", () => {
     const opts = callArgs[2];
     expect(opts.env["COPILOT_HOME"]).toBe(mockCopilotHome());
     expect(opts.env["BRAINKIT_VAULT_PATH"]).toBe(vault);
+  });
+
+  it("second launch on unchanged state skips writes for instructions and auto-commit script", () => {
+    // First launch: populates everything.
+    launchCopilot([], vault);
+    const instrPath = path.join(mockCopilotHome(), "copilot-instructions.md");
+    const hookPath = path.join(mockCopilotHome(), "hooks", "scripts", "auto-commit.js");
+
+    // Second launch: spy on fs.writeFileSync and assert these two paths are not written.
+    const writeSpy = vi.spyOn(fs, "writeFileSync");
+    try {
+      launchCopilot([], vault);
+      const writtenPaths = writeSpy.mock.calls.map((call) => String(call[0]));
+      expect(writtenPaths).not.toContain(instrPath);
+      expect(writtenPaths).not.toContain(hookPath);
+    } finally {
+      writeSpy.mockRestore();
+    }
+  });
+
+  it("launchCopilot preserves user-added settings.json keys across launches (regression: MCP servers)", () => {
+    // First launch: populate everything fresh.
+    launchCopilot([], vault);
+
+    // Simulate Copilot CLI runtime adding an MCP server to the file.
+    const settingsPath = path.join(mockCopilotHome(), "settings.json");
+    const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as Record<string, unknown>;
+    settings["mcpServers"] = { myserver: { command: "node", args: ["/path/server.js"] } };
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
+
+    // Second launch: brainkit must NOT clobber mcpServers.
+    launchCopilot([], vault);
+    const after = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as Record<string, unknown>;
+    expect(after["mcpServers"]).toEqual({ myserver: { command: "node", args: ["/path/server.js"] } });
+    expect(after["companyAnnouncements"]).toBeDefined();
   });
 });
 
@@ -1258,5 +1457,179 @@ describe("buildSystemPrompt — sentinel emission (gap fill for P1-A)", () => {
     expect(prompt.startsWith("<!-- brainkit:generated -->")).toBe(true);
     // Re-mock to avoid bleeding into other tests in this file.
     vi.doMock("../../core/index.js");
+  });
+});
+
+describe("mergeCopilotSettings", () => {
+  const brainkitOwned = {
+    companyAnnouncements: ["bk-msg"],
+    statusLine: { command: "node /abs/status.js" },
+    hooks: {
+      agentStop: [{ command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on agent stop" }],
+      sessionEnd: [{ command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on session end" }],
+    },
+  };
+
+  it("no existing settings → returns brainkit-owned content as-is", () => {
+    const result = mergeCopilotSettings(null, brainkitOwned);
+    expect(result).toEqual(brainkitOwned);
+  });
+
+  it("preserves user-added top-level keys", () => {
+    const existing = { mcpServers: { foo: { command: "bar" } }, theme: "dark" };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    expect(result["mcpServers"]).toEqual({ foo: { command: "bar" } });
+    expect(result["theme"]).toBe("dark");
+    expect(result["companyAnnouncements"]).toEqual(["bk-msg"]);
+    expect(result["statusLine"]).toEqual({ command: "node /abs/status.js" });
+  });
+
+  it("replaces brainkit-owned top-level scalar keys (companyAnnouncements, statusLine)", () => {
+    const existing = {
+      companyAnnouncements: ["stale"],
+      statusLine: { command: "node /old/status.js" },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    expect(result["companyAnnouncements"]).toEqual(["bk-msg"]);
+    expect(result["statusLine"]).toEqual({ command: "node /abs/status.js" });
+  });
+
+  it("preserves user-added hook entries in agentStop/sessionEnd while refreshing brainkit entries", () => {
+    const existing = {
+      hooks: {
+        agentStop: [
+          { command: "user-script.sh", description: "my hook" },
+          { command: "node /old/path.js", description: "brainkit: stale entry" },
+        ],
+        sessionEnd: [{ command: "another-user-script.sh", description: "another user hook" }],
+        sessionStart: [{ command: "user-start.sh", description: "user start hook" }],
+      },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as {
+      agentStop: { command: string; description: string }[];
+      sessionEnd: { command: string; description: string }[];
+      sessionStart: { command: string; description: string }[];
+    };
+    expect(hooks.agentStop).toHaveLength(2);
+    expect(hooks.agentStop[0]).toEqual({ command: "user-script.sh", description: "my hook" });
+    expect(hooks.agentStop[1]?.description).toBe("brainkit: auto-commit on agent stop");
+    expect(hooks.sessionEnd).toHaveLength(2);
+    expect(hooks.sessionEnd[0]).toEqual({ command: "another-user-script.sh", description: "another user hook" });
+    expect(hooks.sessionEnd[1]?.description).toBe("brainkit: auto-commit on session end");
+    expect(hooks.sessionStart).toEqual([{ command: "user-start.sh", description: "user start hook" }]);
+  });
+
+  it("idempotent: merging brainkit-owned content twice produces the same result", () => {
+    const once = mergeCopilotSettings(null, brainkitOwned);
+    const twice = mergeCopilotSettings(once, brainkitOwned);
+    expect(twice).toEqual(once);
+    const hooks = twice["hooks"] as { agentStop: unknown[]; sessionEnd: unknown[] };
+    expect(hooks.agentStop).toHaveLength(1);
+    expect(hooks.sessionEnd).toHaveLength(1);
+  });
+
+  it("strips legacy unprefixed brainkit hook descriptions (upgrade safety, no duplicate auto-commits)", () => {
+    const existing = {
+      hooks: {
+        agentStop: [
+          { command: "node /old/auto-commit.js", description: "Auto-commit vault changes after agent turns" },
+          { command: "user.sh", description: "my hook" },
+        ],
+        sessionEnd: [
+          { command: "node /old/auto-commit.js", description: "Commit any remaining vault changes on session end" },
+        ],
+      },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as {
+      agentStop: { command: string; description: string }[];
+      sessionEnd: { command: string; description: string }[];
+    };
+    expect(hooks.agentStop).toHaveLength(2);
+    expect(hooks.agentStop[0]).toEqual({ command: "user.sh", description: "my hook" });
+    expect(hooks.agentStop[1]?.description).toMatch(/^brainkit:/);
+    expect(hooks.sessionEnd).toHaveLength(1);
+    expect(hooks.sessionEnd[0]?.description).toMatch(/^brainkit:/);
+  });
+
+  it("produces canonical key order: non-brainkit keys first, then companyAnnouncements/statusLine/hooks", () => {
+    const existing = {
+      mcpServers: { foo: { command: "bar" } },
+      theme: "dark",
+      companyAnnouncements: ["stale"],
+      hooks: { agentStop: [] },
+      statusLine: { command: "old" },
+      anotherUserKey: "value",
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const keys = Object.keys(result);
+    expect(keys.slice(0, 3)).toEqual(["mcpServers", "theme", "anotherUserKey"]);
+    expect(keys.slice(3)).toEqual(["companyAnnouncements", "statusLine", "hooks"]);
+  });
+
+  it("hook entry without description (user added bare entry) is preserved", () => {
+    const existing = { hooks: { agentStop: [{ command: "user.sh" }] } };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as { agentStop: { command: string; description?: string }[] };
+    expect(hooks.agentStop).toHaveLength(2);
+    expect(hooks.agentStop[0]).toEqual({ command: "user.sh" });
+    expect(hooks.agentStop[1]?.description).toBe("brainkit: auto-commit on agent stop");
+  });
+
+  it("existing hooks key with non-array event values (malformed) → brainkit overwrites that event", () => {
+    const existing = { hooks: { agentStop: "not an array" as unknown } };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as { agentStop: { description: string }[] };
+    expect(Array.isArray(hooks.agentStop)).toBe(true);
+    expect(hooks.agentStop).toHaveLength(1);
+    expect(hooks.agentStop[0]?.description).toBe("brainkit: auto-commit on agent stop");
+  });
+
+  it("preserves non-object entries in user hook arrays (does not crash)", () => {
+    const existing = {
+      hooks: {
+        agentStop: [null, "string-entry", 42, { command: "user.sh", description: "my hook" }],
+      },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as { agentStop: unknown[] };
+    // Garbage entries preserved (don't destroy user data); brainkit entry appended.
+    expect(hooks.agentStop).toHaveLength(5);
+    expect(hooks.agentStop[0]).toBeNull();
+    expect(hooks.agentStop[1]).toBe("string-entry");
+    expect(hooks.agentStop[2]).toBe(42);
+    expect(hooks.agentStop[3]).toEqual({ command: "user.sh", description: "my hook" });
+    expect((hooks.agentStop[4] as { description: string }).description).toMatch(/^brainkit:/);
+  });
+
+  it("empty brainkit-owned hook array strips brainkit entries while preserving user entries", () => {
+    const existing = {
+      hooks: {
+        agentStop: [
+          { command: "user.sh", description: "my hook" },
+          { command: "node /old/auto-commit.js", description: "brainkit: stale" },
+        ],
+      },
+    };
+    const emptyBrainkit = { ...brainkitOwned, hooks: { agentStop: [] } };
+    const result = mergeCopilotSettings(existing, emptyBrainkit);
+    const hooks = result["hooks"] as { agentStop: { command: string; description: string }[] };
+    expect(hooks.agentStop).toHaveLength(1);
+    expect(hooks.agentStop[0]).toEqual({ command: "user.sh", description: "my hook" });
+  });
+
+  it("preserves __proto__ as an own property (does not mutate prototype slot)", () => {
+    // JSON.parse keeps __proto__ as an own enumerable property. Naive bracket
+    // assignment to a plain {} would set the prototype slot instead of an own
+    // property, silently losing the key. Object.create(null) prevents this.
+    const existing = JSON.parse('{"__proto__": {"polluted": true}, "user": "key"}') as Record<string, unknown>;
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    // The __proto__ key should be preserved as an own property in the output.
+    expect(Object.prototype.hasOwnProperty.call(result, "__proto__")).toBe(true);
+    // And it must not have polluted Object.prototype.
+    expect(({} as { polluted?: boolean }).polluted).toBeUndefined();
+    // User key still preserved.
+    expect(result["user"]).toBe("key");
   });
 });
