@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- **Copilot CLI**: `brainkit copilot` now preserves user-added entries in `~/.config/brainkit/copilot/settings.json` (such as MCP servers, approved tools, or theme preferences added through Copilot's interactive commands) across launches instead of overwriting them. Per-launch disk I/O for unchanged config files is also skipped.
+
 ## [0.10.0] - 2026-04-29
 
 ### Added
