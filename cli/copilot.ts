@@ -556,8 +556,12 @@ export function generateCopilotSettings(
   autoCommitScriptPath: string,
 ): void {
   fs.mkdirSync(copilotHome, { recursive: true });
+
+  // Brainkit-owned content. Hook entries get the `brainkit:` description
+  // prefix so the merge can identify and refresh them on re-launch without
+  // touching user-added entries under the same event.
   // Schema verified 2026-04-28 against Copilot CLI v1.0.37 (event-keyed inline hooks).
-  const settings = {
+  const brainkitOwned = {
     companyAnnouncements: COMPANY_ANNOUNCEMENTS,
     statusLine: {
       command: `node ${statusScriptPath.replace(/\\/g, "/")}`,
@@ -566,18 +570,44 @@ export function generateCopilotSettings(
       agentStop: [
         {
           command: `node ${autoCommitScriptPath.replace(/\\/g, "/")}`,
-          description: "Auto-commit vault changes after agent turns",
+          description: `${BRAINKIT_HOOK_DESCRIPTION_PREFIX} auto-commit vault changes after agent turns`,
         },
       ],
       sessionEnd: [
         {
           command: `node ${autoCommitScriptPath.replace(/\\/g, "/")}`,
-          description: "Commit any remaining vault changes on session end",
+          description: `${BRAINKIT_HOOK_DESCRIPTION_PREFIX} commit any remaining vault changes on session end`,
         },
       ],
     },
   };
-  fs.writeFileSync(path.join(copilotHome, "settings.json"), JSON.stringify(settings, null, 2) + "\n", "utf-8");
+
+  // Read existing settings if present, parse defensively. Malformed JSON
+  // falls back to overwrite — we don't want a corrupt file to permanently
+  // break launches.
+  const settingsPath = path.join(copilotHome, "settings.json");
+  const warnOverwrite = (reason: string): void => {
+    p.log.warn(`${settingsPath} ${reason} — overwriting with brainkit-managed content. Any prior content is lost.`);
+  };
+  let existing: Record<string, unknown> | null = null;
+  try {
+    const raw = fs.readFileSync(settingsPath, "utf-8");
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        existing = parsed as Record<string, unknown>;
+      } else {
+        warnOverwrite("is not a JSON object");
+      }
+    } catch {
+      warnOverwrite("is not valid JSON");
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+
+  const merged = mergeCopilotSettings(existing, brainkitOwned);
+  writeIfChanged(settingsPath, JSON.stringify(merged, null, 2) + "\n");
 }
 
 // ---------------------------------------------------------------------------
