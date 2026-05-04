@@ -75,6 +75,7 @@ Skip-write check after merge: if the on-disk content equals the new content byte
 ## Task 1: `writeIfChanged` helper + apply to instructions and hooks
 
 **Files:**
+
 - Modify: `cli/copilot.ts` — add `writeIfChanged`, update `writeCopilotInstructions` (line 381) and `installCopilotHooks` (line 391)
 - Modify: `cli/__tests__/copilot.test.ts` — add tests verifying skip behavior
 
@@ -85,8 +86,12 @@ Add to `cli/__tests__/copilot.test.ts` after the `installCopilotHooks` describe 
 ```typescript
 describe("writeIfChanged", () => {
   let tmp: string;
-  beforeEach(() => { tmp = makeTempDir("write-if-changed"); });
-  afterEach(() => { fs.rmSync(tmp, { recursive: true, force: true }); });
+  beforeEach(() => {
+    tmp = makeTempDir("write-if-changed");
+  });
+  afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
 
   it("writes when file does not exist", () => {
     const target = path.join(tmp, "f.txt");
@@ -233,6 +238,7 @@ git commit -m "perf(copilot): skip rewriting unchanged instructions and auto-com
 ## Task 2: `mergeCopilotSettings` pure function + tests
 
 **Files:**
+
 - Modify: `cli/copilot.ts` — add `BRAINKIT_HOOK_DESCRIPTION_PREFIX`, `BRAINKIT_OWNED_SETTINGS_KEYS`, `mergeCopilotSettings`
 - Modify: `cli/__tests__/copilot.test.ts` — unit tests for `mergeCopilotSettings`
 
@@ -246,12 +252,8 @@ describe("mergeCopilotSettings", () => {
     companyAnnouncements: ["bk-msg"],
     statusLine: { command: "node /abs/status.js" },
     hooks: {
-      agentStop: [
-        { command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on agent stop" },
-      ],
-      sessionEnd: [
-        { command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on session end" },
-      ],
+      agentStop: [{ command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on agent stop" }],
+      sessionEnd: [{ command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on session end" }],
     },
   };
 
@@ -286,12 +288,8 @@ describe("mergeCopilotSettings", () => {
           { command: "user-script.sh", description: "my hook" },
           { command: "node /old/path.js", description: "brainkit: stale entry" },
         ],
-        sessionEnd: [
-          { command: "another-user-script.sh", description: "another user hook" },
-        ],
-        sessionStart: [
-          { command: "user-start.sh", description: "user start hook" },
-        ],
+        sessionEnd: [{ command: "another-user-script.sh", description: "another user hook" }],
+        sessionStart: [{ command: "user-start.sh", description: "user start hook" }],
       },
     };
     const result = mergeCopilotSettings(existing, brainkitOwned);
@@ -581,6 +579,7 @@ git commit -m "feat(copilot): add mergeCopilotSettings pure function for setting
 ## Task 3: Wire `mergeCopilotSettings` into `generateCopilotSettings`
 
 **Files:**
+
 - Modify: `cli/copilot.ts` — `generateCopilotSettings`
 - Modify: `cli/__tests__/copilot.test.ts` — integration tests via `launchCopilot`
 
@@ -853,6 +852,7 @@ Malformed existing JSON falls back to overwrite with a warning."
 ## Task 4: Changelog entry
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 
 ### Step 1: Read existing CHANGELOG to match style and find the unreleased section
