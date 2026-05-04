@@ -76,6 +76,7 @@ import {
   cleanupOnboardingWorkspace,
   vaultHasLegacyBrainkitFiles,
   writeIfChanged,
+  mergeCopilotSettings,
 } from "../copilot.js";
 import { readGlobalConfig } from "../../core/index.js";
 
@@ -1315,5 +1316,173 @@ describe("buildSystemPrompt — sentinel emission (gap fill for P1-A)", () => {
     expect(prompt.startsWith("<!-- brainkit:generated -->")).toBe(true);
     // Re-mock to avoid bleeding into other tests in this file.
     vi.doMock("../../core/index.js");
+  });
+});
+
+describe("mergeCopilotSettings", () => {
+  const brainkitOwned = {
+    companyAnnouncements: ["bk-msg"],
+    statusLine: { command: "node /abs/status.js" },
+    hooks: {
+      agentStop: [
+        { command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on agent stop" },
+      ],
+      sessionEnd: [
+        { command: "node /abs/auto-commit.js", description: "brainkit: auto-commit on session end" },
+      ],
+    },
+  };
+
+  it("no existing settings → returns brainkit-owned content as-is", () => {
+    const result = mergeCopilotSettings(null, brainkitOwned);
+    expect(result).toEqual(brainkitOwned);
+  });
+
+  it("preserves user-added top-level keys", () => {
+    const existing = { mcpServers: { foo: { command: "bar" } }, theme: "dark" };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    expect(result["mcpServers"]).toEqual({ foo: { command: "bar" } });
+    expect(result["theme"]).toBe("dark");
+    expect(result["companyAnnouncements"]).toEqual(["bk-msg"]);
+    expect(result["statusLine"]).toEqual({ command: "node /abs/status.js" });
+  });
+
+  it("replaces brainkit-owned top-level scalar keys (companyAnnouncements, statusLine)", () => {
+    const existing = {
+      companyAnnouncements: ["stale"],
+      statusLine: { command: "node /old/status.js" },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    expect(result["companyAnnouncements"]).toEqual(["bk-msg"]);
+    expect(result["statusLine"]).toEqual({ command: "node /abs/status.js" });
+  });
+
+  it("preserves user-added hook entries in agentStop/sessionEnd while refreshing brainkit entries", () => {
+    const existing = {
+      hooks: {
+        agentStop: [
+          { command: "user-script.sh", description: "my hook" },
+          { command: "node /old/path.js", description: "brainkit: stale entry" },
+        ],
+        sessionEnd: [
+          { command: "another-user-script.sh", description: "another user hook" },
+        ],
+        sessionStart: [
+          { command: "user-start.sh", description: "user start hook" },
+        ],
+      },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as {
+      agentStop: { command: string; description: string }[];
+      sessionEnd: { command: string; description: string }[];
+      sessionStart: { command: string; description: string }[];
+    };
+    expect(hooks.agentStop).toHaveLength(2);
+    expect(hooks.agentStop[0]).toEqual({ command: "user-script.sh", description: "my hook" });
+    expect(hooks.agentStop[1]?.description).toBe("brainkit: auto-commit on agent stop");
+    expect(hooks.sessionEnd).toHaveLength(2);
+    expect(hooks.sessionEnd[0]).toEqual({ command: "another-user-script.sh", description: "another user hook" });
+    expect(hooks.sessionEnd[1]?.description).toBe("brainkit: auto-commit on session end");
+    expect(hooks.sessionStart).toEqual([{ command: "user-start.sh", description: "user start hook" }]);
+  });
+
+  it("idempotent: merging brainkit-owned content twice produces the same result", () => {
+    const once = mergeCopilotSettings(null, brainkitOwned);
+    const twice = mergeCopilotSettings(once, brainkitOwned);
+    expect(twice).toEqual(once);
+    const hooks = twice["hooks"] as { agentStop: unknown[]; sessionEnd: unknown[] };
+    expect(hooks.agentStop).toHaveLength(1);
+    expect(hooks.sessionEnd).toHaveLength(1);
+  });
+
+  it("strips legacy unprefixed brainkit hook descriptions (upgrade safety, no duplicate auto-commits)", () => {
+    const existing = {
+      hooks: {
+        agentStop: [
+          { command: "node /old/auto-commit.js", description: "Auto-commit vault changes after agent turns" },
+          { command: "user.sh", description: "my hook" },
+        ],
+        sessionEnd: [
+          { command: "node /old/auto-commit.js", description: "Commit any remaining vault changes on session end" },
+        ],
+      },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as {
+      agentStop: { command: string; description: string }[];
+      sessionEnd: { command: string; description: string }[];
+    };
+    expect(hooks.agentStop).toHaveLength(2);
+    expect(hooks.agentStop[0]).toEqual({ command: "user.sh", description: "my hook" });
+    expect(hooks.agentStop[1]?.description).toMatch(/^brainkit:/);
+    expect(hooks.sessionEnd).toHaveLength(1);
+    expect(hooks.sessionEnd[0]?.description).toMatch(/^brainkit:/);
+  });
+
+  it("produces canonical key order: non-brainkit keys first, then companyAnnouncements/statusLine/hooks", () => {
+    const existing = {
+      mcpServers: { foo: { command: "bar" } },
+      theme: "dark",
+      companyAnnouncements: ["stale"],
+      hooks: { agentStop: [] },
+      statusLine: { command: "old" },
+      anotherUserKey: "value",
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const keys = Object.keys(result);
+    expect(keys.slice(0, 3)).toEqual(["mcpServers", "theme", "anotherUserKey"]);
+    expect(keys.slice(3)).toEqual(["companyAnnouncements", "statusLine", "hooks"]);
+  });
+
+  it("hook entry without description (user added bare entry) is preserved", () => {
+    const existing = { hooks: { agentStop: [{ command: "user.sh" }] } };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as { agentStop: { command: string; description?: string }[] };
+    expect(hooks.agentStop).toHaveLength(2);
+    expect(hooks.agentStop[0]).toEqual({ command: "user.sh" });
+    expect(hooks.agentStop[1]?.description).toBe("brainkit: auto-commit on agent stop");
+  });
+
+  it("existing hooks key with non-array event values (malformed) → brainkit overwrites that event", () => {
+    const existing = { hooks: { agentStop: "not an array" as unknown } };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as { agentStop: { description: string }[] };
+    expect(Array.isArray(hooks.agentStop)).toBe(true);
+    expect(hooks.agentStop).toHaveLength(1);
+    expect(hooks.agentStop[0]?.description).toBe("brainkit: auto-commit on agent stop");
+  });
+
+  it("preserves non-object entries in user hook arrays (does not crash)", () => {
+    const existing = {
+      hooks: {
+        agentStop: [null, "string-entry", 42, { command: "user.sh", description: "my hook" }],
+      },
+    };
+    const result = mergeCopilotSettings(existing, brainkitOwned);
+    const hooks = result["hooks"] as { agentStop: unknown[] };
+    // Garbage entries preserved (don't destroy user data); brainkit entry appended.
+    expect(hooks.agentStop).toHaveLength(5);
+    expect(hooks.agentStop[0]).toBeNull();
+    expect(hooks.agentStop[1]).toBe("string-entry");
+    expect(hooks.agentStop[2]).toBe(42);
+    expect(hooks.agentStop[3]).toEqual({ command: "user.sh", description: "my hook" });
+    expect((hooks.agentStop[4] as { description: string }).description).toMatch(/^brainkit:/);
+  });
+
+  it("empty brainkit-owned hook array strips brainkit entries while preserving user entries", () => {
+    const existing = {
+      hooks: {
+        agentStop: [
+          { command: "user.sh", description: "my hook" },
+          { command: "node /old/auto-commit.js", description: "brainkit: stale" },
+        ],
+      },
+    };
+    const emptyBrainkit = { ...brainkitOwned, hooks: { agentStop: [] } };
+    const result = mergeCopilotSettings(existing, emptyBrainkit);
+    const hooks = result["hooks"] as { agentStop: { command: string; description: string }[] };
+    expect(hooks.agentStop).toHaveLength(1);
+    expect(hooks.agentStop[0]).toEqual({ command: "user.sh", description: "my hook" });
   });
 });
