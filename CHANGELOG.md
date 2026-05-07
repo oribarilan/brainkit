@@ -5,12 +5,12 @@
 ## [0.11.0] - 2026-05-07
 
 ### Fixed
-- **OpenCode**: brainkit launches no longer leak in `.opencode/` directories from your dotfiles dir or the parent dirs of your vault. The user's `~/.config/opencode/` (auth, MCP, LSP, model defaults) still merges in as before.
-- **OpenCode**: brainkit's brain logo, sidebar, rotating tips, and `/doctor` command no longer silently fail to load when brainkit is installed from npm. The plugin's internal modules now resolve correctly when loaded by OpenCode's bun runtime from `node_modules`.
+- **OpenCode**: brainkit sessions are no longer affected by stray OpenCode config in your dotfiles or the parent directories of your vault.
+- **OpenCode**: brain logo, sidebar, rotating tips, and `/doctor` now load reliably when brainkit is installed from npm.
 - **Copilot CLI**: settings you change inside a brainkit Copilot session (MCP servers, approved tools, theme) now persist across launches.
 
 ### Changed
-- **OpenCode**: brainkit no longer ships a custom theme. Brainkit sessions now use whatever OpenCode theme you've selected. The previous custom theme had a leak — installing it copied the theme file into your global OpenCode config dir, which brainkit cannot redirect — so it's been disabled for new users until that's solved. Existing installs are unaffected; your `/theme` choice is respected.
+- **OpenCode**: brainkit no longer applies its own theme — sessions now use whatever theme you've selected in OpenCode. Existing installs keep their current theme.
 
 ## [0.10.0] - 2026-04-29
 
