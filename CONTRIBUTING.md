@@ -9,13 +9,32 @@
 ## Development
 
 ```bash
-just dev        # start opencode with the local brainkit plugin
 just test       # run tests
 just test-watch # run tests in watch mode
 just lint       # eslint + typecheck
 just format     # format with prettier
 just check      # lint + format check + test (run before committing)
 ```
+
+## Testing your changes against a real harness
+
+Three commands launch a real harness against your dev branch — same artifact end users get:
+
+```bash
+just oc      # OpenCode against the dev brainkit
+just cp      # Copilot CLI against the dev brainkit (alias: just ghcp)
+just cc      # Claude Code against the dev brainkit
+```
+
+Each command rebuilds the npm tarball (full `prepack`: tsc + shim generator), installs it into `.dev/install/`, and launches the harness using the dev binary. Your real `~/.config/brainkit/` is untouched — dev state lives under `.dev/user-config/`.
+
+For OpenCode specifically, the recipe also pre-seeds OpenCode's plugin cache via an isolated `XDG_CACHE_HOME=.dev/xdg/cache` so OpenCode loads the dev plugin instead of auto-installing the published version from npm. Auth/MCP/model defaults still merge in from your real `~/.config/opencode/`.
+
+```bash
+just dev-clean   # wipe .dev/install/, .dev/user-config/, .dev/xdg/ — forces a fresh first-run
+```
+
+Iterating on plugin code? Rerun `just oc` (or `cp`/`cc`) — `dev-install` runs every time and picks up source changes. The recipe also strips the `core/*.js` shims it generates so `just lint` stays clean.
 
 ## Pull requests
 

@@ -43,6 +43,12 @@ function isInstalled(binaries: string[]): boolean {
 /**
  * Build the opencode.json config object brainkit writes to its isolated config dir.
  *
+ * The brainkit-isolated `opencode.json` is 100% brainkit-owned: only the fields
+ * brainkit needs to function (`$schema`, `plugin`, conditional `permission`).
+ * Per-user customizations (model, MCP, LSP, instructions, etc.) belong in
+ * `~/.config/opencode/` — OpenCode merges that with brainkit's config at load
+ * time, with brainkit's values winning on conflict (verified empirically).
+ *
  * During onboarding we grant full permissions ("yolo mode") so the agent can
  * create dirs, write config, etc. without permission prompts. The top-level
  * `permission: "allow"` shortcut is the documented OpenCode form for this
@@ -64,24 +70,50 @@ export function buildOpenCodeConfig(isOnboarding: boolean): Record<string, unkno
   return config;
 }
 
+/**
+ * Build the tui.json config object brainkit writes to its isolated config dir.
+ *
+ * Brainkit currently does not declare a theme — see opencode/tui.tsx for the
+ * reason. The brainkit theme JSON is kept dormant in the repo for future use.
+ */
+export function buildOpenCodeTuiConfig(): Record<string, unknown> {
+  return {
+    $schema: "https://opencode.ai/tui.json",
+    plugin: ["@2brain/brainkit"],
+  };
+}
+
+/**
+ * Write `content` to `filePath` only if the on-disk content differs.
+ *
+ * Preserves mtime when content is unchanged, which avoids unnecessary file
+ * churn (and any tooling that watches config mtimes) on every launch.
+ *
+ * Exported for direct unit testing; production callers go through
+ * `ensureOpenCodeConfig`.
+ */
+export function writeIfChanged(filePath: string, content: string): void {
+  let existing: string | null;
+  try {
+    existing = fs.readFileSync(filePath, "utf-8");
+  } catch {
+    existing = null;
+  }
+  if (existing === content) return;
+  fs.writeFileSync(filePath, content, "utf-8");
+}
+
 function ensureOpenCodeConfig(isOnboarding: boolean): void {
   const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
 
-  // Always regenerate opencode.json so any stale/broken config from a prior
-  // brainkit version gets overwritten on the next launch.
-  const ocConfig = buildOpenCodeConfig(isOnboarding);
   const ocConfigPath = path.join(configDir, "opencode.json");
-  fs.writeFileSync(ocConfigPath, JSON.stringify(ocConfig, null, 2) + "\n", "utf-8");
+  const ocContent = JSON.stringify(buildOpenCodeConfig(isOnboarding), null, 2) + "\n";
+  writeIfChanged(ocConfigPath, ocContent);
 
   const tuiConfigPath = path.join(configDir, "tui.json");
-  if (!fs.existsSync(tuiConfigPath)) {
-    const config = {
-      $schema: "https://opencode.ai/tui.json",
-      plugin: ["@2brain/brainkit"],
-    };
-    fs.writeFileSync(tuiConfigPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
-  }
+  const tuiContent = JSON.stringify(buildOpenCodeTuiConfig(), null, 2) + "\n";
+  writeIfChanged(tuiConfigPath, tuiContent);
 }
 
 function launchOpenCode(args: string[], vaultPath?: string): void {
@@ -89,10 +121,19 @@ function launchOpenCode(args: string[], vaultPath?: string): void {
   ensureOpenCodeConfig(isOnboarding);
 
   const configDir = getConfigDir();
+  // Selective isolation: brainkit owns the OPENCODE_CONFIG file (overrides on
+  // conflict via OpenCode's merge precedence) and overrides OPENCODE_CONFIG_DIR
+  // so the user's dotfiles-managed `.opencode/` directory doesn't leak in.
+  // OPENCODE_DISABLE_PROJECT_CONFIG kills the upward project walk so vault
+  // parent directories can't inject their own `.opencode/` configs. Auth, MCP
+  // servers, model defaults from `~/.config/opencode/` continue to merge in —
+  // we don't redirect XDG_*_HOME because that would wipe the user's auth.json.
   const env: Record<string, string | undefined> = {
     ...process.env,
     OPENCODE_CONFIG: path.join(configDir, "opencode.json"),
     OPENCODE_TUI_CONFIG: path.join(configDir, "tui.json"),
+    OPENCODE_CONFIG_DIR: configDir,
+    OPENCODE_DISABLE_PROJECT_CONFIG: "true",
   };
 
   if (vaultPath !== undefined) {

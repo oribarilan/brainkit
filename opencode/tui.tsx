@@ -5,13 +5,8 @@ import { createMemo } from "solid-js";
 import { Tips } from "./tips.tsx";
 import { Sidebar } from "./side.tsx";
 import { logoLarge } from "./logo.ts";
-import { themePath } from "./theme-path.ts";
 
 const id = "brainkit";
-
-// Re-export so the regression test can import it without pulling in JSX deps.
-// (See ./theme-path.ts for why path resolution lives in its own module.)
-export { themePath };
 
 type Api = Parameters<TuiPlugin>[0];
 
@@ -50,25 +45,14 @@ const brainkitPlaceholders = {
 };
 
 const tui: TuiPlugin = async (api) => {
-  // Theme load is best-effort. If it fails (missing file, schema mismatch,
-  // OpenCode API change), log + toast the user, and continue registering
-  // everything else so the TUI degrades to default colors instead of
-  // disappearing entirely.
-  try {
-    await api.theme.install(themePath);
-    api.theme.set("brainkit");
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[brainkit] failed to load custom theme: ${msg}`);
-    if (typeof api.ui?.toast === "function") {
-      api.ui.toast({
-        variant: "error",
-        title: "brainkit",
-        message: "Failed to load custom theme; using default colors. See opencode logs for details.",
-        duration: 8000,
-      });
-    }
-  }
+  // The brainkit theme is intentionally NOT installed in any harness right
+  // now. The theme JSON (opencode/brainkit.json) and path resolver
+  // (opencode/theme-path.ts) are kept dormant in the repo so we can wire it
+  // up later without rebuilding it from scratch. See AGENTS.md for the
+  // reason: api.theme.install writes to <XDG_CONFIG_HOME>/opencode/themes/,
+  // which OPENCODE_CONFIG_DIR cannot redirect, so it leaks into the user's
+  // global OpenCode config dir. Until that's solved, the brainkit TUI uses
+  // whatever theme the user has selected in OpenCode.
 
   api.slots.register({
     slots: {
@@ -134,10 +118,8 @@ const tui: TuiPlugin = async (api) => {
   ]);
 
   // All our slots/commands are registered. Now safe to deactivate the built-in
-  // tips — if any registration above had thrown, we'd never reach here and the
-  // built-in tips would remain as a fallback. The user always has *some* tips,
-  // never zero. (This invariant relies on slot/command registration being
-  // synchronous on the API surface.)
+  // tips. The user always has *some* tips, never zero. (This invariant relies
+  // on slot/command registration being synchronous on the API surface.)
   const builtinTips = api.plugins.list().find((entry) => entry.id === "internal:home-tips");
   if (builtinTips?.enabled && builtinTips.active) {
     await api.plugins.deactivate("internal:home-tips");

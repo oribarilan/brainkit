@@ -1,143 +1,275 @@
 # external-brain-reference-skill
 
-> **Status:** Idea, not designed. Requires brainstorming session before any spec or implementation work. Do **not** start implementing — open questions below need answers first.
+> **Status:** Idea, not designed. This file is structured in two parts: **WHAT first, HOW second.** The HOW (distribution mechanism, isolation-rule reconciliation, lifecycle) is a real and important topic, but a prior council review collapsed the entire conversation into HOW debates and never engaged the strategic question. The next review should take a stance on the WHAT first, then engage the HOW with that stance in hand.
 
-## Context
+## The core idea (one sentence)
 
-Brainkit today only "knows" about the user's second brain when the agent is running **inside** a brainkit-launched harness session (via `brainkit oc`, `brainkit cc`, etc.). The system prompt, skills, and vault path are injected by the launcher.
+**Any agent the user talks to — in any repo, any harness, any surface — should know the user has a brainkit second brain and be able to interact with it.**
 
-But the user also works on **other repositories** — regular software projects, side projects, client work — where they launch their harness directly (plain `opencode`, `claude`, `copilot`) without going through brainkit. In those sessions the agent has **no idea the brain exists**, let alone where it lives. So the agent can't:
+Today, that knowledge only exists inside brainkit-launched sessions (`brainkit oc`, `brainkit cc`, `brainkit copilot`). Outside those sessions, the brain is invisible. This idea reframes brainkit from **an app the user goes to** into **a layer that follows the user across surfaces**.
 
-- Suggest writing a meeting note, contact, or brag entry into the brain
-- Pull context from the brain (e.g., "what did we decide about X last quarter?")
-- Cross-reference a project in the current repo with its PARA entry in the brain
-- Even mention the brain as an option
+## Why this matters (the strategic framing)
 
-The idea: ship a **standalone, installable skill** (or set of files) that lives outside the brainkit-launched context — installed once into the user's global agent config — that teaches any agent session "the user has a brainkit second brain at `<path>`, and here's how to refer to it." The skill would be **personalized at install time** with the user's actual `brain_path` so the agent always knows where to look.
+### Brainkit-as-app vs. brainkit-as-layer
 
-This is essentially a "brain pointer" for non-brainkit sessions — a thin, read-aware reference that doesn't replicate brainkit functionality but bridges arbitrary projects to the brain.
+Brainkit today is closer to an app: the user opens it (`brainkit oc`), works in it, closes it. The brain is a destination.
 
-**Value delivered (hypothesized — to be validated in brainstorming):**
+The idea here is that a second brain is supposed to be a **layer** over your work, not a destination. Tiago Forte's PARA / "Building a Second Brain" thesis is explicitly about ambient capture and retrieval — the brain _with_ you, not _waited on_. Brainkit's current model only partially delivers that.
 
-- The brain becomes useful from **everywhere**, not just inside brainkit-launched sessions
-- Reduces friction for "I should put this in my brain" moments during regular project work
-- Makes the brain a first-class context source the agent can pull from when relevant
-- Lightweight — doesn't require running brainkit's full plugin in every project
+External brain awareness is the shift from app to layer.
 
-## Related Files
+### The compounding-value argument
 
-- `core/system-prompt.ts` — how brainkit-launched sessions learn about the brain today; reference for what minimum context an external skill would need
-- `core/vault.ts` — vault discovery + config; the install flow would read `~/.config/brainkit/config.toml` to learn the user's `brain_path`
-- `skills/brainkit/` — root client-side skill; some of its content might be the basis for the external skill
-- `cli/launch.ts`, `cli/copilot.ts`, `cli/claude.ts` — launcher patterns; an `install-external-skill` command would live alongside these or as a subcommand
-- `specs/US-claude-code.md` — Claude Code skill format reference (`.claude-plugin`, `skills/<name>/SKILL.md`)
-- `specs/10-copilot-cli.md` — Copilot CLI skill install pattern (`.agents/skills/`)
-- `specs/05-skills.md` — current skills architecture; external skill is a new category outside this
+A 6-month-old brain with 200 entries is dramatically more valuable when accessible **everywhere** than when accessible only in dedicated sessions. The value gradient steepens over time:
 
-## Dependencies
+- Week 1: tiny brain, low loss from being session-bound
+- Month 6: rich brain, every inaccessible moment is a lost retrieval/capture opportunity
+- Year 2: brain is a meaningful long-term memory layer; session-bound access becomes the dominant friction point
 
-- **Soft:** Multi-vault — if the user has multiple vaults, which one does the external skill point at? (Probably the default, or all of them.)
-- **Soft:** Harness-isolation rule (AGENTS.md) — installing into the user's global harness config arguably violates this. Needs explicit carve-out or a different install location.
-- **Soft:** Team vaults (`.todo/backlog/team-vault.md`) — shares the "remote brain" problem space. Brainstorm together; see Open Questions → Remote brains.
-- **Hard:** A working `brain_path` in `~/.config/brainkit/config.toml` — the skill is meaningless without one (unless remote-brain support lands first, in which case the requirement shifts to "a working brain reference, local or remote").
+Tools that are always-on become indispensable. Tools you context-switch into stay optional. Brainkit's long-term value depends on closing this gap.
 
-## Open Questions (resolve in brainstorming)
+### What the layer actually unlocks
 
-These are the unknowns that block design. They are not acceptance criteria — they are the agenda for the brainstorming session.
+1. **Ambient capture across surfaces.** Brag-worthy moments, contact mentions, decisions worth recording — these happen _during_ coding, conversation, planning, debugging. Today they're only captured if the user happens to be in a brainkit session. With external awareness, any agent the user is talking to can offer to capture them.
 
-### Scope & shape
+2. **Cross-repo continuity / long-term memory.** "We decided X about auth last quarter" — the agent can pull from the user's `02_areas/` or `04_archive/` from inside any unrelated project. The brain becomes queryable long-term memory for _every_ agent interaction, not just brainkit ones.
 
-- Is this **one** generic skill ("the user has a brain at `<path>`, here's its structure") or **many** thin wrappers that mirror brainkit's existing skills (bragfile, contacts, meeting-notes) but in read/write-via-path mode?
-- Read-only, write-only, or full read/write from arbitrary project directories? Read-only is safest; full read/write is most useful.
-- Does the agent get the **full** PARA structure docs, or just enough to know "the brain exists at `<path>`, look there if you need second-brain content"?
+3. **Project ↔ PARA linkage.** Agent in `~/code/acme-redesign/` recognizes this maps to `02_areas/clients/acme/` in the brain and surfaces relevant prior context unprompted.
 
-### Distribution
+4. **Friction removal.** "I should put this in my brain" today: open another terminal → run `brainkit oc` → navigate → write → context-switch back. With external awareness: agent offers, user says yes, done. The friction reduction is small per-instance but high-frequency, and frequency is what makes a tool indispensable.
 
-- How is the skill installed? `brainkit install-external-skill <harness>`? Auto-installed on first `brainkit` run? Manual copy from docs?
-- One skill per harness (Claude / OpenCode / Copilot), or a single skill format that works everywhere?
-- Where does it live? `~/.claude/skills/`, `~/.config/opencode/skills/`, `~/.agents/skills/`? This **directly conflicts** with brainkit's harness-isolation rule, which says brainkit must never write to the user's global harness config. Resolve before designing.
-- Is there a way to deliver it without writing to the user's global harness config — e.g., as a plugin/MCP the user manually enables, or as a snippet they add to their own `AGENTS.md`/`CLAUDE.md`?
+### Where the idea genuinely shines vs. where it's marginal
+
+**Shines:**
+
+- **Capture** triggered by code work (shipped feature → brag entry; mentioned a colleague → contact; made a decision → note).
+- **Retrieval of durable knowledge** (decisions, conventions, prior art on areas the user owns long-term).
+- **Linking active projects to their PARA records.**
+
+**Marginal or risky:**
+
+- Pulling random brain content into unrelated client repos (real privacy concern — see Risks).
+- Replicating brainkit's full skill behavior outside brainkit (probably better solved by a `--cwd` flag on the launcher; that's a different feature).
+
+### The reframe a contrarian review surfaced
+
+Most "I should brain this" moments aren't triggered by code work — they're triggered by Slack, calendar, conversation, voice. If true, "agent in a coding harness knows about the brain" only captures a slice of the real opportunity.
+
+The bigger principle: **the brain should be addressable by any agent the user talks to**, not only coding-harness agents. Coding harnesses are one instance — the strategic target is "brainkit isn't trapped inside its own launcher."
+
+This widens the surface area of the idea considerably:
+
+- Coding harnesses outside brainkit launches (Claude Code, OpenCode, Copilot CLI run plain)
+- Non-coding agent surfaces (Claude Desktop, ChatGPT, Cursor, voice assistants, future agent platforms)
+- Anything that speaks the right protocol
+
+Which raises the strategic question the next review should chew on:
+
+> **Is the right long-term answer a per-harness skill/snippet, or a harness-agnostic interface to the brain (most likely an MCP server) that any agent ecosystem can consume?**
+
+The skill/snippet/pointer ideas are tactical bridges. MCP (or whatever cross-tool agent protocol wins) is the strategic answer to brainkit-as-layer.
+
+## Open questions about the WHAT (next review's agenda)
+
+These are about the **idea**, not the implementation. The previous review skipped past these.
+
+### Is the problem real and worth pursuing?
+
+- How often, in real usage, does the "I'm in a non-brainkit session and want my brain" moment actually occur? Validate before designing.
+- Is the value distribution skewed (a few high-value moments per week) or flat (many small moments per day)? Different shapes justify different investment.
+- What fraction of "I should brain this" moments happen in coding contexts vs. non-coding contexts (Slack, calendar, conversation)? If non-coding dominates, this feature targets the smaller slice and the strategic priority should arguably be a different surface entirely.
+- Is there a cohort effect? Does this matter more for users with mature, large brains (year 2+) than for new users (week 2)? If so, is brainkit even at the point where this is the right next investment?
+
+### Is the brain-as-layer thesis the right strategic direction for brainkit?
+
+- Does brainkit want to be an **app** (a destination users open) or a **layer** (ambient context across surfaces)? The current architecture is an app; this idea is a layer. The product implication is significant.
+- If layer: which surfaces matter most, in priority order? Coding harnesses? Desktop assistants? Voice? Future agent platforms?
+- Does the layer thesis change what brainkit's _core_ value proposition is? Today it's "structured second brain with agent-aware skills." Layer-thesis: "your brain, present in every conversation."
+- What does a year-2 brainkit user's daily flow look like under each thesis? Which is more compelling?
+
+### Capture vs. retrieval — which direction is the bigger win?
+
+- **Outbound (capture):** agent in any session offers to write to the brain. Lower-risk, well-scoped, clear value.
+- **Inbound (retrieval):** agent in any session pulls from the brain. Higher-value when it works, but real privacy/leak risks (especially in client repos).
+- Should v1 do only one direction? Both? Capture-only is a meaningfully smaller and safer feature; retrieval is where the "long-term memory" magic lives.
+- What does "the agent reads from the brain" look like in practice — proactive (agent decides), reactive (user asks), or hybrid (agent suggests, user confirms)?
+
+### What is the brain-shaped contract the agent needs?
+
+- What's the minimum the agent needs to know to be useful? Just `(brain_path, "it's PARA")`? Or richer (features, identity, conventions, current projects)?
+- Is there an analogy to follow — how do other "ambient context" tools work? (e.g., shell history, git, knowledge graphs in IDEs)
+- Does the agent need _interface_ knowledge (how to read/write) or _content_ knowledge (what's actually in there) or both?
+
+### Surfaces and protocols
+
+- **Per-harness skills/snippets** (today's framing) — works for harnesses brainkit knows, doesn't extend to the broader agent ecosystem.
+- **MCP server** — harness-agnostic, future-proof, reaches non-coding surfaces; bigger investment, requires brainkit to ship and maintain a server.
+- **A standard "brain pointer" format** that any agent could be taught to consume — interesting but requires ecosystem adoption.
+- Which of these is the right strategic bet given where agent tooling is heading? Is it worth waiting for the ecosystem to converge, or moving early?
+
+### What is the brain becoming?
+
+- Today the brain is a single-user, local markdown vault.
+- A "layer" brain implies it needs to be addressable from multiple machines, possibly multiple agents simultaneously, possibly remote.
+- This pulls in adjacent ideas (remote brains, team vaults — see `.todo/backlog/team-vault.md`). Are they prerequisites for the layer thesis, or separate?
+- Does the layer thesis force brainkit toward a hosted/sync model eventually, or can it stay local-first?
+
+## Risks of the WHAT (independent of mechanism)
+
+These are risks of the **idea itself**, not of any particular delivery mechanism.
+
+- **Privacy leakage in mixed contexts.** Agent in a client repo reads from the user's personal brain → personal/other-client content surfaces in client commits, PRs, code review, transcripts. This is a property of "brain visible everywhere" regardless of how that visibility is delivered.
+- **Capture in the wrong context.** Agent in a client repo writes to the personal brain about something it shouldn't have captured (client-confidential phrasing, identifying details). The brain absorbs context it shouldn't.
+- **Always-on attention drag.** A brain that's always present in the agent's context might cause the agent to over-reference it, derailing focused work. "Brain-everywhere" risks "brain-too-much."
+- **Identity bleed.** If the brain pointer carries the user's identity, that identity leaks into client-context agent transcripts.
+- **Trust shape.** Brainkit-as-layer makes brainkit a more pervasive presence in the user's tooling. Users' threshold for trusting a layer is higher than for trusting an app.
+- **Feature gravity.** Once the brain is a layer, every adjacent feature wants to plug into it. Scope discipline becomes harder.
+
+## Non-goals (explicitly)
+
+- Replicating brainkit's full TUI / sidebar / launcher inside non-brainkit sessions.
+- Auto-launching brainkit from inside another agent session.
+- Two-way sync between arbitrary project repos and the brain — brain stays source of truth.
+
+## Related work and dependencies
+
+- **Soft:** Multi-vault — if the user has multiple vaults, which one is "the brain" the layer exposes?
+- **Soft:** Team vaults (`.todo/backlog/team-vault.md`) — shares the "brain present in multiple contexts" problem space; coordinate.
+- **Soft:** Remote brains — the layer thesis probably accelerates the case for non-local brains.
+- **Hard:** A working `brain_path` exists — the layer is meaningless without a brain to expose.
+- **Reference:** `core/system-prompt.ts` — what brainkit-launched sessions tell the agent today; informs what minimum context the layer needs to convey.
+
+---
+
+# Part 2: The HOW (secondary — engage only after the WHAT lands)
+
+> The HOW matters, but it's downstream. A previous review collapsed the entire conversation into install mechanics and the harness-isolation rule, never engaging the strategic question. **Do not re-litigate the HOW until the WHAT has a stance.** Once the WHAT is decided, the HOW questions below become first-class.
+
+## The mechanism space
+
+Roughly ordered from tactical/cheap to strategic/heavy:
+
+### 1. User-pasted snippet (`brainkit print-pointer`)
+
+Brainkit prints a personalized markdown block to stdout. The user pastes it into their own `~/.claude/CLAUDE.md`, `~/.config/opencode/AGENTS.md`, project-level `AGENTS.md`, or wherever they want the brain to be visible. Brainkit never writes to global harness config.
+
+- **Honors isolation rule:** yes (user owns the change).
+- **Reach:** every harness/surface that respects user-edited instruction files.
+- **Lifecycle:** user re-runs command on changes; no auto-update machinery.
+- **Best for:** validating demand cheaply, opt-in users, per-project scoping.
+
+### 2. Brainkit-installed skill in global harness config
+
+`brainkit install-external-skill <harness>` writes a personalized skill into `~/.claude/skills/`, `~/.config/opencode/skills/`, etc. Auto-update on every brainkit launch keeps it fresh.
+
+- **Honors isolation rule:** no (this is exactly what the rule forbids; explicit user opt-in is consent-washing, not isolation).
+- **Reach:** harnesses brainkit knows about.
+- **Lifecycle:** brainkit owns install/update/uninstall — significant surface area (version markers, drift detection, multi-harness coordination, opt-out flags).
+- **Best for:** if validation proves demand and the isolation rule is deliberately revised.
+
+### 3. MCP server (or equivalent harness-agnostic protocol)
+
+Brainkit ships a `brainkit-mcp` server. The user enables it through their own harness/agent config (still a config edit, but they did it). Server exposes read (and possibly write) tools over the brain.
+
+- **Honors isolation rule:** yes (user-enabled, brainkit doesn't write the config).
+- **Reach:** broadest — any agent ecosystem that speaks MCP, including non-coding surfaces (Claude Desktop, Cursor, future agent platforms).
+- **Lifecycle:** brainkit ships and maintains a server; updates flow through normal package updates.
+- **Best for:** the layer thesis at strategic scale.
+
+### 4. A documented "brain pointer" file convention (e.g., `~/.brainkit-pointer`)
+
+A standardized location/format that any agent could be taught to look for. Requires either ecosystem adoption or per-harness teaching (which loops back to mechanism #1 or #2).
+
+- **Honors isolation rule:** depends on how agents are taught.
+- **Reach:** ambitious but speculative without ecosystem buy-in.
+
+### 5. Per-project opt-in
+
+The user adds a brainkit pointer to specific project repos where they want brain awareness. Solves the privacy problem (§Risks) by default — brain isn't visible in repos where it shouldn't be.
+
+- **Honors isolation rule:** yes.
+- **Reach:** narrow but precise.
+- **Best for:** the privacy-conscious case where "everywhere" is too much.
+
+## Open questions about the HOW
+
+Engage these **after** the WHAT is decided. The shape of the WHAT determines which mechanism makes sense.
+
+### The isolation-rule tension
+
+- AGENTS.md says brainkit must never modify the user's normal harness configuration. This is a load-bearing trust property.
+- Mechanism #2 directly violates this. Mechanisms #1, #3, #5 do not (the user owns the config edit).
+- If the WHAT requires brainkit to install into global config, the rule must be deliberately revised (with a written exception clause), not silently bent. Is the WHAT important enough to justify revising the rule?
+- Is there an opt-in pattern that genuinely respects user agency (clear consent, easy uninstall, no surprise behavior) — or is "explicit opt-in" just consent-washing?
+
+### Distribution per harness vs. universal
+
+- One mechanism per harness (Claude / OpenCode / Copilot — each with its own skill format)?
+- Or one universal mechanism (MCP, snippet) that works across all of them?
+- If per-harness: maintenance multiplies; drift between implementations is inevitable.
+- If universal: probably MCP, which is the strategic answer but heavier to build.
 
 ### Personalization
 
-- The skill needs to know **where the brain is** (`brain_path`). How is that injected?
-  - Generated at install time with the path baked in?
-  - Read from `~/.config/brainkit/config.toml` at runtime by the agent?
-  - Env var (`BRAINKIT_VAULT_PATH`) the user sets globally?
-- What happens if the user changes their `brain_path` later? Auto-regenerate, or stale until reinstalled?
-- Multi-vault: list all vaults, or just the default? How does the agent pick the right one?
+- How does the mechanism learn `brain_path`? Generated at install with the path baked in? Read at runtime from `~/.config/brainkit/config.toml`? Env var (`BRAINKIT_VAULT_PATH`)?
+- Runtime read is more resilient (no stale-pointer rot when the user moves the vault), but requires the agent to perform a runtime lookup.
+- Multi-vault: list all, pick default, or prompt? Depends on what the WHAT says about multi-vault for this feature.
 
-### Auto-update
+### Lifecycle (only relevant if mechanism owns installed files)
 
-- Every `brainkit` invocation (any harness, any subcommand that launches a session) should ensure the externally-installed skill is **up to date** before the session starts. Stale skills = wrong brain path, wrong PARA structure, wrong feature list.
-- What does "up to date" mean? Two axes:
-  - **Content drift** — brainkit shipped a new version of the skill template (new PARA conventions, new features, bug fixes in the agent guidance).
-  - **Personalization drift** — the user's `brain_path`, vault list, identity, or features changed since last install.
-- Detection mechanism — version marker file in the installed skill dir (`.brainkit-version` like the Claude staging pattern in `US-claude-code.md`), plus a hash/mtime of the source config. If either differs, regenerate.
-- Failure mode — if auto-update fails (permissions, disk full, harness config dir missing), do we block the launch, warn loudly, or silently continue with the stale skill? Probably warn + continue, since the user explicitly invoked brainkit and a stale pointer is better than no launch.
-- Cost — auto-update runs on every launch and must be **fast** (sub-100ms in the no-op case). Use the `.brainkit-version` + config-hash short-circuit, only do real work when something changed. Mirrors the Claude plugin staging fast-path.
-- Uninstall — if the user removes their brain (`brain_path` no longer exists or is unset), should auto-update **remove** the external skill, or leave it pointing at a missing path? Probably remove, with a one-line notice.
-- Scope — does auto-update touch **only** the brainkit-installed external skill, or could it accidentally clobber user edits in the same skill dir? Must be scoped to files brainkit owns (manifest of installed files, like the Copilot pattern).
-- Multi-harness — if the user has the skill installed for OpenCode **and** Claude **and** Copilot, does invoking `brainkit oc` update only the OpenCode copy, or all three? Updating all three is more correct but slower; updating only the active harness is faster but lets the others drift.
+- Auto-update on every brainkit launch: detection (version marker + config hash), failure mode, performance budget, multi-harness coordination, uninstall on `brain_path` removal, scope to brainkit-owned files only.
+- Alternative: lazy `brainkit doctor` check that surfaces drift but requires user action.
+- Opt-out for power users who want to pin or hand-edit (`auto_update_external_skill = false`, `.brainkit-pin` marker).
+- Honest question: how much of this lifecycle complexity disappears entirely if the mechanism is #1 (snippet) or #3 (MCP)?
 
-### Opt-out — power users may want to pin the skill to a specific brainkit version or edit it locally. Provide an opt-out (`auto_update_external_skill = false` in `~/.config/brainkit/config.toml` or a `.brainkit-pin` marker in the skill dir).
+### Composition with brainkit-launched sessions
 
-### Remote brains
+- If the user runs `brainkit oc` and the global mechanism is also active, what wins? Duplicated context? Supersede? Deactivate?
+- The mechanism's content should probably defer to a brainkit-launched session when one is active.
 
-- Today brainkit assumes `brain_path` is a **local filesystem path**. The external-skill idea inherits that assumption — the agent gets a local path and reads/writes through normal fs tools.
-- But a user's brain might live **remotely**: a git repo on GitHub/GitLab they haven't cloned to this machine, a synced cloud drive (iCloud, Dropbox, Syncthing) that may or may not be mounted, an SSH-accessible host, an object store, or eventually a hosted brainkit service.
-- Shapes to consider:
-  - **Cloned-on-demand** — skill knows the remote URL; if `brain_path` doesn't exist locally, agent (or skill) clones it on first use. Closest to current model.
-  - **Pure remote, no local clone** — agent reads/writes via API (git protocol, HTTP, SSH). Big departure; probably needs an MCP server or a shim CLI.
-  - **Mounted/synced** — the brain is "remote" conceptually but appears as a local path via Dropbox/iCloud/Syncthing. Brainkit just needs to handle "path exists but might be partially synced / locked / conflicted."
-- Identity & auth — remote brains need credentials (SSH key, GitHub token, API key). Where do those live? Brainkit currently has zero credential management.
-- Latency & offline — local fs is instant; remote is slow and may be unavailable. Does the agent degrade gracefully (cache, read-only mode, defer writes), or hard-fail?
-- Conflict resolution — multi-machine + remote = same file edited from two places. Same problem as team vaults (see below). Probably the same solution.
-- **Strong overlap with team vaults** — `.todo/backlog/team-vault.md` already brainstorms shared brains for multiple humans. A team brain almost certainly lives remotely (git repo). The two ideas should be brainstormed **together** because:
-  - Both need a remote-source-of-truth model
-  - Both need conflict/sync semantics
-  - Both raise the same auth/credential questions
-  - Both affect the external skill's "where is the brain?" answer (a remote team brain might have multiple valid paths, or no local path at all)
-- Action: when this leaves backlog, coordinate the brainstorm with `team-vault.md`. Likely outputs are: a unified "remote brain" abstraction underneath both single-user-remote and multi-user-shared cases, or an explicit decision that they're separate features with different mechanisms.
+### Identity in the mechanism
 
-### Identity & content
+- Should the mechanism carry the user's identity (name, role) for richer agent behavior, or just the path?
+- Identity in non-brainkit contexts risks bleeding into client-context transcripts. Probably path-only as default.
 
-- Does the skill include the user's identity (name, role) or just the path? Identity makes the agent more useful but is more invasive in non-brainkit projects.
-- Does it explain PARA, features, conventions — or is it just a pointer with "look here, read what you need"?
+### Remote brains and team vaults
 
-### Agent behavior
+- Today `brain_path` is local. Mechanisms that bake a path assume locality. Mechanisms that read at runtime can adapt to whatever brainkit's brain abstraction becomes.
+- Strong overlap with `.todo/backlog/team-vault.md` and the unwritten remote-brain story. Coordinate when both leave backlog.
 
-- When should the agent reach into the brain unprompted? Never, on accomplishment-detection-like signals, or only when the user asks?
-- Should the agent be allowed to **write** to the brain from a project it doesn't own (e.g., add a brag entry while the user is mid-coding)? Permission model?
-- How does the skill compose with brainkit's actual launched sessions — does it deactivate / get superseded when running under `brainkit oc`?
+### Reach beyond coding harnesses
 
-### Conflicts & isolation
+- Mechanisms #1 and #2 reach only harnesses brainkit knows about.
+- Mechanism #3 (MCP) reaches the broader agent ecosystem (desktop assistants, voice, future platforms).
+- If the WHAT endorses the broader brain-as-layer thesis, the HOW probably needs to include MCP eventually — even if not first.
 
-- **Hard:** AGENTS.md says "never modify the user's normal harness configuration." Installing skills into the user's global config dir is exactly that. Either revise the rule with a carved-out exception for opt-in external skills, or find a non-violating delivery mechanism (e.g., a documented manual snippet, a brainkit-launched "external mode" the user toggles per-project).
-- If a project already has an `AGENTS.md`/`CLAUDE.md`, does the brain pointer get appended, ignored, or replace it? Probably appended via skill, but TBD.
+## What this file is NOT
 
-### Non-goals to consider
+- Not an implementation spec.
+- Not a final decision — it's the framing for the next review.
+- Not a debate about the harness-isolation rule **at the WHAT stage** (engage that debate only when discussing the HOW).
 
-- Replicating brainkit's full TUI / sidebar / status outside brainkit sessions — out of scope.
-- Auto-launching brainkit from inside another harness session — out of scope.
-- Two-way sync between project repos and the brain — out of scope; brain stays the source of truth.
+## Acceptance criteria for the next review
 
-## Acceptance Criteria
+The next review should produce, **in order**:
 
-Not defined yet — the brainstorming output should include:
+**On the WHAT (primary):**
 
-- [ ] A 1-paragraph problem statement narrowed to a specific shape (one skill vs many; read-only vs read/write; which harnesses)
-- [ ] Decisions (or explicit deferrals) for each open question above, especially the harness-isolation conflict
-- [ ] A delivery mechanism that either honors the harness-isolation rule or carves an explicit, justified exception
-- [ ] A units-of-work breakdown similar to `US-multi-vault.md`
-- [ ] A promotion path: when this leaves backlog and becomes `specs/US-external-brain-reference.md`
+- [ ] A clear stance on whether the brain-as-layer thesis is the right strategic direction for brainkit.
+- [ ] An opinion on capture vs. retrieval — which direction to invest in first, and why.
+- [ ] An opinion on which surfaces matter most (coding harnesses only, or also desktop/voice/non-coding agents).
+- [ ] An honest assessment of the privacy and trust risks inherent in "brain visible everywhere."
+- [ ] A recommendation on whether this idea should be promoted, deferred, reshaped, or killed.
 
-## Verification
+**On the HOW (secondary, only if the WHAT is endorsed):**
 
-N/A at this stage. Once designed, verification is defined per unit of work in the resulting spec.
+- [ ] A stance on per-harness vs. harness-agnostic (MCP-like) as the strategic target, even if the tactical first step is different.
+- [ ] A recommended mechanism for v1 (likely the cheapest validation path) and a recommended strategic mechanism for v2+.
+- [ ] A position on the harness-isolation rule: honor it (constrain the HOW), revise it (justify the carve-out), or sidestep it (mechanism the user owns).
+- [ ] A view on lifecycle complexity (auto-update, drift, opt-out) — necessary or accidental, and how much of it goes away under different mechanism choices.
 
 ## Notes
 
-- The hardest part of this is probably **not** the skill content — it's reconciling "install into the user's global harness config" with brainkit's hard rule against doing exactly that. Brainstorming should probably lead with that question.
-- Smallest viable version: a single read-only skill, one harness, single-vault users only, install via explicit `brainkit install-external-skill <harness>` (so the user opts in, sidestepping some of the isolation concern).
-- Consider running the `brainstorming` skill when picking this up.
+- A previous review correctly identified that `brainkit <harness> --cwd <path>` is a much smaller, higher-leverage tactical feature that solves the "I'm in another repo and want brainkit" case. That feature is worth doing on its own merits regardless of what happens to this idea — it should likely be split into its own backlog item.
+- This idea (brain-as-layer) is bigger than the `--cwd` feature: it's about reaching agent surfaces brainkit doesn't and won't ever launch directly.
+- Consider running the `brainstorming` skill when this is picked up.
