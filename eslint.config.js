@@ -31,7 +31,18 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["node_modules/", "*.js", "*.cjs", "eslint.config.js", "vitest.config.ts", "extensions/bundled/"],
+    ignores: [
+      "node_modules/",
+      "*.js",
+      "*.cjs",
+      "eslint.config.js",
+      "vitest.config.ts",
+      "extensions/bundled/",
+      // Auto-generated shims for npm consumers (see scripts/generate-core-shims.mjs).
+      // Stale copies can sit on disk after an interrupted `npm pack` or test run;
+      // ignoring them keeps `just lint` deterministic regardless of disk state.
+      "core/*.js",
+    ],
   },
   {
     files: ["cli/**/*.ts"],

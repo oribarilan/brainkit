@@ -34,7 +34,7 @@ For OpenCode specifically, the recipe also pre-seeds OpenCode's plugin cache via
 just dev-clean   # wipe .dev/install/, .dev/user-config/, .dev/xdg/ — forces a fresh first-run
 ```
 
-Iterating on plugin code? Rerun `just oc` (or `cp`/`cc`) — `dev-install` runs every time and picks up source changes. The recipe also strips the `core/*.js` shims it generates so `just lint` stays clean.
+Iterating on plugin code? Rerun `just oc` (or `cp`/`cc`) — `dev-install` runs every time and picks up source changes. The `core/*.js` shims it generates are gitignored and ignored by eslint, so they're harmless to leave in your checkout.
 
 ## Pull requests
 
