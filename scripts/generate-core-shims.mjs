@@ -1,6 +1,14 @@
-#!/usr/bin/env node
 // Generate `core/<name>.js` shim files at prepack time, one per `core/<name>.ts`
 // source file (excluding tests). Each shim re-exports from its `.ts` sibling.
+//
+// Invoked via `node scripts/generate-core-shims.mjs` from `npm prepack`.
+// Imported by `cli/__tests__/core-shims.test.ts` for unit-testing the
+// helpers against a tempdir.
+//
+// (No shebang: vite/vitest's loader on Windows treats a leading `#!` in
+// `.mjs` as a parse error when the file is imported from a `.ts` test.
+// Since the script is always invoked via `node` explicitly, the shebang
+// added nothing.)
 //
 // Why this exists:
 //
@@ -24,10 +32,6 @@
 //
 // Long-term plan: migrate to `rewriteRelativeImportExtensions` (TS 5.7+) and
 // drop this shim layer. Tracked as a follow-up.
-//
-// This module exports its helpers so tests can drive the generator against a
-// temp directory instead of mutating the real `core/` (which races with
-// parallel vitest workers importing `core/index.ts`).
 
 import * as fs from "node:fs";
 import * as path from "node:path";
