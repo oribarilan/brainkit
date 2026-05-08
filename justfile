@@ -52,9 +52,9 @@ dev-install:
     npm install "./$TARBALL" --silent --no-audit --no-fund
     rm -f "$TARBALL"
     # The package's prepack script generates core/*.js shims for npm consumers.
-    # In dev they confuse eslint (the .js files aren't in tsconfig). They're
-    # safely ignored at runtime — strip them so `just lint` stays clean.
-    rm -f {{justfile_directory()}}/core/*.js
+    # In dev they sit in our checkout's core/, but eslint ignores them
+    # (see eslint.config.js) and they're harmless at runtime, so we leave them
+    # alone. The .gitignore keeps them out of git.
     echo "Installed brainkit dev build into .dev/install/"
 
 # wipe .dev/ install + isolated config + isolated XDG dirs
