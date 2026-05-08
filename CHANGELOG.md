@@ -2,9 +2,6 @@
 
 ## [Unreleased]
 
-### Internal
-- Made the core-shims test deterministic — `just check` no longer races parallel vitest workers, and stale shims left on disk no longer break `just lint`.
-
 ## [0.11.0] - 2026-05-07
 
 ### Fixed
