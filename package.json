@@ -1,6 +1,6 @@
 {
   "name": "@2brain/brainkit",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "An augmentation kit for your brain",
   "keywords": [
     "opencode-plugin",
@@ -37,7 +37,7 @@
     "claude/"
   ],
   "scripts": {
-    "prepack": "rm -rf dist && npx tsc --project cli/tsconfig.json"
+    "prepack": "rm -rf dist && npx tsc --project cli/tsconfig.json && node scripts/generate-core-shims.mjs"
   },
   "dependencies": {
     "@clack/prompts": "^1.2.0",

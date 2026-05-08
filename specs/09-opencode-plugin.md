@@ -214,11 +214,15 @@ brainkit oc --model anthropic/claude-sonnet-4-5
 
 ### How launch works
 
-1. Ensure `~/.config/brainkit/opencode.json` and `tui.json` exist (create with plugin entries if not)
-2. Set `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars
-3. Spawn `opencode` with remaining args forwarded
+1. Ensure `~/.config/brainkit/opencode.json` and `tui.json` are up to date — regenerate via `writeIfChanged` so unchanged content keeps its mtime.
+2. Set the spawned-env vars: `OPENCODE_CONFIG`, `OPENCODE_TUI_CONFIG`, `OPENCODE_CONFIG_DIR=~/.config/brainkit/`, `OPENCODE_DISABLE_PROJECT_CONFIG=true`.
+3. Spawn `opencode` with remaining args forwarded.
 
-OpenCode **merges** configs (confirmed in docs: "Configuration files are merged together, not replaced"), so all user settings (providers, models, permissions, keybinds, etc.) from `~/.config/opencode/` are preserved. Brainkit's config only adds the plugin.
+`OPENCODE_CONFIG_DIR` and `OPENCODE_DISABLE_PROJECT_CONFIG` give brainkit selective isolation: the user's dotfiles-managed `.opencode/` directory and any vault-parent `.opencode/` configs are blocked, while the user's `~/.config/opencode/{config,opencode}.json{,c}` (auth, MCP, LSP, model defaults, instructions) still merges in. Brainkit's values win on conflict because OpenCode loads `OPENCODE_CONFIG` after the user's global config (verified empirically against opencode v1.x source).
+
+The brainkit-isolated config files are 100% brainkit-owned. They contain only the fields brainkit needs; per-user customization belongs in `~/.config/opencode/`. Unknown keys in brainkit's files are stripped by OpenCode's schema validation, so don't stash brainkit-private state there — use a sibling file under `~/.config/brainkit/` instead.
+
+The plugin **must not** call `api.theme.set` or any other API that mutates OpenCode's persisted KV state. Brainkit currently does not install a custom theme — `api.theme.install` for global plugins writes to `<XDG_CONFIG_HOME>/opencode/themes/`, which `OPENCODE_CONFIG_DIR` cannot redirect, so it leaks into the user's global OpenCode config dir. The brainkit theme JSON (`opencode/brainkit.json`) and path resolver (`opencode/theme-path.ts`) are kept dormant in the repo for future use, behind a sandboxed install path.
 
 ### Config files created
 
@@ -230,6 +234,8 @@ OpenCode **merges** configs (confirmed in docs: "Configuration files are merged 
   "plugin": ["@2brain/brainkit"]
 }
 ```
+
+(During onboarding, an extra top-level `"permission": "allow"` is included; it's dropped on regular vault launches.)
 
 `~/.config/brainkit/tui.json`:
 
@@ -260,30 +266,20 @@ Root `package.json` uses `"workspaces": ["core"]`. Publishing order: core → br
 
 ```bash
 # From repo root
-just dev        # runs opencode with local brainkit plugin
+just oc         # launch OpenCode against the dev brainkit (full pipeline)
+just cp         # launch Copilot CLI against the dev brainkit
+just cc         # launch Claude Code against the dev brainkit
 just check      # lint + format + test all packages
 ```
 
-### Local OpenCode dev
+### How `just oc` loads the dev plugin
 
-For developing the plugin locally, use a `.opencode/` directory at repo root:
+OpenCode resolves npm-style plugin specs (`plugin: ["@2brain/brainkit"]` in `opencode.json`) by calling `Npm.add(pkg)`, which auto-installs the package into `<XDG_CACHE_HOME>/opencode/packages/<pkg>/` if the path doesn't already exist. To make OpenCode load the local checkout instead of the published version:
 
-`.opencode/opencode.json`:
+1. `just dev-install` packs the current branch (`npm pack`, full `prepack` — tsc + shim generator) and installs the tarball into `.dev/install/`.
+2. `just oc` redirects `XDG_CACHE_HOME` to `.dev/xdg/cache/`, then symlinks `.dev/install/node_modules` into the spot OpenCode's `Npm.add` cache check looks first. The cache hit short-circuits the npm install, and bun's `import.meta.resolve` walks up through the symlink to find brainkit's runtime deps (`smol-toml`, etc.).
+3. `BRAINKIT_CONFIG_DIR=.dev/user-config/` keeps brainkit's own config isolated from your real `~/.config/brainkit/`.
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": [["../", { "enabled": true }]]
-}
-```
+Auth/MCP/model defaults still come from your real `~/.config/opencode/` — only `XDG_CACHE_HOME` is redirected, not `XDG_CONFIG_HOME`.
 
-`.opencode/tui.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["../"]
-}
-```
-
-Then `just dev` runs `opencode` from the repo root with the local plugin loaded.
+For Copilot CLI and Claude Code, no plugin-cache trickery is needed — both load brainkit by copying files from `findPackageRoot()`, which walks up from the dev CLI binary at `.dev/install/node_modules/@2brain/brainkit/dist/cli/index.js`.

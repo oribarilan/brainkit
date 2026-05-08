@@ -2,8 +2,15 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-07
+
 ### Fixed
+- **OpenCode**: brainkit sessions are no longer affected by stray OpenCode config in your dotfiles or the parent directories of your vault.
+- **OpenCode**: brain logo, sidebar, rotating tips, and `/doctor` now load reliably when brainkit is installed from npm.
 - **Copilot CLI**: settings you change inside a brainkit Copilot session (MCP servers, approved tools, theme) now persist across launches.
+
+### Changed
+- **OpenCode**: brainkit no longer applies its own theme — sessions now use whatever theme you've selected in OpenCode. Existing installs keep their current theme.
 
 ## [0.10.0] - 2026-04-29
 

@@ -5,3 +5,7 @@ dist/
 .reference/
 .worktrees/
 .dev/user-config/
+.dev/install/
+.dev/xdg/
+# Auto-generated at prepack time by scripts/generate-core-shims.mjs
+core/*.js

@@ -34,13 +34,84 @@ fresh *args:
     @echo "Dev config reset. Launching fresh first-run experience..."
     BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config npx tsx cli/index.ts {{args}}
 
-# launch opencode with the local brainkit plugin
-oc:
-    OPENCODE_CONFIG={{justfile_directory()}}/.dev/opencode.json OPENCODE_TUI_CONFIG={{justfile_directory()}}/.dev/tui.json opencode
+# Pack the current branch and install it into .dev/install/ so harness
+# launchers resolve `@2brain/brainkit` to *this* checkout, not the published
+# version. Runs `prepack` (tsc + shim generator). Idempotent — rerun to pick
+# up source changes.
+#
+# build + install brainkit dev tarball into .dev/install/
+dev-install:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd {{justfile_directory()}}
+    rm -rf .dev/install
+    mkdir -p .dev/install
+    cd .dev/install
+    npm init -y --silent > /dev/null
+    TARBALL=$(cd {{justfile_directory()}} && npm pack --pack-destination {{justfile_directory()}}/.dev/install 2>&1 | tail -1)
+    npm install "./$TARBALL" --silent --no-audit --no-fund
+    rm -f "$TARBALL"
+    # The package's prepack script generates core/*.js shims for npm consumers.
+    # In dev they confuse eslint (the .js files aren't in tsconfig). They're
+    # safely ignored at runtime — strip them so `just lint` stays clean.
+    rm -f {{justfile_directory()}}/core/*.js
+    echo "Installed brainkit dev build into .dev/install/"
 
-# launch copilot with the local brainkit plugin (installs skills/hooks/AGENTS.md into vault, then spawns copilot)
-cp:
-    npx tsx cli/index.ts copilot
+# wipe .dev/ install + isolated config + isolated XDG dirs
+dev-clean:
+    rm -rf {{justfile_directory()}}/.dev/install \
+           {{justfile_directory()}}/.dev/user-config \
+           {{justfile_directory()}}/.dev/xdg
+    @echo "Dev install + config + XDG dirs cleared."
+
+# Launch opencode against the dev-installed brainkit (build + install + launch).
+#
+# Why this is more than just `opencode`: brainkit's launcher writes
+# plugin: ["@2brain/brainkit"] into ~/.config/brainkit/opencode.json, and
+# OpenCode auto-installs that package from npm into its plugin cache. To make
+# OpenCode use *this* checkout instead of the published version, we:
+#   1. Build + install our package into .dev/install/ (via dev-install).
+#   2. Redirect OpenCode's XDG_CACHE_HOME to .dev/xdg/cache.
+#   3. Pre-seed the cache by symlinking our dev install into the spot
+#      OpenCode's Npm.add() checks first. The cache hit short-circuits the
+#      npm install and OpenCode loads our dev build.
+# Auth/MCP/model still come from your real ~/.config/opencode/ (we only
+# redirect cache, not config). BRAINKIT_CONFIG_DIR isolates brainkit's own
+# config under .dev/user-config/.
+#
+# launch opencode against the dev-installed brainkit
+oc: dev-install
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd {{justfile_directory()}}
+    # OpenCode's Npm.add() short-circuits when path.join(cacheDir, "node_modules", name)
+    # already exists. We symlink the entire node_modules dir so brainkit AND its
+    # runtime deps (smol-toml, etc.) are reachable via the parent-dir walk.
+    PKG_CACHE_DIR=.dev/xdg/cache/opencode/packages/@2brain/brainkit
+    rm -rf "$PKG_CACHE_DIR"
+    mkdir -p "$PKG_CACHE_DIR"
+    ln -s {{justfile_directory()}}/.dev/install/node_modules "$PKG_CACHE_DIR/node_modules"
+    BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config \
+      XDG_CACHE_HOME={{justfile_directory()}}/.dev/xdg/cache \
+      node {{justfile_directory()}}/.dev/install/node_modules/@2brain/brainkit/dist/cli/index.js oc
+
+# Copilot's harness loads brainkit via files copied from the package root, so
+# no plugin-cache trickery needed — running our dev CLI is enough.
+#
+# launch copilot against the dev-installed brainkit
+cp: dev-install
+    BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config \
+      node {{justfile_directory()}}/.dev/install/node_modules/@2brain/brainkit/dist/cli/index.js copilot
+
+# Same as `cp`: Claude loads brainkit via files copied from the package root.
+#
+# launch claude code against the dev-installed brainkit
+cc: dev-install
+    BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config \
+      node {{justfile_directory()}}/.dev/install/node_modules/@2brain/brainkit/dist/cli/index.js claude
+
+# alias for github copilot CLI (= `just cp`)
+ghcp: cp
 
 # run tests
 test:

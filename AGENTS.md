@@ -61,7 +61,9 @@ All actions use [just](https://just.systems/). Run `just` to list all available 
 
 ```bash
 just            # list all recipes
-just dev        # start opencode with the local brainkit plugin
+just oc         # launch OpenCode against the dev brainkit (full pipeline)
+just cp         # launch Copilot CLI against the dev brainkit (alias: just ghcp)
+just cc         # launch Claude Code against the dev brainkit
 just test       # run tests
 just test-watch # run tests in watch mode
 just lint       # eslint + typecheck
@@ -72,13 +74,15 @@ just build-cli  # compile CLI to dist/ for npm publishing
 
 ### Running
 
-This is an OpenCode plugin. For local development:
+Brainkit ships as an npm package consumed by three harnesses (OpenCode, Copilot CLI, Claude Code). For local development, use the harness recipes:
 
 ```bash
-just dev        # recommended — runs opencode with local plugin loaded
+just oc         # OpenCode + dev brainkit
+just cp         # Copilot CLI + dev brainkit
+just cc         # Claude Code + dev brainkit
 ```
 
-This uses `.opencode/opencode.json` and `.opencode/tui.json` to load the plugin from the repo root.
+Each recipe rebuilds the npm tarball (full `prepack`: tsc + shim generator), installs it into `.dev/install/`, and launches the harness using the dev binary. Your real `~/.config/brainkit/` is untouched — dev state lives under `.dev/user-config/`. See `CONTRIBUTING.md` § Testing your changes against a real harness for details.
 
 ### CLI (for npm)
 
@@ -165,7 +169,7 @@ Tests live in `__tests__/` directories alongside source. Each test file maps to 
 
 Brainkit must **never** modify the user's normal harness configuration. When brainkit launches a harness, it must use its own dedicated, isolated config so the user's regular setup is untouched and unaffected.
 
-- **OpenCode**: launch with `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` env vars pointing at `~/.config/brainkit/{opencode,tui}.json`. Never read, write, or merge into `~/.config/opencode/`.
+- **OpenCode**: launch with `OPENCODE_CONFIG` and `OPENCODE_TUI_CONFIG` pointing at `~/.config/brainkit/{opencode,tui}.json`, plus `OPENCODE_CONFIG_DIR=~/.config/brainkit/` and `OPENCODE_DISABLE_PROJECT_CONFIG=true` to block dotfiles-dir and project-walk leaks. Write only the minimum fields brainkit owns (`$schema`, `plugin`, conditional `permission`); do not merge in values from the user's `~/.config/opencode/` — OpenCode does that itself at load time, with brainkit's overrides winning on conflict. Plugins must not call APIs that mutate OpenCode's persisted state (e.g. `api.theme.set`) or that write outside the brainkit config dir (e.g. `api.theme.install` for global plugins, which copies the theme file into `<XDG_CONFIG_HOME>/opencode/themes/` — `OPENCODE_CONFIG_DIR` does not redirect this); declare configuration in the brainkit-owned files instead. Use `writeIfChanged` so unchanged config preserves mtime. Never read or write `~/.config/opencode/`.
 - **Copilot CLI**: launch with `COPILOT_HOME` env var pointing at `~/.config/brainkit/copilot/`. Never read, write, or merge into `~/.copilot/` (the user's global Copilot config). The vault is the agent's `cwd` but brainkit must not write any files inside the vault. The launcher must reject `--config-dir` in user args (it would override `COPILOT_HOME` per Copilot's precedence rules and defeat isolation). The `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` env var, if set by the user, is left alone. The only exception to the "no vault writes" rule is the one-time mechanical migration that removes legacy brainkit-generated files from vaults created with prior brainkit versions.
 - **Claude Code**: launch with `CLAUDE_CONFIG_DIR` env var pointing at `~/.config/brainkit/claude/`. Never read or write `~/.claude/` (the user's global Claude config). Never write to `<pkgRoot>/claude/` — it is a read-only template; copy it into `~/.config/brainkit/claude/plugin/` at launch instead.
 - Any new harness integration must follow the same rule: use env vars, dedicated config dirs, or vault-scoped files. Never mutate the user's global harness config or installed plugins/extensions.
