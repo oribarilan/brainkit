@@ -28,13 +28,7 @@ export interface BrainkitConfig {
     bragfile?: boolean;
     contacts?: boolean;
   };
-  agents?: {
-    enabled?: boolean;
-    keep_builtin_agents?: boolean;
-    thinker?: { model?: string };
-    consultant?: { model?: string };
-    librarian?: { model?: string };
-  };
+
 }
 
 export interface BragEntry {
