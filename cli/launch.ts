@@ -104,6 +104,30 @@ export function writeIfChanged(filePath: string, content: string): void {
   fs.writeFileSync(filePath, content, "utf-8");
 }
 
+/**
+ * Write the Librarian sub-agent markdown file to `<configDir>/agents/librarian.md`.
+ *
+ * Reads vault config from `brainkit.toml` in `vaultPath`, builds the agent
+ * file content, and writes it with mtime preservation. Silently skips if vault
+ * config is missing or unreadable — a broken toml must not prevent OpenCode
+ * from launching.
+ *
+ * Exported for direct unit testing; production callers go through
+ * `ensureOpenCodeConfig`.
+ */
+export function ensureLibrarianAgent(configDir: string, vaultPath: string): void {
+  try {
+    const vaultConfig = readVaultConfigSimple(vaultPath);
+    if (!vaultConfig) return;
+    const agentsDir = path.join(configDir, "agents");
+    fs.mkdirSync(agentsDir, { recursive: true });
+    const agentContent = buildLibrarianAgentFile(vaultConfig, vaultPath);
+    writeIfChanged(path.join(agentsDir, "librarian.md"), agentContent);
+  } catch {
+    // Gracefully skip — no Librarian, but OpenCode still works
+  }
+}
+
 function ensureOpenCodeConfig(isOnboarding: boolean, vaultPath?: string): void {
   const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
@@ -116,19 +140,8 @@ function ensureOpenCodeConfig(isOnboarding: boolean, vaultPath?: string): void {
   const tuiContent = JSON.stringify(buildOpenCodeTuiConfig(), null, 2) + "\n";
   writeIfChanged(tuiConfigPath, tuiContent);
 
-  // Write librarian agent file when a vault exists
   if (vaultPath !== undefined) {
-    try {
-      const vaultConfig = readVaultConfigSimple(vaultPath);
-      if (vaultConfig) {
-        const agentsDir = path.join(configDir, "agents");
-        fs.mkdirSync(agentsDir, { recursive: true });
-        const agentContent = buildLibrarianAgentFile(vaultConfig, vaultPath);
-        writeIfChanged(path.join(agentsDir, "librarian.md"), agentContent);
-      }
-    } catch {
-      // Gracefully skip — no Librarian, but OpenCode still works
-    }
+    ensureLibrarianAgent(configDir, vaultPath);
   }
 }
 

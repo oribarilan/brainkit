@@ -3,7 +3,9 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { buildOpenCodeConfig, buildOpenCodeTuiConfig, writeIfChanged } from "../launch.js";
+import { buildOpenCodeConfig, buildOpenCodeTuiConfig, writeIfChanged, ensureLibrarianAgent } from "../launch.js";
+import { buildLibrarianAgentFile } from "../../core/librarian-agent.js";
+import { readVaultConfigSimple } from "../../core/index.js";
 
 describe("buildOpenCodeConfig", () => {
   it("uses top-level permission: 'allow' during onboarding", () => {
@@ -135,6 +137,120 @@ describe("writeIfChanged", () => {
 
     expect(mtime2).toBeGreaterThan(mtime1);
     expect(fs.readFileSync(filePath, "utf-8")).toBe(fresh);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ensureLibrarianAgent — functional tests with real filesystem
+// ---------------------------------------------------------------------------
+
+describe("ensureLibrarianAgent", () => {
+  let configDir: string;
+  let vaultDir: string;
+
+  beforeEach(() => {
+    configDir = fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-config-"));
+    vaultDir = fs.mkdtempSync(path.join(os.tmpdir(), "brainkit-vault-"));
+  });
+
+  afterEach(() => {
+    fs.rmSync(configDir, { recursive: true, force: true });
+    fs.rmSync(vaultDir, { recursive: true, force: true });
+  });
+
+  function writeVaultToml(content: string): void {
+    fs.writeFileSync(path.join(vaultDir, "brainkit.toml"), content, "utf-8");
+  }
+
+  const minimalToml = [
+    "version = 1",
+    "",
+    "[user]",
+    'name = "Test User"',
+    'role = "Engineer"',
+  ].join("\n");
+
+  it("writes agents/librarian.md when vault has valid config", () => {
+    writeVaultToml(minimalToml);
+    ensureLibrarianAgent(configDir, vaultDir);
+
+    const agentFile = path.join(configDir, "agents", "librarian.md");
+    expect(fs.existsSync(agentFile)).toBe(true);
+
+    const content = fs.readFileSync(agentFile, "utf-8");
+    expect(content).toMatch(/^---\n/);
+    expect(content).toContain("mode: subagent");
+    expect(content).toContain("Librarian");
+    expect(content).toContain(vaultDir);
+  });
+
+  it("produces the same content as buildLibrarianAgentFile", () => {
+    const tomlWithFeatures = [
+      minimalToml,
+      "",
+      "[features]",
+      "bragfile = true",
+      "contacts = true",
+    ].join("\n");
+    writeVaultToml(tomlWithFeatures);
+    ensureLibrarianAgent(configDir, vaultDir);
+
+    // Read what the launcher wrote
+    const written = fs.readFileSync(path.join(configDir, "agents", "librarian.md"), "utf-8");
+
+    // Build expected content directly from the builder
+    const vaultConfig = readVaultConfigSimple(vaultDir);
+    const expected = buildLibrarianAgentFile(vaultConfig, vaultDir);
+
+    expect(written).toBe(expected);
+  });
+
+  it("does not write when vault has no brainkit.toml", () => {
+    // vaultDir exists but has no brainkit.toml
+    ensureLibrarianAgent(configDir, vaultDir);
+
+    const agentsDir = path.join(configDir, "agents");
+    expect(fs.existsSync(agentsDir)).toBe(false);
+  });
+
+  it("does not write when vault path does not exist", () => {
+    const bogusPath = path.join(os.tmpdir(), "nonexistent-vault-" + Date.now());
+    ensureLibrarianAgent(configDir, bogusPath);
+
+    const agentsDir = path.join(configDir, "agents");
+    expect(fs.existsSync(agentsDir)).toBe(false);
+  });
+
+  it("does not throw when brainkit.toml is malformed", () => {
+    fs.writeFileSync(path.join(vaultDir, "brainkit.toml"), "{{not valid toml}}", "utf-8");
+    // Should not throw — graceful degradation
+    expect(() => ensureLibrarianAgent(configDir, vaultDir)).not.toThrow();
+
+    const agentsDir = path.join(configDir, "agents");
+    expect(fs.existsSync(agentsDir)).toBe(false);
+  });
+
+  it("preserves mtime on repeated calls with same config", async () => {
+    writeVaultToml(minimalToml);
+
+    ensureLibrarianAgent(configDir, vaultDir);
+    const agentFile = path.join(configDir, "agents", "librarian.md");
+    const mtime1 = fs.statSync(agentFile).mtimeMs;
+
+    await new Promise((r) => setTimeout(r, 50));
+
+    ensureLibrarianAgent(configDir, vaultDir);
+    const mtime2 = fs.statSync(agentFile).mtimeMs;
+
+    expect(mtime2).toBe(mtime1);
+  });
+
+  it("scopes external_directory permission to the vault path", () => {
+    writeVaultToml(minimalToml);
+    ensureLibrarianAgent(configDir, vaultDir);
+
+    const content = fs.readFileSync(path.join(configDir, "agents", "librarian.md"), "utf-8");
+    expect(content).toContain(`"${vaultDir}/**": allow`);
   });
 });
 
