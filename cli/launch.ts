@@ -3,7 +3,8 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as p from "@clack/prompts";
 import { execFileSync } from "node:child_process";
-import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
+import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir, readVaultConfigSimple } from "../core/index.js";
+import { buildLibrarianAgentFile } from "../core/librarian-agent.js";
 import { launchCopilot } from "./copilot.js";
 import { launchClaude } from "./claude.js";
 import { maybeCheckHarnessVersion } from "./harness-version.js";
@@ -103,7 +104,7 @@ export function writeIfChanged(filePath: string, content: string): void {
   fs.writeFileSync(filePath, content, "utf-8");
 }
 
-function ensureOpenCodeConfig(isOnboarding: boolean): void {
+function ensureOpenCodeConfig(isOnboarding: boolean, vaultPath?: string): void {
   const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
 
@@ -114,11 +115,26 @@ function ensureOpenCodeConfig(isOnboarding: boolean): void {
   const tuiConfigPath = path.join(configDir, "tui.json");
   const tuiContent = JSON.stringify(buildOpenCodeTuiConfig(), null, 2) + "\n";
   writeIfChanged(tuiConfigPath, tuiContent);
+
+  // Write librarian agent file when a vault exists
+  if (vaultPath !== undefined) {
+    try {
+      const vaultConfig = readVaultConfigSimple(vaultPath);
+      if (vaultConfig) {
+        const agentsDir = path.join(configDir, "agents");
+        fs.mkdirSync(agentsDir, { recursive: true });
+        const agentContent = buildLibrarianAgentFile(vaultConfig, vaultPath);
+        writeIfChanged(path.join(agentsDir, "librarian.md"), agentContent);
+      }
+    } catch {
+      // Gracefully skip — no Librarian, but OpenCode still works
+    }
+  }
 }
 
 function launchOpenCode(args: string[], vaultPath?: string): void {
   const isOnboarding = vaultPath === undefined;
-  ensureOpenCodeConfig(isOnboarding);
+  ensureOpenCodeConfig(isOnboarding, vaultPath);
 
   const configDir = getConfigDir();
   // Selective isolation: brainkit owns the OPENCODE_CONFIG file (overrides on

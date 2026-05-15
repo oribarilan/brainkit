@@ -167,3 +167,33 @@ describe("launchOpenCode isolation env contract (source-level)", () => {
     expect(launchSource).toMatch(/OPENCODE_DISABLE_PROJECT_CONFIG\s*:/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Source-level librarian agent file contract
+// ---------------------------------------------------------------------------
+
+describe("launchOpenCode librarian agent file contract (source-level)", () => {
+  const launchSource = fs.readFileSync(new URL("../launch.ts", import.meta.url), "utf-8");
+
+  it("writes librarian.md to agents directory", () => {
+    expect(launchSource).toMatch(/librarian\.md/);
+  });
+
+  it("uses writeIfChanged for the agent file", () => {
+    expect(launchSource).toMatch(/writeIfChanged.*librarian/s);
+  });
+
+  it("creates agents directory with mkdirSync", () => {
+    expect(launchSource).toMatch(/agents.*mkdirSync|mkdirSync.*agents/s);
+  });
+
+  it("reads vault config before writing agent file", () => {
+    expect(launchSource).toMatch(/readVaultConfigSimple/);
+  });
+
+  it("gracefully handles missing vault config (try/catch)", () => {
+    // The agent file writing must be wrapped in try/catch
+    // so a bad brainkit.toml doesn't prevent OpenCode from launching
+    expect(launchSource).toMatch(/try\s*\{[\s\S]*readVaultConfigSimple[\s\S]*librarian[\s\S]*catch/);
+  });
+});
