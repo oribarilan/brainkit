@@ -162,13 +162,7 @@ describe("ensureLibrarianAgent", () => {
     fs.writeFileSync(path.join(vaultDir, "brainkit.toml"), content, "utf-8");
   }
 
-  const minimalToml = [
-    "version = 1",
-    "",
-    "[user]",
-    'name = "Test User"',
-    'role = "Engineer"',
-  ].join("\n");
+  const minimalToml = ["version = 1", "", "[user]", 'name = "Test User"', 'role = "Engineer"'].join("\n");
 
   it("writes agents/librarian.md when vault has valid config", () => {
     writeVaultToml(minimalToml);
@@ -185,13 +179,7 @@ describe("ensureLibrarianAgent", () => {
   });
 
   it("produces the same content as buildLibrarianAgentFile", () => {
-    const tomlWithFeatures = [
-      minimalToml,
-      "",
-      "[features]",
-      "bragfile = true",
-      "contacts = true",
-    ].join("\n");
+    const tomlWithFeatures = [minimalToml, "", "[features]", "bragfile = true", "contacts = true"].join("\n");
     writeVaultToml(tomlWithFeatures);
     ensureLibrarianAgent(configDir, vaultDir);
 
@@ -214,7 +202,7 @@ describe("ensureLibrarianAgent", () => {
   });
 
   it("does not write when vault path does not exist", () => {
-    const bogusPath = path.join(os.tmpdir(), "nonexistent-vault-" + Date.now());
+    const bogusPath = path.join(os.tmpdir(), `nonexistent-vault-${String(Date.now())}`);
     ensureLibrarianAgent(configDir, bogusPath);
 
     const agentsDir = path.join(configDir, "agents");
@@ -224,7 +212,9 @@ describe("ensureLibrarianAgent", () => {
   it("does not throw when brainkit.toml is malformed", () => {
     fs.writeFileSync(path.join(vaultDir, "brainkit.toml"), "{{not valid toml}}", "utf-8");
     // Should not throw — graceful degradation
-    expect(() => ensureLibrarianAgent(configDir, vaultDir)).not.toThrow();
+    expect(() => {
+      ensureLibrarianAgent(configDir, vaultDir);
+    }).not.toThrow();
 
     const agentsDir = path.join(configDir, "agents");
     expect(fs.existsSync(agentsDir)).toBe(false);

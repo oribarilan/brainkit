@@ -80,11 +80,6 @@ function librarianRole(vaultPath: string): string {
 export function buildLibrarianAgentFile(config: BrainkitConfig, vaultPath: string): string {
   const ctx: SectionContext = { config, vaultPath, mode: "cli" };
   const frontmatter = buildFrontmatter(vaultPath);
-  const body = joinSections([
-    librarianRole(vaultPath),
-    buildPreamble(ctx),
-    buildVaultStructure(),
-    buildKeyFiles(ctx),
-  ]);
+  const body = joinSections([librarianRole(vaultPath), buildPreamble(ctx), buildVaultStructure(), buildKeyFiles(ctx)]);
   return frontmatter + "\n" + body;
 }

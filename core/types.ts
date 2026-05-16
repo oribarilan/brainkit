@@ -28,7 +28,6 @@ export interface BrainkitConfig {
     bragfile?: boolean;
     contacts?: boolean;
   };
-
 }
 
 export interface BragEntry {

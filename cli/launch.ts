@@ -3,7 +3,13 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as p from "@clack/prompts";
 import { execFileSync } from "node:child_process";
-import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir, readVaultConfigSimple } from "../core/index.js";
+import {
+  readGlobalConfig,
+  writeGlobalConfig,
+  discoverVaults,
+  getConfigDir,
+  readVaultConfigSimple,
+} from "../core/index.js";
 import { buildLibrarianAgentFile } from "../core/librarian-agent.js";
 import { launchCopilot } from "./copilot.js";
 import { launchClaude } from "./claude.js";
@@ -118,7 +124,6 @@ export function writeIfChanged(filePath: string, content: string): void {
 export function ensureLibrarianAgent(configDir: string, vaultPath: string): void {
   try {
     const vaultConfig = readVaultConfigSimple(vaultPath);
-    if (!vaultConfig) return;
     const agentsDir = path.join(configDir, "agents");
     fs.mkdirSync(agentsDir, { recursive: true });
     const agentContent = buildLibrarianAgentFile(vaultConfig, vaultPath);

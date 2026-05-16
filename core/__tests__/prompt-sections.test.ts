@@ -14,7 +14,6 @@ import {
   buildDelegation,
 } from "../prompt-sections.js";
 
-
 // ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
@@ -245,5 +244,3 @@ describe("buildDelegation", () => {
     expect(result).toMatch(/already know|single.file|writ/i);
   });
 });
-
-

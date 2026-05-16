@@ -12,25 +12,26 @@
 
 ## File Map
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `core/librarian-agent.ts` | Create | Builds the complete `librarian.md` content (YAML frontmatter + prompt body) |
-| `core/__tests__/librarian-agent.test.ts` | Create | Tests for the agent file builder |
-| `core/prompt-sections.ts` | Modify | Add `buildDelegation()` section builder |
-| `core/__tests__/prompt-sections.test.ts` | Modify | Add delegation tests, remove Thinker/Consultant tests |
-| `cli/launch.ts` | Modify | Write `librarian.md` to agents dir when vault exists |
-| `cli/__tests__/launch.test.ts` | Modify | Test agent file writing, update allowed-keys test |
-| `opencode/server.ts` | Modify | Inject delegation section in `system.transform` |
-| `core/agent-prompts.ts` | Delete | Replaced by `core/librarian-agent.ts` |
-| `core/types.ts` | Modify | Remove `agents?` field from `BrainkitConfig` |
-| `core/index.ts` | Modify | Update exports (remove old, add new) |
-| `specs/10-agents.md` | Modify | Rewrite to reflect simplified design |
+| File                                     | Action | Responsibility                                                              |
+| ---------------------------------------- | ------ | --------------------------------------------------------------------------- |
+| `core/librarian-agent.ts`                | Create | Builds the complete `librarian.md` content (YAML frontmatter + prompt body) |
+| `core/__tests__/librarian-agent.test.ts` | Create | Tests for the agent file builder                                            |
+| `core/prompt-sections.ts`                | Modify | Add `buildDelegation()` section builder                                     |
+| `core/__tests__/prompt-sections.test.ts` | Modify | Add delegation tests, remove Thinker/Consultant tests                       |
+| `cli/launch.ts`                          | Modify | Write `librarian.md` to agents dir when vault exists                        |
+| `cli/__tests__/launch.test.ts`           | Modify | Test agent file writing, update allowed-keys test                           |
+| `opencode/server.ts`                     | Modify | Inject delegation section in `system.transform`                             |
+| `core/agent-prompts.ts`                  | Delete | Replaced by `core/librarian-agent.ts`                                       |
+| `core/types.ts`                          | Modify | Remove `agents?` field from `BrainkitConfig`                                |
+| `core/index.ts`                          | Modify | Update exports (remove old, add new)                                        |
+| `specs/10-agents.md`                     | Modify | Rewrite to reflect simplified design                                        |
 
 ---
 
 ### Task 1: Build Librarian agent file builder (TDD)
 
 **Files:**
+
 - Create: `core/__tests__/librarian-agent.test.ts`
 - Create: `core/librarian-agent.ts`
 
@@ -175,12 +176,7 @@ Create `core/librarian-agent.ts`:
 ```typescript
 import type { BrainkitConfig } from "./types.js";
 import type { SectionContext } from "./prompt-sections.js";
-import {
-  joinSections,
-  buildPreamble,
-  buildVaultStructure,
-  buildKeyFiles,
-} from "./prompt-sections.js";
+import { joinSections, buildPreamble, buildVaultStructure, buildKeyFiles } from "./prompt-sections.js";
 
 function buildFrontmatter(vaultPath: string): string {
   return [
@@ -270,6 +266,7 @@ git commit -m "feat: add librarian agent file builder for OpenCode"
 ### Task 2: Add delegation section builder (TDD)
 
 **Files:**
+
 - Modify: `core/prompt-sections.ts` (add `buildDelegation`)
 - Modify: `core/__tests__/prompt-sections.test.ts` (add delegation tests)
 
@@ -362,6 +359,7 @@ git commit -m "feat: add delegation section builder for librarian sub-agent"
 ### Task 3: Wire launcher to write agent file
 
 **Files:**
+
 - Modify: `cli/launch.ts` (write `librarian.md` in `ensureOpenCodeConfig`)
 - Modify: `cli/__tests__/launch.test.ts` (test agent file writing)
 
@@ -437,6 +435,7 @@ Expected: FAIL — source-level contract tests fail (no `librarian.md` in source
 Modify `cli/launch.ts`:
 
 Add import at top:
+
 ```typescript
 import { readVaultConfigSimple } from "../core/index.js";
 import { buildLibrarianAgentFile } from "../core/librarian-agent.js";
@@ -501,6 +500,7 @@ git commit -m "feat: launcher writes librarian agent file for OpenCode"
 ### Task 4: Wire server plugin to inject delegation
 
 **Files:**
+
 - Modify: `opencode/server.ts`
 
 The `system.transform` hook already injects the brainkit system prompt. When a vault exists, it also pushes the delegation section so the primary agent knows about Librarian.
@@ -508,6 +508,7 @@ The `system.transform` hook already injects the brainkit system prompt. When a v
 - [ ] **Step 1: Add delegation import and injection**
 
 Add import:
+
 ```typescript
 import { buildDelegation } from "../core/prompt-sections.ts";
 ```
@@ -559,6 +560,7 @@ git commit -m "feat: inject librarian delegation instructions in OpenCode system
 ### Task 5: Remove dead code
 
 **Files:**
+
 - Delete: `core/agent-prompts.ts`
 - Modify: `core/types.ts` (remove `agents?` field)
 - Modify: `core/index.ts` (update exports)
@@ -567,12 +569,14 @@ git commit -m "feat: inject librarian delegation instructions in OpenCode system
 - [ ] **Step 1: Remove Thinker/Consultant/Librarian tests from prompt-sections.test.ts**
 
 Remove these `describe` blocks from `core/__tests__/prompt-sections.test.ts`:
+
 - `buildThinkerPrompt`
 - `buildConsultantPrompt`
 - `buildLibrarianPrompt`
 - `agent prompts use cli mode`
 
 Also remove the import line:
+
 ```typescript
 import { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from "../agent-prompts.js";
 ```
@@ -580,11 +584,13 @@ import { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from 
 - [ ] **Step 2: Remove agent-prompts.ts exports from core/index.ts**
 
 In `core/index.ts`, remove line 51:
+
 ```typescript
 export { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from "./agent-prompts.js";
 ```
 
 Add the new export:
+
 ```typescript
 export { buildLibrarianAgentFile } from "./librarian-agent.js";
 ```
@@ -592,6 +598,7 @@ export { buildLibrarianAgentFile } from "./librarian-agent.js";
 - [ ] **Step 3: Remove `agents?` field from BrainkitConfig**
 
 In `core/types.ts`, remove:
+
 ```typescript
   agents?: {
     enabled?: boolean;
@@ -630,6 +637,7 @@ git commit -m "refactor: remove thinker/consultant agents, simplify to librarian
 ### Task 6: Update spec
 
 **Files:**
+
 - Modify: `specs/10-agents.md`
 
 Rewrite the spec to reflect the simplified design: Librarian as a markdown agent file, no Thinker/Consultant registration, no `brainkit.toml` configuration, delegation via system prompt injection.

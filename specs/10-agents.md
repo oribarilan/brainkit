@@ -19,12 +19,14 @@ Two pieces, wired independently:
 Read-only search specialist scoped to the vault directory. Hidden from `@` autocomplete but invocable by the primary agent via the Task tool.
 
 **Permissions:**
+
 - `edit: deny` — can't modify files
 - `bash` — deny-all with an allowlist: `cat`, `grep`, `find`, `ls`, `head`, `tail`, `wc`
 - `task: deny` — can't delegate further
 - `external_directory` — deny-all except `{vaultPath}/**`
 
 **Prompt composition** (via `buildLibrarianAgentFile` in `core/librarian-agent.ts`):
+
 - Librarian role and search instructions (inline)
 - Brainkit preamble (vault path)
 - PARA vault structure
@@ -46,12 +48,12 @@ The Librarian returns a summary of findings, not raw file contents. The primary 
 
 ## Implementation
 
-| File | Role |
-|------|------|
+| File                      | Role                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `core/librarian-agent.ts` | `buildLibrarianAgentFile(config, vaultPath)` — builds the complete `librarian.md` content (YAML frontmatter + prompt body) |
-| `core/prompt-sections.ts` | `buildDelegation()` — static delegation instructions for the primary agent |
-| `cli/launch.ts` | `ensureOpenCodeConfig` writes `agents/librarian.md` to the config dir when a vault exists |
-| `opencode/server.ts` | `system.transform` hook appends delegation section to the system prompt |
+| `core/prompt-sections.ts` | `buildDelegation()` — static delegation instructions for the primary agent                                                 |
+| `cli/launch.ts`           | `ensureOpenCodeConfig` writes `agents/librarian.md` to the config dir when a vault exists                                  |
+| `opencode/server.ts`      | `system.transform` hook appends delegation section to the system prompt                                                    |
 
 The launcher reads vault config at launch to build the agent prompt. If the vault or config is missing, it skips the agent file gracefully — OpenCode launches without a Librarian, and the primary agent doesn't get delegation instructions (since the delegation section only appears when a vault is found).
 
