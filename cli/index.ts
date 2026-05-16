@@ -2,7 +2,14 @@
 
 import * as p from "@clack/prompts";
 import { version } from "./version.js";
-import { isHarnessAlias, launchHarness, detectAndLaunch, parseVaultFlag, selectVault } from "./launch.js";
+import {
+  isHarnessAlias,
+  launchHarness,
+  detectAndLaunch,
+  handleDefaultCommand,
+  parseVaultFlag,
+  selectVault,
+} from "./launch.js";
 import { factoryReset } from "./reset.js";
 import { maybeCheckForSelfUpdate } from "./self-update.js";
 
@@ -14,6 +21,7 @@ const HELP_TEXT = `Usage:
   brainkit cp [args...]        Launch with Copilot CLI
   brainkit claude [args...]    Launch with Claude Code
   brainkit cc [args...]        Launch with Claude Code
+  brainkit default [alias]     View or set default harness
   brainkit reset               Factory reset (removes all brainkit config; vaults untouched)
 
 Options:
@@ -45,6 +53,11 @@ async function main(): Promise<void> {
   // Subcommands
   if (args[0] === "reset") {
     await factoryReset();
+    return;
+  }
+
+  if (args[0] === "default") {
+    await handleDefaultCommand(args.slice(1));
     return;
   }
 

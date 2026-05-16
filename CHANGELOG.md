@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- `brainkit default [alias]` lets you view or change your default harness directly, instead of waiting for the auto-detect picker on next launch
+
 ## [0.12.0] - 2026-05-16
 
 ### Added

@@ -347,6 +347,95 @@ export async function launchHarness(alias: string, args: string[], vaultPath?: s
   harness.launch(args, vaultPath);
 }
 
+// ---------------------------------------------------------------------------
+// Default harness command
+// ---------------------------------------------------------------------------
+
+export async function handleDefaultCommand(args: string[]): Promise<void> {
+  const alias = args[0];
+  if (alias === undefined) {
+    await showOrPickDefault();
+    return;
+  }
+
+  const harness = HARNESSES.find((h) => h.aliases.includes(alias));
+  if (!harness) {
+    const allAliases = HARNESSES.flatMap((h) => h.aliases).join(", ");
+    p.cancel(`Unknown harness alias: "${alias}". Valid aliases: ${allAliases}`);
+    process.exit(1);
+  }
+
+  const canonicalAlias = harness.aliases[0];
+  const globalConfig = readGlobalConfig();
+  const currentDefault = globalConfig?.default_harness;
+
+  // Cross-alias aware: "cc" and "claude" resolve to the same harness
+  if (currentDefault !== undefined && currentDefault !== "") {
+    const currentHarness = HARNESSES.find((h) => h.aliases.includes(currentDefault));
+    if (currentHarness === harness) {
+      p.log.info(`Default harness is already ${harness.name}.`);
+      return;
+    }
+  }
+
+  const config = globalConfig ?? { version: 1, brain_path: "" };
+  config.default_harness = canonicalAlias;
+  writeGlobalConfig(config);
+  p.log.success(`Default harness set to ${harness.name}.`);
+
+  if (!isInstalled(harness.binaries)) {
+    p.log.warn(
+      `${harness.binaries[0]} is not found on PATH. The default won't take effect until ${harness.name} is installed.`,
+    );
+  }
+}
+
+async function showOrPickDefault(): Promise<void> {
+  const globalConfig = readGlobalConfig();
+  const currentDefault = globalConfig?.default_harness;
+
+  if (!process.stdin.isTTY) {
+    if (currentDefault !== undefined && currentDefault !== "") {
+      const harness = HARNESSES.find((h) => h.aliases.includes(currentDefault));
+      console.log(`Default harness: ${harness?.name ?? currentDefault}`);
+    } else {
+      console.log("No default harness set.");
+    }
+    return;
+  }
+
+  // TTY: interactive picker — all harnesses enabled (unlike detectAndLaunch
+  // which disables uninstalled ones, since setting a preference doesn't
+  // require the harness to be installed yet)
+  const currentHarness =
+    currentDefault !== undefined && currentDefault !== ""
+      ? HARNESSES.find((h) => h.aliases.includes(currentDefault))
+      : undefined;
+
+  const selected = await p.select({
+    message: "Select your default harness",
+    initialValue: currentHarness,
+    options: HARNESSES.map((h) => {
+      const installed = isInstalled(h.binaries);
+      const isCurrent = h === currentHarness;
+      const parts = [h.name];
+      if (isCurrent) parts.push("(current)");
+      if (!installed) parts.push("(not installed)");
+      return { value: h, label: parts.join(" ") };
+    }),
+  });
+
+  if (p.isCancel(selected)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  const config = globalConfig ?? { version: 1, brain_path: "" };
+  config.default_harness = selected.aliases[0];
+  writeGlobalConfig(config);
+  p.log.success(`Default harness set to ${selected.name}.`);
+}
+
 export async function detectAndLaunch(args: string[], vaultPath?: string): Promise<void> {
   const available = HARNESSES.filter((h) => isInstalled(h.binaries));
 
