@@ -1,10 +1,11 @@
 // @ts-nocheck
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin, TuiPluginModule } from "@opencode-ai/plugin/tui";
-import { createMemo } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
+import { useTerminalDimensions } from "@opentui/solid";
 import { Tips } from "./tips.tsx";
 import { Sidebar } from "./side.tsx";
-import { logoLarge } from "./logo.ts";
+import { logoLarge, logoLargeWidth, logoMedium, logoSmall } from "./logo.ts";
 
 const id = "brainkit";
 
@@ -12,12 +13,48 @@ type Api = Parameters<TuiPlugin>[0];
 
 const Home = (props: { api: Api }) => {
   const theme = createMemo(() => props.api.theme.current);
+  const dim = useTerminalDimensions();
+  const [chrome, setChrome] = createSignal({ width: 0, height: 0 });
+
+  const logo = createMemo(() => {
+    const term = dim();
+    const gap = chrome();
+    const h = Math.max(0, term.height - gap.height);
+    const w = Math.max(0, term.width - gap.width);
+
+    if (h >= logoLarge.length && w >= logoLargeWidth) return logoLarge;
+    if (logoMedium.length > 0 && h >= logoMedium.length) return logoMedium;
+    if (logoSmall.length > 0 && h >= logoSmall.length) return logoSmall;
+    return null;
+  });
 
   return (
-    <box flexDirection="column" alignItems="center">
-      {logoLarge.map((line) => (
-        <text fg={theme().primary}>{line}</text>
-      ))}
+    <box
+      onSizeChange={function () {
+        const term = dim();
+        const own = { width: this.width, height: this.height };
+        const next = {
+          width: Math.max(0, term.width - own.width),
+          height: Math.max(0, term.height - own.height),
+        };
+        setChrome((prev) => {
+          const width = prev.width > 0 ? Math.min(prev.width, next.width) : next.width;
+          const height = prev.height > 0 ? Math.min(prev.height, next.height) : next.height;
+          if (prev.width === width && prev.height === height) return prev;
+          return { width, height };
+        });
+      }}
+      flexDirection="column"
+      alignItems="center"
+      flexShrink={1}
+    >
+      {(() => {
+        const lines = logo();
+        if (!lines) return null;
+        return lines.map((line) => (
+          <text fg={theme().primary}>{line}</text>
+        ));
+      })()}
     </box>
   );
 };

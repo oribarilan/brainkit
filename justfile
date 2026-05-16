@@ -84,13 +84,15 @@ oc: dev-install
     #!/usr/bin/env bash
     set -euo pipefail
     cd {{justfile_directory()}}
-    # OpenCode's Npm.add() short-circuits when path.join(cacheDir, "node_modules", name)
-    # already exists. We symlink the entire node_modules dir so brainkit AND its
-    # runtime deps (smol-toml, etc.) are reachable via the parent-dir walk.
+    # OpenCode's Npm.add() caches packages at <cacheDir>/packages/<name>@<version>/
+    # (e.g. @2brain/brainkit@latest). We symlink the entire node_modules dir so
+    # brainkit AND its runtime deps (smol-toml, etc.) are reachable via the
+    # parent-dir walk. Both the bare and @latest paths are cleaned to avoid stale
+    # entries from previous runs.
     PKG_CACHE_DIR=.dev/xdg/cache/opencode/packages/@2brain/brainkit
-    rm -rf "$PKG_CACHE_DIR"
-    mkdir -p "$PKG_CACHE_DIR"
-    ln -s {{justfile_directory()}}/.dev/install/node_modules "$PKG_CACHE_DIR/node_modules"
+    rm -rf "$PKG_CACHE_DIR" "${PKG_CACHE_DIR}@latest"
+    mkdir -p "${PKG_CACHE_DIR}@latest"
+    ln -s {{justfile_directory()}}/.dev/install/node_modules "${PKG_CACHE_DIR}@latest/node_modules"
     BRAINKIT_CONFIG_DIR={{justfile_directory()}}/.dev/user-config \
       XDG_CACHE_HOME={{justfile_directory()}}/.dev/xdg/cache \
       node {{justfile_directory()}}/.dev/install/node_modules/@2brain/brainkit/dist/cli/index.js oc
