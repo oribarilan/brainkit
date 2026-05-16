@@ -47,12 +47,12 @@ export type { PromptMode } from "./system-prompt.js";
 // Onboarding
 export { buildOnboardingPrompt } from "./onboarding-prompt.js";
 
-// Agent prompts
-export { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from "./agent-prompts.js";
+// Librarian agent
+export { buildLibrarianAgentFile } from "./librarian-agent.js";
 
 // Prompt sections (for custom composition)
 export type { SectionContext } from "./prompt-sections.js";
-export { joinSections } from "./prompt-sections.js";
+export { joinSections, buildDelegation } from "./prompt-sections.js";
 
 // Auto-commit
 export { scheduleAutoCommit, flushAutoCommit } from "./auto-commit.js";

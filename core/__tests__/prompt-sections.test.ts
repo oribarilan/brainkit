@@ -11,8 +11,8 @@ import {
   buildCustomRules,
   buildProfileNudge,
   buildBehavioralRules,
+  buildDelegation,
 } from "../prompt-sections.js";
-import { buildThinkerPrompt, buildConsultantPrompt, buildLibrarianPrompt } from "../agent-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Helper
@@ -221,64 +221,26 @@ describe("joinSections", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Agent prompt composers
-// ---------------------------------------------------------------------------
-
-describe("buildThinkerPrompt", () => {
-  it("includes role, preamble, identity, conventions, behavioral rules, discoverability", () => {
-    const config = makeConfig();
-    const prompt = buildThinkerPrompt(config, "/fake/vault");
-
-    expect(prompt).toContain("## Role");
-    expect(prompt).toContain("Thinker");
-    expect(prompt).toContain("## Brainkit");
-    expect(prompt).toContain("Test User");
-    expect(prompt).toContain("## Conventions");
-    expect(prompt).toContain("## How to Work With This Vault");
-    expect(prompt).toContain("## Discoverability");
+describe("buildDelegation", () => {
+  it("mentions Librarian by name", () => {
+    const result = buildDelegation();
+    expect(result).toContain("Librarian");
   });
-});
 
-describe("buildConsultantPrompt", () => {
-  it("includes role, preamble, identity, conventions but NOT behavioral rules", () => {
-    const config = makeConfig();
-    const prompt = buildConsultantPrompt(config, "/fake/vault");
-
-    expect(prompt).toContain("## Role");
-    expect(prompt).toContain("Consultant");
-    expect(prompt).toContain("## Brainkit");
-    expect(prompt).toContain("Test User");
-    expect(prompt).toContain("## Conventions");
-    expect(prompt).not.toContain("## How to Work With This Vault");
+  it("includes task invocation syntax", () => {
+    const result = buildDelegation();
+    expect(result).toContain("librarian");
+    expect(result).toMatch(/task/i);
   });
-});
 
-describe("buildLibrarianPrompt", () => {
-  it("includes role, preamble, vault structure but NOT identity or conventions", () => {
-    const config = makeConfig();
-    const prompt = buildLibrarianPrompt(config, "/fake/vault");
-
-    expect(prompt).toContain("## Role");
-    expect(prompt).toContain("Librarian");
-    expect(prompt).toContain("## Brainkit");
-    expect(prompt).toContain("PARA");
-    expect(prompt).not.toContain("## Second Brain");
-    expect(prompt).not.toContain("## Conventions");
+  it("describes when to delegate", () => {
+    const result = buildDelegation();
+    expect(result).toMatch(/search|find/i);
+    expect(result).toMatch(/vault/i);
   });
-});
 
-describe("agent prompts use cli mode", () => {
-  it("all three use cli mode (no brain_* tool references in key files)", () => {
-    const config = makeConfig({ features: { bragfile: true, contacts: true } });
-
-    const thinker = buildThinkerPrompt(config, "/fake/vault");
-    const consultant = buildConsultantPrompt(config, "/fake/vault");
-    const librarian = buildLibrarianPrompt(config, "/fake/vault");
-
-    for (const prompt of [thinker, consultant, librarian]) {
-      expect(prompt).not.toContain("brain_add_brag");
-      expect(prompt).not.toContain("brain_query_contacts");
-    }
+  it("describes when NOT to delegate", () => {
+    const result = buildDelegation();
+    expect(result).toMatch(/already know|single.file|writ/i);
   });
 });

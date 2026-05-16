@@ -215,6 +215,8 @@ Runtime dependency: `smol-toml` (TOML parsing). Optional peer deps on OpenCode p
 
 ## OpenCode Plugin API
 
+Official docs: https://opencode.ai/docs (plugins, agents, config, SDK sections).
+
 OpenCode plugins export a server function and/or TUI function. The package exports these via:
 
 ```json
