@@ -2,12 +2,17 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-05-31
+
 ### Added
 - `brainkit default [alias]` lets you view or change your default harness directly, instead of waiting for the auto-detect picker on next launch
 
 ### Fixed
 - **OpenCode**: brain logo no longer fills the entire screen when the terminal is short, hiding the input line. The logo now hides itself when there isn't enough vertical space.
 - Dev: `just oc` now actually loads your local plugin changes — previously OpenCode silently used the published npm version because the dev cache path didn't match OpenCode's `name@latest` format.
+
+### Removed
+- **OpenCode**: Removed the Librarian sub-agent. The primary agent handles vault queries directly.
 
 ## [0.12.0] - 2026-05-16
 
