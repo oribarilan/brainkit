@@ -11,9 +11,6 @@
 
 ## [0.12.0] - 2026-05-16
 
-### Added
-- **OpenCode**: Librarian sub-agent for vault search — the primary agent automatically delegates "find X in my vault" queries to a read-only search specialist, keeping its own context window clean
-
 ## [0.11.0] - 2026-05-07
 
 ### Fixed

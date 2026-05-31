@@ -57,12 +57,13 @@ dev-install:
     # alone. The .gitignore keeps them out of git.
     echo "Installed brainkit dev build into .dev/install/"
 
-# wipe .dev/ install + isolated config + isolated XDG dirs
+# wipe .dev/ install + isolated config + isolated XDG dirs + test vault
 dev-clean:
     rm -rf {{justfile_directory()}}/.dev/install \
            {{justfile_directory()}}/.dev/user-config \
-           {{justfile_directory()}}/.dev/xdg
-    @echo "Dev install + config + XDG dirs cleared."
+           {{justfile_directory()}}/.dev/xdg \
+           {{justfile_directory()}}/.dev/vault
+    @echo "Dev install + config + XDG dirs + test vault cleared."
 
 # Launch opencode against the dev-installed brainkit (build + install + launch).
 #
@@ -84,6 +85,34 @@ oc: dev-install
     #!/usr/bin/env bash
     set -euo pipefail
     cd {{justfile_directory()}}
+
+    # Seed a test vault so dev mode skips onboarding. `just fresh` bypasses
+    # this (calls CLI directly) so true first-run testing still works.
+    VAULT_DIR=.dev/vault/dev
+    CONFIG_TOML=.dev/user-config/config.toml
+    mkdir -p "$VAULT_DIR"
+    if [ ! -f "$VAULT_DIR/brainkit.toml" ]; then
+      printf '%s\n' \
+        'version = 1' '' \
+        '[user]' \
+        'name = "Dev User"' \
+        'role = "brainkit developer"' \
+        'expertise = ["TypeScript", "OpenCode plugins"]' \
+        'tone = "direct"' '' \
+        '[features]' \
+        'bragfile = true' \
+        'contacts = true' \
+        > "$VAULT_DIR/brainkit.toml"
+    fi
+    mkdir -p "$(dirname "$CONFIG_TOML")"
+    if [ ! -f "$CONFIG_TOML" ]; then
+      printf '%s\n' \
+        'version = 1' \
+        "brain_path = \"{{justfile_directory()}}/.dev/vault\"" \
+        'default_harness = "oc"' \
+        > "$CONFIG_TOML"
+    fi
+
     # OpenCode's Npm.add() caches packages at <cacheDir>/packages/<name>@<version>/
     # (e.g. @2brain/brainkit@latest). We symlink the entire node_modules dir so
     # brainkit AND its runtime deps (smol-toml, etc.) are reachable via the

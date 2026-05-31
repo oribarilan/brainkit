@@ -51,9 +51,7 @@ const Home = (props: { api: Api }) => {
       {(() => {
         const lines = logo();
         if (!lines) return null;
-        return lines.map((line) => (
-          <text fg={theme().primary}>{line}</text>
-        ));
+        return lines.map((line) => <text fg={theme().primary}>{line}</text>);
       })()}
     </box>
   );
