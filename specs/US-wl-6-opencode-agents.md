@@ -52,14 +52,6 @@ api.agent({
 
 Each agent should have a distinct visual identity (color, label) in the TUI.
 
-Handle existing agents: the current Thinker, Consultant, and Librarian agents (from `core/agent-prompts.ts`) are role-based, not scope-based. Decision needed:
-
-- Keep them as additional agents alongside bk/work/life?
-- Retire them?
-- Make them scope-aware (each role x scope combination)?
-
-This should be a conscious choice during implementation, not an accident.
-
 ### `opencode/server.ts`
 
 **System prompt injection** — update `system.transform` hook to determine active agent and inject the scoped system prompt:
@@ -102,8 +94,7 @@ No existing tests for the plugin layer. Testing depends on API investigation res
 ## Open questions
 
 1. How does the plugin API expose the active agent? (blocker)
-2. What happens to the existing Thinker/Consultant/Librarian agents?
-3. Should each agent have a distinct TUI color/theme?
+2. Should each agent have a distinct TUI color/theme?
 
 ## Acceptance criteria
 

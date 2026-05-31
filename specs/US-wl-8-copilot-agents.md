@@ -38,10 +38,6 @@ Agent files are generated during `installCopilotHooks()` (or equivalent setup fu
 - Vault config changes
 - The CLI launcher runs setup
 
-### Existing agents
-
-If there are existing Copilot agent files (e.g., for Thinker/Consultant/Librarian), decide whether to keep them alongside the scope agents or replace them.
-
 ## Tests
 
 File: `cli/__tests__/copilot.test.ts` (extend existing)

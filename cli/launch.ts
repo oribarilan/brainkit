@@ -3,14 +3,7 @@ import * as path from "node:path";
 import * as os from "node:os";
 import * as p from "@clack/prompts";
 import { execFileSync } from "node:child_process";
-import {
-  readGlobalConfig,
-  writeGlobalConfig,
-  discoverVaults,
-  getConfigDir,
-  readVaultConfigSimple,
-} from "../core/index.js";
-import { buildLibrarianAgentFile } from "../core/librarian-agent.js";
+import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 import { launchClaude } from "./claude.js";
 import { maybeCheckHarnessVersion } from "./harness-version.js";
@@ -110,30 +103,7 @@ export function writeIfChanged(filePath: string, content: string): void {
   fs.writeFileSync(filePath, content, "utf-8");
 }
 
-/**
- * Write the Librarian sub-agent markdown file to `<configDir>/agents/librarian.md`.
- *
- * Reads vault config from `brainkit.toml` in `vaultPath`, builds the agent
- * file content, and writes it with mtime preservation. Silently skips if vault
- * config is missing or unreadable — a broken toml must not prevent OpenCode
- * from launching.
- *
- * Exported for direct unit testing; production callers go through
- * `ensureOpenCodeConfig`.
- */
-export function ensureLibrarianAgent(configDir: string, vaultPath: string): void {
-  try {
-    const vaultConfig = readVaultConfigSimple(vaultPath);
-    const agentsDir = path.join(configDir, "agents");
-    fs.mkdirSync(agentsDir, { recursive: true });
-    const agentContent = buildLibrarianAgentFile(vaultConfig, vaultPath);
-    writeIfChanged(path.join(agentsDir, "librarian.md"), agentContent);
-  } catch {
-    // Gracefully skip — no Librarian, but OpenCode still works
-  }
-}
-
-function ensureOpenCodeConfig(isOnboarding: boolean, vaultPath?: string): void {
+function ensureOpenCodeConfig(isOnboarding: boolean): void {
   const configDir = getConfigDir();
   fs.mkdirSync(configDir, { recursive: true });
 
@@ -144,15 +114,11 @@ function ensureOpenCodeConfig(isOnboarding: boolean, vaultPath?: string): void {
   const tuiConfigPath = path.join(configDir, "tui.json");
   const tuiContent = JSON.stringify(buildOpenCodeTuiConfig(), null, 2) + "\n";
   writeIfChanged(tuiConfigPath, tuiContent);
-
-  if (vaultPath !== undefined) {
-    ensureLibrarianAgent(configDir, vaultPath);
-  }
 }
 
 function launchOpenCode(args: string[], vaultPath?: string): void {
   const isOnboarding = vaultPath === undefined;
-  ensureOpenCodeConfig(isOnboarding, vaultPath);
+  ensureOpenCodeConfig(isOnboarding);
 
   const configDir = getConfigDir();
   // Selective isolation: brainkit owns the OPENCODE_CONFIG file (overrides on
@@ -345,6 +311,95 @@ export async function launchHarness(alias: string, args: string[], vaultPath?: s
   await maybeCheckHarnessVersion(harness.name);
   p.outro(`Launching ${harness.name}...`);
   harness.launch(args, vaultPath);
+}
+
+// ---------------------------------------------------------------------------
+// Default harness command
+// ---------------------------------------------------------------------------
+
+export async function handleDefaultCommand(args: string[]): Promise<void> {
+  const alias = args[0];
+  if (alias === undefined) {
+    await showOrPickDefault();
+    return;
+  }
+
+  const harness = HARNESSES.find((h) => h.aliases.includes(alias));
+  if (!harness) {
+    const allAliases = HARNESSES.flatMap((h) => h.aliases).join(", ");
+    p.cancel(`Unknown harness alias: "${alias}". Valid aliases: ${allAliases}`);
+    process.exit(1);
+  }
+
+  const canonicalAlias = harness.aliases[0];
+  const globalConfig = readGlobalConfig();
+  const currentDefault = globalConfig?.default_harness;
+
+  // Cross-alias aware: "cc" and "claude" resolve to the same harness
+  if (currentDefault !== undefined && currentDefault !== "") {
+    const currentHarness = HARNESSES.find((h) => h.aliases.includes(currentDefault));
+    if (currentHarness === harness) {
+      p.log.info(`Default harness is already ${harness.name}.`);
+      return;
+    }
+  }
+
+  const config = globalConfig ?? { version: 1, brain_path: "" };
+  config.default_harness = canonicalAlias;
+  writeGlobalConfig(config);
+  p.log.success(`Default harness set to ${harness.name}.`);
+
+  if (!isInstalled(harness.binaries)) {
+    p.log.warn(
+      `${harness.binaries[0]} is not found on PATH. The default won't take effect until ${harness.name} is installed.`,
+    );
+  }
+}
+
+async function showOrPickDefault(): Promise<void> {
+  const globalConfig = readGlobalConfig();
+  const currentDefault = globalConfig?.default_harness;
+
+  if (!process.stdin.isTTY) {
+    if (currentDefault !== undefined && currentDefault !== "") {
+      const harness = HARNESSES.find((h) => h.aliases.includes(currentDefault));
+      console.log(`Default harness: ${harness?.name ?? currentDefault}`);
+    } else {
+      console.log("No default harness set.");
+    }
+    return;
+  }
+
+  // TTY: interactive picker — all harnesses enabled (unlike detectAndLaunch
+  // which disables uninstalled ones, since setting a preference doesn't
+  // require the harness to be installed yet)
+  const currentHarness =
+    currentDefault !== undefined && currentDefault !== ""
+      ? HARNESSES.find((h) => h.aliases.includes(currentDefault))
+      : undefined;
+
+  const selected = await p.select({
+    message: "Select your default harness",
+    initialValue: currentHarness,
+    options: HARNESSES.map((h) => {
+      const installed = isInstalled(h.binaries);
+      const isCurrent = h === currentHarness;
+      const parts = [h.name];
+      if (isCurrent) parts.push("(current)");
+      if (!installed) parts.push("(not installed)");
+      return { value: h, label: parts.join(" ") };
+    }),
+  });
+
+  if (p.isCancel(selected)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  const config = globalConfig ?? { version: 1, brain_path: "" };
+  config.default_harness = selected.aliases[0];
+  writeGlobalConfig(config);
+  p.log.success(`Default harness set to ${selected.name}.`);
 }
 
 export async function detectAndLaunch(args: string[], vaultPath?: string): Promise<void> {

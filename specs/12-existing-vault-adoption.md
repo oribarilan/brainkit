@@ -33,7 +33,7 @@ The current "Fresh Vault Detected" section in the system prompt becomes a more n
 - `"fresh"` → current "Fresh Vault Detected" behavior (triggers standard onboarding)
 - `"existing"` → "Existing Vault Detected" section that triggers the adoption flow
 
-When agents are enabled, only Thinker sees the vault state section — Consultant and Librarian can't act on onboarding or adoption flows. In no-agents mode, the default agent sees it.
+The default agent sees the vault state section and handles onboarding or adoption flows.
 
 ## Adoption Flow
 

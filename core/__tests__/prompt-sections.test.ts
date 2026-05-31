@@ -11,7 +11,6 @@ import {
   buildCustomRules,
   buildProfileNudge,
   buildBehavioralRules,
-  buildDelegation,
 } from "../prompt-sections.js";
 
 // ---------------------------------------------------------------------------
@@ -218,29 +217,5 @@ describe("joinSections", () => {
   it("filters nulls and joins with double newlines", () => {
     const result = joinSections(["A", null, "B", undefined, "C"]);
     expect(result).toBe("A\n\nB\n\nC\n");
-  });
-});
-
-describe("buildDelegation", () => {
-  it("mentions Librarian by name", () => {
-    const result = buildDelegation();
-    expect(result).toContain("Librarian");
-  });
-
-  it("includes task invocation syntax", () => {
-    const result = buildDelegation();
-    expect(result).toContain("librarian");
-    expect(result).toMatch(/task/i);
-  });
-
-  it("describes when to delegate", () => {
-    const result = buildDelegation();
-    expect(result).toMatch(/search|find/i);
-    expect(result).toMatch(/vault/i);
-  });
-
-  it("describes when NOT to delegate", () => {
-    const result = buildDelegation();
-    expect(result).toMatch(/already know|single.file|writ/i);
   });
 });

@@ -114,21 +114,6 @@ contacts = true
 | `bragfile` | boolean | no       | `true`  | Enable the bragfile (accomplishment log). |
 | `contacts` | boolean | no       | `true`  | Enable the contacts index.                |
 
-### `[agents]` — Agent System
-
-| Field                 | Type    | Required | Default | Description                                                        |
-| --------------------- | ------- | -------- | ------- | ------------------------------------------------------------------ |
-| `enabled`             | boolean | no       | `false` | Enable brainkit's agent system (Thinker, Consultant, Librarian).   |
-| `keep_builtin_agents` | boolean | no       | `false` | When `true`, keep OpenCode's built-in agents alongside brainkit's. |
-
-### `[agents.thinker]` / `[agents.consultant]` / `[agents.librarian]`
-
-| Field   | Type   | Required | Default                            | Description                                                             |
-| ------- | ------ | -------- | ---------------------------------- | ----------------------------------------------------------------------- |
-| `model` | string | no       | Inherited from user's global model | Model ID in `provider/model` format (e.g. `anthropic/claude-opus-4-6`). |
-
-See `specs/10-agents.md` for agent roles, permissions, and prompt design.
-
 ## Config Lifecycle
 
 ### First Run (No Config)
@@ -141,9 +126,7 @@ See `specs/10-agents.md` for agent roles, permissions, and prompt design.
 
 ### Steady State
 
-The plugin reads both configs on every turn (system prompt hook). Changes to `brainkit.toml` take effect immediately — no restart needed.
-
-**Exception:** Changes to `[agents]` require restarting OpenCode — the agent config hook runs once at startup. The agent can also modify the config (e.g., toggling a feature, updating context) via its built-in file editing tools.
+The plugin reads both configs on every turn (system prompt hook). Changes to `brainkit.toml` take effect immediately — no restart needed. The agent can also modify the config (e.g., toggling a feature, updating context) via its built-in file editing tools.
 
 ### Portable Vault
 

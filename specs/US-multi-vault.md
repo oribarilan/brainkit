@@ -127,7 +127,7 @@ Minimal:
 - **`core/prompt-sections.ts`**: No changes. `SectionContext.vaultPath` points to the selected vault.
 - **`core/system-prompt.ts`**: No changes.
 - **`core/migrations.ts`**: No changes.
-- **`core/agent-prompts.ts`**: No changes. Thinker, Consultant, Librarian agents work within whichever vault was selected.
+- **`core/agent-prompts.ts`**: No changes.
 
 ### Plugin changes
 

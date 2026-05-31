@@ -11,7 +11,6 @@ import {
   containsUserAccomplishment,
   scheduleAutoCommit,
 } from "../core/index.ts";
-import { buildDelegation } from "../core/prompt-sections.ts";
 
 const id = "brainkit";
 
@@ -54,11 +53,6 @@ const server: Plugin = async () => {
         const prompt = buildSystemPrompt(vaultConfig, vaultPath, { mode: "cli" });
         if (!output.system.includes(prompt)) {
           output.system.push(prompt);
-        }
-        // Delegation instructions for the Librarian sub-agent
-        const delegation = buildDelegation();
-        if (!output.system.includes(delegation)) {
-          output.system.push(delegation);
         }
       } catch {
         // Gracefully handle missing vault

@@ -39,3 +39,7 @@ export const logoLarge: string[] = [
   "                                            ██▒▒▒▒██                ",
   "                                              ██████                ",
 ];
+
+const charWidth = (line: string): number => [...line].length;
+
+export const logoLargeWidth = Math.max(...logoLarge.map(charWidth));

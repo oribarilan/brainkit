@@ -247,25 +247,3 @@ export function buildProfileNudge(ctx: SectionContext): string | null {
     "Once the user is satisfied with their profile, set `onboarding_complete = true` under `[user.customization]` in brainkit.toml.",
   ].join("\n");
 }
-
-export function buildDelegation(): string {
-  return [
-    "## Vault Search Delegation",
-    "",
-    "You have a sub-agent called Librarian that specializes in vault search. Delegate to it when:",
-    "",
-    "- The user asks a question that requires searching across multiple vault files",
-    "- You need to find specific notes, contacts, meeting notes, or brag entries",
-    "- You want to avoid loading large amounts of vault content into your own context",
-    "",
-    'Delegate via: `task(subagent_type="librarian", prompt="<specific search query>")`',
-    "",
-    "Write clear, specific search queries. The Librarian returns a summary of what it found — not raw file dumps.",
-    "",
-    "Do NOT delegate when:",
-    "",
-    "- You already know the file path (just read it directly)",
-    "- The operation is a simple single-file read",
-    "- You're writing or editing files (Librarian is read-only)",
-  ].join("\n");
-}
