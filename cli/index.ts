@@ -22,6 +22,7 @@ const HELP_TEXT = `Usage:
   brainkit claude [args...]    Launch with Claude Code
   brainkit cc [args...]        Launch with Claude Code
   brainkit default [alias]     View or set default harness
+  brainkit update [version]    Check for updates or install a specific version
   brainkit reset               Factory reset (removes all brainkit config; vaults untouched)
 
 Options:
@@ -58,6 +59,12 @@ async function main(): Promise<void> {
 
   if (args[0] === "default") {
     await handleDefaultCommand(args.slice(1));
+    return;
+  }
+
+  if (args[0] === "update") {
+    const { runUpdate } = await import("./update.js");
+    await runUpdate(args[1]); // optional version
     return;
   }
 

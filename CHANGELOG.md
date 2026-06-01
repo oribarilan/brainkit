@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- `brainkit update` shows a version picker with the last 5 releases (with dates) and lets you upgrade or downgrade. `brainkit update <version>` skips the picker and goes straight to a specific version.
+
 ## [0.13.0] - 2026-05-31
 
 ### Added
