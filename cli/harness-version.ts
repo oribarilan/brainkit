@@ -81,35 +81,27 @@ export function getInstalledVersion(meta: HarnessVersionMeta): string | null {
   }
 }
 
-export { isOlderThan } from "./version-utils.js";
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export async function maybeCheckHarnessVersion(harnessName: string): Promise<void> {
-  // Skip in non-TTY (can't prompt)
-  if (!process.stdin.isTTY) return;
-
-  const meta = HARNESS_VERSION_META[harnessName];
-  if (!meta) return;
-
+async function runHarnessCheck(meta: HarnessVersionMeta, harnessName: string, showUpToDate: boolean): Promise<void> {
   const configDir = getConfigDir();
-
-  // Only check on first run or brainkit version change
-  if (!shouldCheckVersion(configDir, brainkitVersion)) return;
 
   const installed = getInstalledVersion(meta);
   const latest = getLatestNpmVersion(meta.npmPackage);
 
-  // If either check failed, skip silently — don't write marker so we retry next time
+  // If either check failed, skip silently
   if (installed === null || latest === null) return;
 
-  // Successfully checked — write marker so we don't check again until brainkit updates
+  // Successfully checked — write marker
   writeVersionMarker(configDir, brainkitVersion);
 
   // Up to date
-  if (!isOlderThan(installed, latest)) return;
+  if (!isOlderThan(installed, latest)) {
+    if (showUpToDate) p.log.info(`${harnessName} is up to date (${installed}).`);
+    return;
+  }
 
   // Outdated — suggest update
   const shouldUpdate = await p.confirm({
@@ -122,6 +114,29 @@ export async function maybeCheckHarnessVersion(harnessName: string): Promise<voi
   p.log.info(`Running: ${cmdString}`);
 
   runUpdateCommand(meta.updateCommand, cmdString, harnessName);
+}
+
+/**
+ * Core harness version check — gets installed/latest versions, compares, prompts, updates.
+ * Does NOT check TTY or version marker. Silently skips unknown harness names.
+ */
+export async function checkHarnessVersion(harnessName: string): Promise<void> {
+  const meta = HARNESS_VERSION_META[harnessName];
+  if (!meta) return;
+  await runHarnessCheck(meta, harnessName, true);
+}
+
+export async function maybeCheckHarnessVersion(harnessName: string): Promise<void> {
+  // Skip in non-TTY (can't prompt)
+  if (!process.stdin.isTTY) return;
+
+  const meta = HARNESS_VERSION_META[harnessName];
+  if (!meta) return;
+
+  // Only check on first run or brainkit version change
+  if (!shouldCheckVersion(getConfigDir(), brainkitVersion)) return;
+
+  await runHarnessCheck(meta, harnessName, false);
 }
 
 /**

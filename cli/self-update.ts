@@ -4,7 +4,7 @@ import { execFileSync, spawn } from "node:child_process";
 import * as p from "@clack/prompts";
 import { getConfigDir, readGlobalConfig, writeGlobalConfig } from "../core/index.js";
 import { version as brainkitVersion } from "./version.js";
-import { isOlderThan, getLatestNpmVersion } from "./version-utils.js";
+import { isOlderThan, getLatestNpmVersion, getNpmVersions } from "./version-utils.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -66,16 +66,17 @@ export function detectPackageManager(): string {
   return "npm";
 }
 
-export function getUpdateCommand(pm: string): { binary: string; args: string[] } {
+export function getUpdateCommand(pm: string, version?: string): { binary: string; args: string[] } {
+  const pkg = `@2brain/brainkit@${version ?? "latest"}`;
   switch (pm) {
     case "pnpm":
-      return { binary: "pnpm", args: ["add", "-g", "@2brain/brainkit@latest"] };
+      return { binary: "pnpm", args: ["add", "-g", pkg] };
     case "yarn":
-      return { binary: "yarn", args: ["global", "add", "@2brain/brainkit@latest"] };
+      return { binary: "yarn", args: ["global", "add", pkg] };
     case "bun":
-      return { binary: "bun", args: ["add", "-g", "@2brain/brainkit@latest"] };
+      return { binary: "bun", args: ["add", "-g", pkg] };
     default:
-      return { binary: "npm", args: ["install", "-g", "@2brain/brainkit@latest"] };
+      return { binary: "npm", args: ["install", "-g", pkg] };
   }
 }
 
@@ -136,19 +137,24 @@ export async function fetchChangelog(currentVersion: string, latestVersion: stri
 // Update execution
 // ---------------------------------------------------------------------------
 
-function runUpdateAndRelaunch(): Promise<void> {
+/** Install a brainkit version. Returns true on success, false on failure. */
+export function installSelfUpdate(version?: string): boolean {
   const pm = detectPackageManager();
-  const { binary, args } = getUpdateCommand(pm);
-
+  const { binary, args } = getUpdateCommand(pm, version);
   try {
     execFileSync(binary, args, {
       stdio: "inherit",
       shell: process.platform === "win32",
     });
+    return true;
   } catch {
     p.log.error(`Update failed. Run manually: ${binary} ${args.join(" ")}`);
-    return Promise.resolve();
+    return false;
   }
+}
+
+function runUpdateAndRelaunch(): Promise<void> {
+  if (!installSelfUpdate()) return Promise.resolve();
 
   p.log.success("Updated! Restarting...");
 
@@ -177,6 +183,71 @@ function runUpdateAndRelaunch(): Promise<void> {
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+/**
+ * Core update check — queries npm, compares versions, prompts, and updates.
+ * Called by `brainkit update [version]`.
+ */
+export async function checkForSelfUpdate(targetVersion?: string): Promise<void> {
+  const configDir = getConfigDir();
+  const current = brainkitVersion;
+
+  let target: string;
+
+  if (targetVersion !== undefined) {
+    // Explicit version given
+    target = targetVersion;
+  } else {
+    // Show version picker
+    const versions = getNpmVersions("@2brain/brainkit", 5);
+    if (versions === null || versions.length === 0) {
+      p.log.warn("Could not fetch available versions.");
+      return;
+    }
+
+    writeCheckTimestamp(configDir);
+
+    const maxVersionLen = Math.max(...versions.map((e) => e.version.length));
+    const selected = await p.select({
+      message: "Pick a version to install",
+      options: versions.map((entry, i) => {
+        const ver = `v${entry.version.padEnd(maxVersionLen)}`;
+        let label = `${ver}  (${entry.date})`;
+        if (i === 0) label += "  · latest";
+        if (entry.version === current) label += "  <-- you are here";
+        return { value: entry.version, label };
+      }),
+    });
+
+    if (p.isCancel(selected)) return;
+    target = selected;
+  }
+
+  if (target === current) {
+    p.log.info(`Already on v${current}.`);
+    return;
+  }
+
+  const isUpgrade = isOlderThan(current, target);
+
+  // Show changelog for upgrades
+  if (isUpgrade) {
+    const changelog = await fetchChangelog(current, target);
+    if (changelog !== null) {
+      p.note(changelog, "What's new");
+    }
+  }
+
+  const action = isUpgrade ? "Upgrade" : "Downgrade";
+  const shouldProceed = await p.confirm({
+    message: `${action} from v${current} to v${target}?`,
+  });
+  if (p.isCancel(shouldProceed) || !shouldProceed) return;
+
+  if (installSelfUpdate(target)) {
+    p.log.success(`Updated to v${target}.`);
+  }
+}
 
 export async function maybeCheckForSelfUpdate(): Promise<void> {
   // Skip in non-TTY

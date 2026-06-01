@@ -296,6 +296,11 @@ export function isHarnessAlias(arg: string): boolean {
   return HARNESSES.some((h) => h.aliases.includes(arg));
 }
 
+/** Resolve a harness alias (e.g. "oc") to its display name (e.g. "OpenCode"). */
+export function resolveHarnessName(alias: string): string | undefined {
+  return HARNESSES.find((h) => h.aliases.includes(alias))?.name;
+}
+
 export async function launchHarness(alias: string, args: string[], vaultPath?: string): Promise<void> {
   const harness = HARNESSES.find((h) => h.aliases.includes(alias));
   if (!harness) {

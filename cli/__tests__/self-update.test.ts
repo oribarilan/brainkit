@@ -14,6 +14,7 @@ import {
   writeCheckTimestamp,
   detectPackageManager,
   formatReleaseBody,
+  installSelfUpdate,
 } from "../self-update.js";
 
 const NODE_BIN = process.argv[0] ?? "node";
@@ -63,6 +64,86 @@ describe("getUpdateCommand", () => {
       binary: "bun",
       args: ["add", "-g", "@2brain/brainkit@latest"],
     });
+  });
+
+  it("uses explicit version when provided", () => {
+    expect(getUpdateCommand("npm", "1.2.3")).toEqual({
+      binary: "npm",
+      args: ["install", "-g", "@2brain/brainkit@1.2.3"],
+    });
+  });
+
+  it("uses explicit version for pnpm", () => {
+    expect(getUpdateCommand("pnpm", "0.8.0")).toEqual({
+      binary: "pnpm",
+      args: ["add", "-g", "@2brain/brainkit@0.8.0"],
+    });
+  });
+});
+
+describe("installSelfUpdate", () => {
+  const originalArgv = [...process.argv];
+  const originalUA = process.env["npm_config_user_agent"];
+
+  beforeEach(() => {
+    // Default to npm (generic path, no user agent)
+    process.argv = [NODE_BIN, "/usr/local/lib/node_modules/@2brain/brainkit/dist/cli/index.js"];
+    delete process.env["npm_config_user_agent"];
+  });
+
+  afterEach(() => {
+    process.argv = [...originalArgv];
+    if (originalUA !== undefined) {
+      process.env["npm_config_user_agent"] = originalUA;
+    } else {
+      delete process.env["npm_config_user_agent"];
+    }
+  });
+
+  it("returns true on successful install", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const mockExec = vi.mocked(execFileSync);
+    mockExec.mockReturnValue(Buffer.from(""));
+
+    expect(installSelfUpdate("0.12.0")).toBe(true);
+  });
+
+  it("returns false when execFileSync throws", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const mockExec = vi.mocked(execFileSync);
+    mockExec.mockImplementation(() => {
+      throw new Error("npm install failed");
+    });
+
+    expect(installSelfUpdate("0.12.0")).toBe(false);
+  });
+
+  it("passes version to the install command", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const mockExec = vi.mocked(execFileSync);
+    mockExec.mockReturnValue(Buffer.from(""));
+
+    installSelfUpdate("0.12.0");
+
+    expect(mockExec).toHaveBeenCalledWith(
+      "npm",
+      ["install", "-g", "@2brain/brainkit@0.12.0"],
+      expect.objectContaining({ stdio: "inherit" }),
+    );
+  });
+
+  it("uses @latest when no version given", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const mockExec = vi.mocked(execFileSync);
+    mockExec.mockReturnValue(Buffer.from(""));
+
+    installSelfUpdate();
+
+    expect(mockExec).toHaveBeenCalledWith(
+      "npm",
+      ["install", "-g", "@2brain/brainkit@latest"],
+      expect.objectContaining({ stdio: "inherit" }),
+    );
   });
 });
 
@@ -194,6 +275,7 @@ vi.mock("../version.js", () => ({
 vi.mock("../version-utils.js", () => ({
   isOlderThan: vi.fn(),
   getLatestNpmVersion: vi.fn(),
+  getNpmVersions: vi.fn(),
 }));
 
 vi.mock("node:child_process", () => ({
@@ -203,6 +285,7 @@ vi.mock("node:child_process", () => ({
 
 vi.mock("@clack/prompts", () => ({
   select: vi.fn(),
+  confirm: vi.fn(),
   isCancel: vi.fn(() => false),
   note: vi.fn(),
   log: {
