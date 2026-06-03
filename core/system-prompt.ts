@@ -17,6 +17,7 @@ import {
   buildOnboarding,
   buildProfileNudge,
 } from "./prompt-sections.js";
+import { isGitRepo } from "./git.js";
 
 /**
  * HTML-comment sentinel emitted as the first line of every brainkit-generated
@@ -36,6 +37,7 @@ export function buildSystemPrompt(
     vaultPath,
     mode: options?.mode ?? "cli",
     cwd: options?.cwd,
+    isGit: isGitRepo(vaultPath),
   };
 
   return joinSections([

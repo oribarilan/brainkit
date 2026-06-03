@@ -54,6 +54,17 @@ describe("buildPreamble", () => {
     const result = buildPreamble(makeCtx({ vaultPath: "/my/vault" }));
     expect(result).toContain("/my/vault");
   });
+
+  it("includes 'backed by git' when isGit is true", () => {
+    const result = buildPreamble(makeCtx({ isGit: true }));
+    expect(result).toContain("backed by git");
+  });
+
+  it("omits 'backed by git' when isGit is false and still includes vault path", () => {
+    const result = buildPreamble(makeCtx({ isGit: false }));
+    expect(result).not.toContain("backed by git");
+    expect(result).toContain("/fake/vault");
+  });
 });
 
 describe("buildIdentity", () => {

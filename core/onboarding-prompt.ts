@@ -138,7 +138,7 @@ Warm but efficient. One topic at a time. Don't dump all questions at once. If th
 
 - Use \`kebab-case\` for all directory and file names (e.g., \`my-project\`, not \`My Project\`)
 - All README.md files should have a heading matching the directory name
-- The brain directory should be initialized as a git repo (\`git init\`) if it isn't already AND it's a brand-new dir (Scenario A). Don't \`git init\` existing dirs.
+- For new brain directories (Scenario A), ask the user if they'd like to use git for version history. Git adds version history — diffs, rollback, change tracking — and complements cloud sync setups like OneDrive or Google Drive. If they say yes, run \`git init\` and seed a \`.gitignore\` at the brain root with common OS and cloud-sync noise (\`.DS_Store\`, \`Thumbs.db\`, \`desktop.ini\`, \`~$*\`, \`*.tmp\`). If they decline, move on. Don't \`git init\` existing dirs (Scenario C) without asking.
 - Directory names: use lowercase with hyphens`;
 }
 

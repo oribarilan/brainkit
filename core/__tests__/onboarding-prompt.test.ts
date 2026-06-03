@@ -64,6 +64,12 @@ describe("buildOnboardingPrompt", () => {
     expect(result).toContain("brainkit.toml");
   });
 
+  it("treats git init as optional — asks the user rather than directing unconditionally", () => {
+    const result = buildOnboardingPrompt("opencode");
+    expect(result).toContain("ask");
+    expect(result).not.toMatch(/should be initialized as a git repo/i);
+  });
+
   it("includes the existing-brain detection branch (Scenario B)", () => {
     const result = buildOnboardingPrompt("opencode");
     // The prompt must instruct the agent to inspect the brain dir before

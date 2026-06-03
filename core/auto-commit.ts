@@ -1,6 +1,8 @@
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 
+import { isGitRepo } from "./git.js";
+
 // ---------------------------------------------------------------------------
 // Debounced vault auto-commit
 // ---------------------------------------------------------------------------
@@ -8,15 +10,6 @@ import * as fs from "node:fs";
 const DEBOUNCE_MS = 30_000; // 30 seconds
 
 let commitTimer: ReturnType<typeof setTimeout> | null = null;
-
-function isGitRepo(vaultPath: string): boolean {
-  try {
-    execSync("git rev-parse --git-dir", { cwd: vaultPath, stdio: "pipe" });
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 function hasUncommittedChanges(vaultPath: string): boolean {
   try {
