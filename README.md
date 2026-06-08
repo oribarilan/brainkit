@@ -1,6 +1,11 @@
-# brainkit
+<h1 align="center">brainkit</h1>
 
-**An augmentation kit for your brain.**
+<p align="center"><strong>An augmentation kit for your brain.</strong></p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@2brain/brainkit"><img src="https://img.shields.io/npm/v/@2brain/brainkit" alt="npm version"></a>
+  <a href="https://github.com/oribarilan/brainkit/actions/workflows/check.yml"><img src="https://github.com/oribarilan/brainkit/actions/workflows/check.yml/badge.svg?branch=main" alt="CI"></a>
+</p>
 
 ```
         _---~~(~~-_.
@@ -15,7 +20,16 @@
                    { }
 ```
 
-[![npm version](https://img.shields.io/npm/v/@2brain/brainkit)](https://www.npmjs.com/package/@2brain/brainkit)
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#what-is-it">What is it</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#philosophy">Philosophy</a> ·
+  <a href="#your-data">Your data</a> ·
+  <a href="#contributing">Contributing</a>
+</p>
+
+---
 
 ## Install
 
@@ -23,7 +37,7 @@
 npm install -g @2brain/brainkit
 ```
 
-Works on macOS, Linux, and Windows.
+*Works on macOS, Linux, and Windows.*
 
 Brainkit is a plugin for AI coding agents. It runs on top of an existing harness (it doesn't replace one) and adds skills, system prompts, hooks, and some visualizations. It detects which harness you have, or you can pick one:
 
