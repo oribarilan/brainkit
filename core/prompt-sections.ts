@@ -54,9 +54,10 @@ export function joinSections(sections: (string | null | undefined)[]): string {
 // ---------------------------------------------------------------------------
 
 export function buildPreamble(ctx: SectionContext): string {
-  const locationLine = ctx.isGit === true
-    ? `The vault is backed by git and lives at \`${ctx.vaultPath}\`.`
-    : `The vault lives at \`${ctx.vaultPath}\`.`;
+  const locationLine =
+    ctx.isGit === true
+      ? `The vault is backed by git and lives at \`${ctx.vaultPath}\`.`
+      : `The vault lives at \`${ctx.vaultPath}\`.`;
   return [
     "## Brainkit",
     "",

@@ -52,6 +52,7 @@ Not exported from `core/index.ts` — only used internally by `auto-commit.ts` a
 Add `isGit?: boolean` (optional) to `SectionContext` so custom prompt composition via `joinSections` can still override it. `buildSystemPrompt` always fills it in; direct `SectionContext` constructors default to `undefined` (treated as `false` by `buildPreamble`).
 
 `buildPreamble` behavior:
+
 - `isGit` is truthy: "The vault is backed by git and lives at `{path}`." (current behavior)
 - `isGit` is falsy/absent: "The vault lives at `{path}`." (git mention dropped)
 
@@ -60,9 +61,11 @@ Add `isGit?: boolean` (optional) to `SectionContext` so custom prompt compositio
 Replace the current unconditional `git init` directive (line 141) with git-as-option text. Exact replacement:
 
 **Current text:**
+
 > The brain directory should be initialized as a git repo (`git init`) if it isn't already AND it's a brand-new dir (Scenario A). Don't `git init` existing dirs.
 
 **New text:**
+
 > For new brain directories (Scenario A), ask the user if they'd like to use git for version history. Git adds version history — diffs, rollback, change tracking — and complements cloud sync setups like OneDrive or Google Drive. If they say yes, run `git init` and seed a `.gitignore` with common OS and cloud-sync noise (`.DS_Store`, `Thumbs.db`, `desktop.ini`, `~$*`, `*.tmp`). Don't push — if they decline, move on. Don't `git init` existing dirs (Scenario C) without asking.
 
 No cloud-sync path detection. The agent frames git the same way regardless of where the vault lives — the user decides.
