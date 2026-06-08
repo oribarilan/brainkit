@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-06-08
+
+### Added
+- Vaults no longer need to be git repos. OneDrive, Google Drive, Dropbox, or any plain folder works. During onboarding, local git init is offered as an option instead of assumed.
+
 ## [0.14.0] - 2026-06-02
 
 ### Added

@@ -87,8 +87,8 @@ No commands, no formatting, no manual filing.
 ## Your data
 
 - **No telemetry, no data collection.** Brainkit doesn't phone home. The only outbound request it makes is a version check against the GitHub releases API.
-- **Plain files in a directory you choose.** Your vault is markdown and TOML on your disk. No database, no cloud, no account.
-- **Recommended: a private git repo you own.** Pair the vault with a private GitHub/GitLab/self-hosted repo for backup and history. `brainkit doctor` warns you if your remote is public.
+- **Plain files in a directory you choose.** Your vault is markdown and TOML on your disk. No database, no cloud, no account. OneDrive, Google Drive, Dropbox, a plain folder — all work.
+- **Git is optional.** Brainkit asks during setup whether you want version history. Say yes and it inits a repo with a `.gitignore`; say no and everything still works. Pair it with a private git repo for backup if you want. `brainkit doctor` warns you if your remote is public.
 
 ## Contributing
 

@@ -15,6 +15,7 @@ export type SectionContext = {
   vaultPath: string;
   mode: PromptMode;
   cwd?: string;
+  isGit?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -53,12 +54,16 @@ export function joinSections(sections: (string | null | undefined)[]): string {
 // ---------------------------------------------------------------------------
 
 export function buildPreamble(ctx: SectionContext): string {
+  const locationLine =
+    ctx.isGit === true
+      ? `The vault is backed by git and lives at \`${ctx.vaultPath}\`.`
+      : `The vault lives at \`${ctx.vaultPath}\`.`;
   return [
     "## Brainkit",
     "",
     "Brainkit is a personal second brain — a structured markdown vault organized with the PARA method.",
     "It captures projects, areas of responsibility, resources, and archives in a consistent, searchable format.",
-    `The vault is backed by git and lives at \`${ctx.vaultPath}\`.`,
+    locationLine,
   ].join("\n");
 }
 
