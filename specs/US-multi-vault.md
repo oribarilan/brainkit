@@ -309,7 +309,7 @@ Split into three independent sub-units:
 
 ## Not in scope
 
-- Cross-vault search or operations
+- ~~Cross-vault search or operations~~ -- now planned as US-all-vaults
 - Vault renaming or deletion
 - Vault-level git configuration (the brain is one repo, vaults don't have independent git)
 - Vault templates or presets
