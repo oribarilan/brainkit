@@ -121,13 +121,13 @@ describe("detectAndLaunch", () => {
     setInstalled(["opencode"]);
 
     // Should not throw (launches the harness via spawn)
-    await detectAndLaunch([]);
+    await detectAndLaunch([], { mode: "onboarding" });
   });
 
   it("exits with error when no harnesses are detected", async () => {
     setInstalled([]);
 
-    await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+    await expect(detectAndLaunch([], { mode: "onboarding" })).rejects.toThrow("process.exit");
     expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("No supported"));
   });
 
@@ -140,7 +140,7 @@ describe("detectAndLaunch", () => {
     });
 
     // Should launch without prompting — no throw, no exit
-    await detectAndLaunch([]);
+    await detectAndLaunch([], { mode: "onboarding" });
     // Should NOT have written config (already saved)
     expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
   });
@@ -155,7 +155,7 @@ describe("detectAndLaunch", () => {
 
     // With only one other harness available after ignoring default,
     // it should auto-launch copilot (falls through to single-harness case)
-    await detectAndLaunch([]);
+    await detectAndLaunch([], { mode: "onboarding" });
   });
 
   it("errors in non-TTY when multiple harnesses detected and no default", async () => {
@@ -167,7 +167,7 @@ describe("detectAndLaunch", () => {
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
 
     try {
-      await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+      await expect(detectAndLaunch([], { mode: "onboarding" })).rejects.toThrow("process.exit");
       expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("Multiple harnesses"));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
@@ -183,7 +183,7 @@ describe("detectAndLaunch", () => {
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
 
     try {
-      await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+      await expect(detectAndLaunch([], { mode: "onboarding" })).rejects.toThrow("process.exit");
       expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("brainkit oc"));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
@@ -194,7 +194,7 @@ describe("detectAndLaunch", () => {
     setInstalled(["claude"]);
 
     // Should not throw — should auto-launch Claude
-    await detectAndLaunch([]);
+    await detectAndLaunch([], { mode: "onboarding" });
   });
 
   it("includes claude as an option when all three harnesses are installed (non-TTY error)", async () => {
@@ -205,7 +205,7 @@ describe("detectAndLaunch", () => {
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
 
     try {
-      await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+      await expect(detectAndLaunch([], { mode: "onboarding" })).rejects.toThrow("process.exit");
       expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("brainkit claude"));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", { value: origIsTTY, configurable: true });
@@ -220,14 +220,14 @@ describe("detectAndLaunch", () => {
       default_harness: "claude",
     });
 
-    await detectAndLaunch([]);
+    await detectAndLaunch([], { mode: "onboarding" });
     expect(mockWriteGlobalConfig).not.toHaveBeenCalled();
   });
 
   it("error message lists all three harnesses when none are installed", async () => {
     setInstalled([]);
 
-    await expect(detectAndLaunch([])).rejects.toThrow("process.exit");
+    await expect(detectAndLaunch([], { mode: "onboarding" })).rejects.toThrow("process.exit");
     expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("Claude Code"));
   });
 });

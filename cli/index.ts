@@ -10,6 +10,7 @@ import {
   parseVaultFlag,
   selectVault,
 } from "./launch.js";
+import type { LaunchTarget } from "./launch.js";
 import { factoryReset } from "./reset.js";
 import { maybeCheckForSelfUpdate } from "./self-update.js";
 
@@ -76,18 +77,23 @@ async function main(): Promise<void> {
   const { vault: vaultFlag, remaining } = parseVaultFlag(args);
 
   // Select vault
-  const { vaultPath } = await selectVault(vaultFlag);
+  const selection = await selectVault(vaultFlag);
+
+  // Map VaultSelection to LaunchTarget (drop brainPath for single mode)
+  const target: LaunchTarget = selection.mode === "single"
+    ? { mode: "single", vaultPath: selection.vaultPath }
+    : selection;
 
   const firstArg = remaining[0];
 
   // Harness alias — launch explicitly
   if (firstArg !== undefined && isHarnessAlias(firstArg)) {
-    await launchHarness(firstArg, remaining.slice(1), vaultPath);
+    await launchHarness(firstArg, remaining.slice(1), target);
     return;
   }
 
   // No args or unknown — auto-detect and launch
-  await detectAndLaunch(remaining, vaultPath);
+  await detectAndLaunch(remaining, target);
 }
 
 main().catch((err: unknown) => {

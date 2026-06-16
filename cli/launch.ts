@@ -11,6 +11,22 @@ import { spawnHarness } from "./spawn.js";
 import { resetBrainkitConfig } from "./reset.js";
 
 // ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type VaultSelection =
+  | { mode: "single"; vaultPath: string; brainPath: string }
+  | { mode: "all"; brainPath: string }
+  | { mode: "onboarding" };
+
+export type LaunchTarget =
+  | { mode: "single"; vaultPath: string }
+  | { mode: "all"; brainPath: string }
+  | { mode: "onboarding" };
+
+const ALL_VAULT_RESERVED = /^all$/i;
+
+// ---------------------------------------------------------------------------
 // Harness definitions
 // ---------------------------------------------------------------------------
 
@@ -18,7 +34,7 @@ interface Harness {
   name: string;
   binaries: string[];
   aliases: string[];
-  launch: (args: string[], vaultPath?: string) => void;
+  launch: (args: string[], target: LaunchTarget) => void;
 }
 
 function which(binary: string): string | null {
@@ -116,18 +132,11 @@ function ensureOpenCodeConfig(isOnboarding: boolean): void {
   writeIfChanged(tuiConfigPath, tuiContent);
 }
 
-function launchOpenCode(args: string[], vaultPath?: string): void {
-  const isOnboarding = vaultPath === undefined;
+function launchOpenCode(args: string[], target: LaunchTarget): void {
+  const isOnboarding = target.mode === "onboarding";
   ensureOpenCodeConfig(isOnboarding);
 
   const configDir = getConfigDir();
-  // Selective isolation: brainkit owns the OPENCODE_CONFIG file (overrides on
-  // conflict via OpenCode's merge precedence) and overrides OPENCODE_CONFIG_DIR
-  // so the user's dotfiles-managed `.opencode/` directory doesn't leak in.
-  // OPENCODE_DISABLE_PROJECT_CONFIG kills the upward project walk so vault
-  // parent directories can't inject their own `.opencode/` configs. Auth, MCP
-  // servers, model defaults from `~/.config/opencode/` continue to merge in —
-  // we don't redirect XDG_*_HOME because that would wipe the user's auth.json.
   const env: Record<string, string | undefined> = {
     ...process.env,
     OPENCODE_CONFIG: path.join(configDir, "opencode.json"),
@@ -136,12 +145,14 @@ function launchOpenCode(args: string[], vaultPath?: string): void {
     OPENCODE_DISABLE_PROJECT_CONFIG: "true",
   };
 
-  if (vaultPath !== undefined) {
-    env["BRAINKIT_VAULT_PATH"] = vaultPath;
+  if (target.mode === "single") {
+    env["BRAINKIT_VAULT_PATH"] = target.vaultPath;
+  } else if (target.mode === "all") {
+    env["BRAINKIT_ALL_VAULTS"] = "1";
   }
 
-  // No vault = onboarding — auto-submit initial prompt
-  const launchArgs = vaultPath === undefined ? ["--prompt", "Let's set up my first brainkit vault!", ...args] : args;
+  // Onboarding — auto-submit initial prompt
+  const launchArgs = isOnboarding ? ["--prompt", "Let's set up my first brainkit vault!", ...args] : args;
 
   const child = spawnHarness("opencode", launchArgs, { stdio: "inherit", env });
   child.on("exit", (code) => process.exit(code ?? 0));
@@ -202,9 +213,17 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
     process.exit(1);
   }
 
+  // Filter out vaults named "all" from the picker to avoid visual collision
+  const pickerVaults = vaults.filter((v) => !ALL_VAULT_RESERVED.test(v));
+
+  const options = [
+    { value: "__all__", label: "+ All vaults" },
+    ...pickerVaults.map((v) => ({ value: v, label: v })),
+  ];
+
   const selected = await p.select({
     message: "Select a vault",
-    options: vaults.map((v) => ({ value: v, label: v })),
+    options,
   });
 
   if (p.isCancel(selected)) {
@@ -217,10 +236,10 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
 
 export async function selectVault(
   vaultFlag: string | null,
-): Promise<{ vaultPath: string | undefined; brainPath: string | undefined }> {
+): Promise<VaultSelection> {
   const globalConfig = readGlobalConfig();
   if (globalConfig === null || !globalConfig.brain_path) {
-    return { vaultPath: undefined, brainPath: undefined };
+    return { mode: "onboarding" };
   }
 
   const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
@@ -250,14 +269,28 @@ export async function selectVault(
       }
 
       p.log.success("Brainkit config removed. Restarting onboarding...");
-      return { vaultPath: undefined, brainPath: undefined };
+      return { mode: "onboarding" };
     }
 
     p.cancel(`Brain directory not found. Run \`brainkit reset\` to clear config and re-onboard.`);
     process.exit(1);
   }
 
-  // Explicit --vault flag
+  // Warn if a vault named "all" exists (any case)
+  if (vaults.some((v) => ALL_VAULT_RESERVED.test(v))) {
+    p.log.warn('"all" is a reserved vault name in brainkit. A vault with this name may conflict with --vault all.');
+  }
+
+  // --vault all (case-insensitive reserved name)
+  if (vaultFlag !== null && ALL_VAULT_RESERVED.test(vaultFlag)) {
+    if (vaults.length === 0) {
+      p.cancel("No vaults found. Run brainkit to set up your first vault.");
+      process.exit(1);
+    }
+    return { mode: "all", brainPath };
+  }
+
+  // Explicit --vault flag (specific vault name)
   if (vaultFlag !== null) {
     if (!vaults.includes(vaultFlag)) {
       const msg =
@@ -267,25 +300,26 @@ export async function selectVault(
       p.cancel(msg);
       process.exit(1);
     }
-    return { vaultPath: path.join(brainPath, vaultFlag), brainPath };
+    return { mode: "single", vaultPath: path.join(brainPath, vaultFlag), brainPath };
   }
 
   // 0 vaults — fresh brain
   if (vaults.length === 0) {
-    return { vaultPath: brainPath, brainPath };
+    return { mode: "single", vaultPath: brainPath, brainPath };
   }
 
   // 1 vault — auto-select
   if (vaults.length === 1) {
-    const single = vaults[0];
-    if (single !== undefined) {
-      return { vaultPath: path.join(brainPath, single), brainPath };
-    }
+    const single = vaults[0]!;
+    return { mode: "single", vaultPath: path.join(brainPath, single), brainPath };
   }
 
-  // 2+ vaults — interactive prompt
+  // 2+ vaults — interactive prompt with "All vaults" option
   const selected = await promptVaultSelection(vaults);
-  return { vaultPath: path.join(brainPath, selected), brainPath };
+  if (selected === "__all__") {
+    return { mode: "all", brainPath };
+  }
+  return { mode: "single", vaultPath: path.join(brainPath, selected), brainPath };
 }
 
 // ---------------------------------------------------------------------------
@@ -301,7 +335,7 @@ export function resolveHarnessName(alias: string): string | undefined {
   return HARNESSES.find((h) => h.aliases.includes(alias))?.name;
 }
 
-export async function launchHarness(alias: string, args: string[], vaultPath?: string): Promise<void> {
+export async function launchHarness(alias: string, args: string[], target: LaunchTarget): Promise<void> {
   const harness = HARNESSES.find((h) => h.aliases.includes(alias));
   if (!harness) {
     p.cancel(`Unknown harness: ${alias}`);
@@ -315,7 +349,7 @@ export async function launchHarness(alias: string, args: string[], vaultPath?: s
 
   await maybeCheckHarnessVersion(harness.name);
   p.outro(`Launching ${harness.name}...`);
-  harness.launch(args, vaultPath);
+  harness.launch(args, target);
 }
 
 // ---------------------------------------------------------------------------
@@ -407,7 +441,7 @@ async function showOrPickDefault(): Promise<void> {
   p.log.success(`Default harness set to ${selected.name}.`);
 }
 
-export async function detectAndLaunch(args: string[], vaultPath?: string): Promise<void> {
+export async function detectAndLaunch(args: string[], target: LaunchTarget): Promise<void> {
   const available = HARNESSES.filter((h) => isInstalled(h.binaries));
 
   if (available.length === 0) {
@@ -420,7 +454,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
     if (harness !== undefined) {
       await maybeCheckHarnessVersion(harness.name);
       p.outro(`Launching ${harness.name}...`);
-      harness.launch(args, vaultPath);
+      harness.launch(args, target);
     }
     return;
   }
@@ -433,7 +467,7 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
     if (defaultHarness) {
       await maybeCheckHarnessVersion(defaultHarness.name);
       p.outro(`Launching ${defaultHarness.name}...`);
-      defaultHarness.launch(args, vaultPath);
+      defaultHarness.launch(args, target);
       return;
     }
   }
@@ -466,5 +500,5 @@ export async function detectAndLaunch(args: string[], vaultPath?: string): Promi
 
   await maybeCheckHarnessVersion(selected.name);
   p.outro(`Launching ${selected.name}...`);
-  selected.launch(args, vaultPath);
+  selected.launch(args, target);
 }

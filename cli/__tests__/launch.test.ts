@@ -166,4 +166,8 @@ describe("launchOpenCode isolation env contract (source-level)", () => {
   it("sets OPENCODE_DISABLE_PROJECT_CONFIG on spawned env (blocks vault-parent walk leak)", () => {
     expect(launchSource).toMatch(/OPENCODE_DISABLE_PROJECT_CONFIG\s*:/);
   });
+
+  it("sets BRAINKIT_ALL_VAULTS on spawned env in all-vaults mode", () => {
+    expect(launchSource).toMatch(/BRAINKIT_ALL_VAULTS/);
+  });
 });

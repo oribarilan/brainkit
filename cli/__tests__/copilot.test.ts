@@ -563,7 +563,7 @@ describe("launchCopilot — isolation", () => {
 
   it("vault stays clean during launch on a fresh vault (no legacy artifacts)", () => {
     const before = listAllFiles(vault);
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     const after = listAllFiles(vault);
     expect(after).toEqual(before);
     // Migration ran (no-op) and wrote the marker.
@@ -575,7 +575,7 @@ describe("launchCopilot — isolation", () => {
     const originalHome = process.env["HOME"];
     process.env["HOME"] = fakeHome;
     try {
-      launchCopilot([], vault);
+      launchCopilot([], { mode: "single", vaultPath: vault });
       expect(fs.existsSync(path.join(fakeHome, ".copilot"))).toBe(false);
     } finally {
       if (originalHome !== undefined) process.env["HOME"] = originalHome;
@@ -585,7 +585,7 @@ describe("launchCopilot — isolation", () => {
   });
 
   it("spawns copilot with COPILOT_HOME and BRAINKIT_VAULT_PATH env", () => {
-    launchCopilot(["-p", "hi"], vault);
+    launchCopilot(["-p", "hi"], { mode: "single", vaultPath: vault });
     expect(mockSpawnHarness).toHaveBeenCalledTimes(1);
     const callArgs = mockSpawnHarness.mock.calls[0] as unknown as [string, string[], { env: NodeJS.ProcessEnv }];
     const opts = callArgs[2];
@@ -595,14 +595,14 @@ describe("launchCopilot — isolation", () => {
 
   it("second launch on unchanged state skips writes for instructions and auto-commit script", () => {
     // First launch: populates everything.
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     const instrPath = path.join(mockCopilotHome(), "copilot-instructions.md");
     const hookPath = path.join(mockCopilotHome(), "hooks", "scripts", "auto-commit.js");
 
     // Second launch: spy on fs.writeFileSync and assert these two paths are not written.
     const writeSpy = vi.spyOn(fs, "writeFileSync");
     try {
-      launchCopilot([], vault);
+      launchCopilot([], { mode: "single", vaultPath: vault });
       const writtenPaths = writeSpy.mock.calls.map((call) => String(call[0]));
       expect(writtenPaths).not.toContain(instrPath);
       expect(writtenPaths).not.toContain(hookPath);
@@ -613,7 +613,7 @@ describe("launchCopilot — isolation", () => {
 
   it("launchCopilot preserves user-added settings.json keys across launches (regression: MCP servers)", () => {
     // First launch: populate everything fresh.
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
 
     // Simulate Copilot CLI runtime adding an MCP server to the file.
     const settingsPath = path.join(mockCopilotHome(), "settings.json");
@@ -622,7 +622,7 @@ describe("launchCopilot — isolation", () => {
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
 
     // Second launch: brainkit must NOT clobber mcpServers.
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     const after = JSON.parse(fs.readFileSync(settingsPath, "utf-8")) as Record<string, unknown>;
     expect(after["mcpServers"]).toEqual({ myserver: { command: "node", args: ["/path/server.js"] } });
     expect(after["companyAnnouncements"]).toBeDefined();
@@ -642,7 +642,7 @@ describe("launchCopilot — migration end-to-end", () => {
     stageLegacyVault(vault);
 
     // First launch — migration runs.
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
 
     // Vault cleaned.
     expect(fs.existsSync(path.join(vault, "AGENTS.md"))).toBe(false);
@@ -663,7 +663,7 @@ describe("launchCopilot — migration end-to-end", () => {
 
     // Second launch — silent.
     mockLog.info.mockClear();
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockLog.info).not.toHaveBeenCalled();
   });
 
@@ -672,7 +672,7 @@ describe("launchCopilot — migration end-to-end", () => {
     fs.writeFileSync(path.join(mockCopilotHome(), ".migration-v1"), "2026-04-28T00:00:00Z\n", "utf-8");
     stageLegacyVault(vault);
 
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
 
     // Legacy files still in vault — migration was skipped.
     expect(fs.existsSync(path.join(vault, "AGENTS.md"))).toBe(true);
@@ -681,7 +681,7 @@ describe("launchCopilot — migration end-to-end", () => {
 
   it("AGENTS.md content gate via launchCopilot: non-brainkit AGENTS.md preserved", () => {
     stageLegacyVault(vault, { agentsMd: "# My project rules\n\nUse TypeScript strict.\n" });
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
 
     const agents = fs.readFileSync(path.join(vault, "AGENTS.md"), "utf-8");
     expect(agents).toContain("My project rules");
@@ -704,7 +704,7 @@ describe("launchCopilot — --config-dir rejection", () => {
     ["equals form", ["--config-dir=/some/path"]],
   ])("rejects --config-dir (%s) with non-zero exit", (_label, args) => {
     expect(() => {
-      launchCopilot(args, vault);
+      launchCopilot(args, { mode: "single", vaultPath: vault });
     }).toThrow(/process\.exit\(1\)/);
     expect(mockLog.error).toHaveBeenCalled();
     // Aborted before any setup.
@@ -729,7 +729,7 @@ describe("launchCopilot — version warning", () => {
       if (cmd === "git" && args?.[0] === "rev-parse") return Buffer.from("true\n");
       return Buffer.from("");
     });
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockLog.warn).toHaveBeenCalled();
     const msg = mockLog.warn.mock.calls[0]?.[0] as string;
     expect(msg).toContain("1.0.37");
@@ -739,7 +739,7 @@ describe("launchCopilot — version warning", () => {
 
   it("does not warn at the floor version", () => {
     // Default mock already returns 1.0.37 + git true; just call.
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockLog.warn).not.toHaveBeenCalled();
   });
 
@@ -749,7 +749,7 @@ describe("launchCopilot — version warning", () => {
       if (cmd === "git" && args?.[0] === "rev-parse") return Buffer.from("true\n");
       return Buffer.from("");
     });
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockLog.warn).not.toHaveBeenCalled();
     expect(mockSpawnHarness).toHaveBeenCalled();
   });
@@ -781,7 +781,7 @@ describe("launchCopilot — atomicity", () => {
     fs.chmodSync(path.join(vault, ".github"), 0o555);
 
     expect(() => {
-      launchCopilot([], vault);
+      launchCopilot([], { mode: "single", vaultPath: vault });
     }).toThrow();
     expect(fs.existsSync(path.join(mockCopilotHome(), ".migration-v1"))).toBe(false);
     expect(mockLog.error).toHaveBeenCalled();
@@ -919,7 +919,7 @@ describe("launchCopilot — ordering invariant (P0-3)", () => {
     });
 
     expect(() => {
-      launchCopilot([], vault);
+      launchCopilot([], { mode: "single", vaultPath: vault });
     }).toThrow(/simulated installSkills failure/);
 
     const filesAfter = listAllFiles(vault).filter((f) => !f.startsWith(".git/"));
@@ -957,7 +957,7 @@ describe("launchCopilot — non-git vault safety (P0-4)", () => {
     const filesBefore = listAllFiles(vault);
 
     expect(() => {
-      launchCopilot([], vault);
+      launchCopilot([], { mode: "single", vaultPath: vault });
     }).toThrow(/process\.exit\(1\)/);
     expect(mockLog.error).toHaveBeenCalled();
     const errMsg = mockLog.error.mock.calls[0]?.[0] as string;
@@ -975,7 +975,7 @@ describe("launchCopilot — non-git vault safety (P0-4)", () => {
       if (cmd === "git" && args?.[0] === "rev-parse") throw new Error("not a git repository");
       return Buffer.from("");
     });
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockLog.error).not.toHaveBeenCalled();
     expect(fs.existsSync(path.join(mockCopilotHome(), ".migration-v1"))).toBe(true);
   });
@@ -985,7 +985,7 @@ describe("launchCopilot — non-git vault safety (P0-4)", () => {
     fs.rmSync(path.join(vault, ".git"), { recursive: true, force: true });
     // Default mock returns "true" for git rev-parse → P1-B fix lets monorepo
     // vaults migrate even without `.git/` directly inside vault.
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockLog.error).not.toHaveBeenCalled();
     expect(fs.existsSync(path.join(vault, ".agents"))).toBe(false);
     expect(fs.existsSync(path.join(mockCopilotHome(), ".migration-v1"))).toBe(true);
@@ -1003,7 +1003,7 @@ describe("launchCopilot — onboarding path (gap fill)", () => {
   });
 
   it("no vault configured → spawns copilot in onboarding workspace, skips migration / version check / config-dir reject", () => {
-    launchCopilot(["--config-dir", "/should/not/be/rejected/here"]);
+    launchCopilot(["--config-dir", "/should/not/be/rejected/here"], { mode: "onboarding" });
 
     // Spawn happened with onboarding cwd + onboarding args, NOT --config-dir rejection.
     expect(mockSpawnHarness).toHaveBeenCalledTimes(1);
@@ -1047,7 +1047,7 @@ describe("launchCopilot — spawn args fidelity (gap fill)", () => {
 
   it("forwards user args verbatim and sets cwd to vaultPath", () => {
     const userArgs = ["-p", "hello world", "--allow-tool", "shell"];
-    launchCopilot(userArgs, vault);
+    launchCopilot(userArgs, { mode: "single", vaultPath: vault });
     const call = mockSpawnHarness.mock.calls[0] as unknown as [
       string,
       string[],
@@ -1060,7 +1060,7 @@ describe("launchCopilot — spawn args fidelity (gap fill)", () => {
   });
 
   it("empty args array still spawns correctly", () => {
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     const call = mockSpawnHarness.mock.calls[0] as unknown as [string, string[], { cwd: string }];
     expect(call[1]).toEqual([]);
     expect(call[2].cwd).toBe(vault);
@@ -1078,7 +1078,7 @@ describe("installSkills invocation contract (gap fill)", () => {
   });
 
   it("installSkills called with targetDir = $COPILOT_HOME/skills/brainkit and skillsSourceDir under package root", () => {
-    launchCopilot([], vault);
+    launchCopilot([], { mode: "single", vaultPath: vault });
     expect(mockInstallSkills).toHaveBeenCalledTimes(1);
     const opts = mockInstallSkills.mock.calls[0]?.[0] as {
       targetDir: string;
@@ -1159,7 +1159,7 @@ describe("migrateLegacyVaultFiles — partial failure stage 1 (gap fill)", () =>
       fs.chmodSync(path.join(vault, ".agents", "skills"), 0o555);
 
       expect(() => {
-        launchCopilot([], vault);
+        launchCopilot([], { mode: "single", vaultPath: vault });
       }).toThrow();
       // Marker not written.
       expect(fs.existsSync(path.join(mockCopilotHome(), ".migration-v1"))).toBe(false);
@@ -1238,7 +1238,7 @@ describe("launchCopilot — ordering invariant for all population steps (gap fil
 
     try {
       expect(() => {
-        launchCopilot([], vault);
+        launchCopilot([], { mode: "single", vaultPath: vault });
       }).toThrow(/simulated buildSystemPrompt failure/);
       expect(legacyFilesSnapshot(vault)).toEqual(before);
       expect(fs.existsSync(path.join(mockCopilotHome(), ".migration-v1"))).toBe(false);
@@ -1262,7 +1262,7 @@ describe("launchCopilot — ordering invariant for all population steps (gap fil
 
       try {
         expect(() => {
-          launchCopilot([], vault);
+          launchCopilot([], { mode: "single", vaultPath: vault });
         }).toThrow();
         expect(legacyFilesSnapshot(vault)).toEqual(before);
         expect(fs.existsSync(path.join(mockCopilotHome(), ".migration-v1"))).toBe(false);
@@ -1316,7 +1316,7 @@ describe("runMigrationIfNeeded — marker write failure (gap fill)", () => {
 
       try {
         expect(() => {
-          launchCopilot([], vault);
+          launchCopilot([], { mode: "single", vaultPath: vault });
         }).toThrow();
         // Vault deletions did succeed (migration ran before marker write).
         expect(fs.existsSync(path.join(vault, ".agents"))).toBe(false);
@@ -1331,7 +1331,7 @@ describe("runMigrationIfNeeded — marker write failure (gap fill)", () => {
 
       // Second launch on now-clean vault — migration is a no-op, marker is
       // written successfully (the directory blocking it has been removed).
-      launchCopilot([], vault);
+      launchCopilot([], { mode: "single", vaultPath: vault });
       const markerStatAfter = fs.statSync(path.join(mockCopilotHome(), ".migration-v1"));
       expect(markerStatAfter.isFile()).toBe(true);
       expect(mockSpawnHarness).toHaveBeenCalled();

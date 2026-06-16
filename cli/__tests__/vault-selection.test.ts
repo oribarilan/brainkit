@@ -113,15 +113,14 @@ describe("selectVault", () => {
     mockDiscoverVaults.mockReturnValue(["work"]);
 
     const result = await selectVault(null);
-    expect(result.vaultPath).toBe(join(brainDir, "work"));
-    expect(result.brainPath).toBe(brainDir);
+    expect(result).toEqual({ mode: "single", vaultPath: join(brainDir, "work"), brainPath: brainDir });
   });
 
   it("resolves --vault flag to brain_path/name", async () => {
     mockDiscoverVaults.mockReturnValue(["work", "life"]);
 
     const result = await selectVault("work");
-    expect(result.vaultPath).toBe(join(brainDir, "work"));
+    expect(result).toEqual({ mode: "single", vaultPath: join(brainDir, "work"), brainPath: brainDir });
   });
 
   it("exits with error when --vault names a nonexistent vault", async () => {
@@ -135,24 +134,58 @@ describe("selectVault", () => {
     mockDiscoverVaults.mockReturnValue([]);
 
     const result = await selectVault(null);
-    expect(result.vaultPath).toBe(brainDir);
-    expect(result.brainPath).toBe(brainDir);
+    expect(result).toEqual({ mode: "single", vaultPath: brainDir, brainPath: brainDir });
   });
 
-  it("returns undefined paths when no global config exists", async () => {
+  it("returns onboarding when no global config exists", async () => {
     mockReadGlobalConfig.mockReturnValue(null);
 
     const result = await selectVault(null);
-    expect(result.vaultPath).toBeUndefined();
-    expect(result.brainPath).toBeUndefined();
+    expect(result).toEqual({ mode: "onboarding" });
   });
 
-  it("returns undefined paths when global config has empty brain_path", async () => {
+  it("returns onboarding when global config has empty brain_path", async () => {
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "" });
 
     const result = await selectVault(null);
-    expect(result.vaultPath).toBeUndefined();
-    expect(result.brainPath).toBeUndefined();
+    expect(result).toEqual({ mode: "onboarding" });
+  });
+
+  // All-vaults mode tests
+  it("--vault all returns all mode", async () => {
+    mockDiscoverVaults.mockReturnValue(["work", "personal"]);
+    const result = await selectVault("all");
+    expect(result).toEqual({ mode: "all", brainPath: brainDir });
+  });
+
+  it("--vault ALL is case-insensitive", async () => {
+    mockDiscoverVaults.mockReturnValue(["work"]);
+    const result = await selectVault("ALL");
+    expect(result).toEqual({ mode: "all", brainPath: brainDir });
+  });
+
+  it("--vault all with 0 vaults exits with error", async () => {
+    mockDiscoverVaults.mockReturnValue([]);
+    await expect(selectVault("all")).rejects.toThrow("process.exit");
+    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("No vaults found"));
+  });
+
+  it("--vault all with 1 vault enters multi-vault mode", async () => {
+    mockDiscoverVaults.mockReturnValue(["only"]);
+    const result = await selectVault("all");
+    expect(result).toEqual({ mode: "all", brainPath: brainDir });
+  });
+
+  it("warns when a vault named 'all' is discovered", async () => {
+    const originalIsTTY = process.stdin.isTTY;
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true, writable: true });
+
+    mockDiscoverVaults.mockReturnValue(["all", "work"]);
+    vi.mocked(p.select).mockResolvedValue("work");
+    await selectVault(null);
+    expect(p.log.warn).toHaveBeenCalledWith(expect.stringContaining("reserved"));
+
+    Object.defineProperty(process.stdin, "isTTY", { value: originalIsTTY, configurable: true, writable: true });
   });
 });
 
@@ -192,9 +225,7 @@ describe("selectVault — brain dir vanished", () => {
     const result = await selectVault(null);
 
     expect(mockResetBrainkitConfig).toHaveBeenCalledOnce();
-    // Returns undefined paths so the caller routes into onboarding.
-    expect(result.vaultPath).toBeUndefined();
-    expect(result.brainPath).toBeUndefined();
+    expect(result).toEqual({ mode: "onboarding" });
   });
 
   it("warns user up-front that the wipe includes Copilot auth/history", async () => {

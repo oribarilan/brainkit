@@ -268,7 +268,7 @@ describe("isolation: user's ~/.claude/ is untouched", () => {
     const userClaudeDir = path.join(fakeHome, ".claude");
     expect(fs.existsSync(userClaudeDir)).toBe(false);
 
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
 
     // Post-condition: still no .claude/ under the fake HOME. Throw with an
     // explicit message before the bare `expect` so failure output is actionable.
@@ -285,7 +285,7 @@ describe("isolation: user's ~/.claude/ is untouched", () => {
   });
 
   it("never sets CLAUDE_CONFIG_DIR to anything inside ~/.claude/", () => {
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     const callArgs = hoisted.mockSpawnHarness.mock.calls[0] as unknown as [
       string,
       string[],
@@ -317,7 +317,7 @@ describe("isolation: <pkgRoot>/claude/ is read-only at runtime", () => {
     const before = snapshotTree(pkgClaudeDir);
     expect(before.size).toBeGreaterThan(0);
 
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
 
     const after = snapshotTree(pkgClaudeDir);
 
@@ -356,7 +356,7 @@ describe("isolation: <pkgRoot>/claude/ is read-only at runtime", () => {
     const before = snapshotTree(pkgSkillsDir);
     expect(before.size).toBeGreaterThan(0);
 
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
 
     const after = snapshotTree(pkgSkillsDir);
     expect(after).toEqual(before);
@@ -369,7 +369,7 @@ describe("isolation: <pkgRoot>/claude/ is read-only at runtime", () => {
 
 describe("staging layout: $CONFIG_DIR/claude/ contains all expected artifacts", () => {
   it("populates the staging dir with the full plugin tree + harness config", () => {
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
 
     const stage = stagingDir();
     const cfg = claudeConfigDir();
@@ -410,7 +410,7 @@ describe("staging layout: $CONFIG_DIR/claude/ contains all expected artifacts", 
 
   it("script files retain exec bits on Unix (cpSync should preserve mode)", () => {
     if (process.platform === "win32") return; // exec bit meaningless on Windows
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     for (const script of ["auto-commit.mjs", "precompact.mjs", "statusline.mjs"]) {
       const mode = fs.statSync(path.join(stagingDir(), "scripts", script)).mode & 0o111;
       expect(mode).not.toBe(0);
@@ -424,7 +424,7 @@ describe("staging layout: $CONFIG_DIR/claude/ contains all expected artifacts", 
 
 describe("cross-platform: assertions use path.join (no hardcoded slashes)", () => {
   it("statusline command in settings.json uses forward slashes regardless of platform", () => {
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     const settings = JSON.parse(fs.readFileSync(path.join(claudeConfigDir(), "settings.json"), "utf-8")) as {
       statusLine: { command: string };
     };
@@ -435,7 +435,7 @@ describe("cross-platform: assertions use path.join (no hardcoded slashes)", () =
   });
 
   it("CLAUDE_CONFIG_DIR env value is a valid platform-native absolute path", () => {
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     const callArgs = hoisted.mockSpawnHarness.mock.calls[0] as unknown as [
       string,
       string[],

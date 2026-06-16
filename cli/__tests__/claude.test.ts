@@ -415,7 +415,7 @@ describe("launchClaude — main path", () => {
   });
 
   it("populates ~/.config/brainkit/claude/ with theme, settings, system-prompt, and staged plugin", () => {
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
 
     expect(fs.existsSync(path.join(mockClaudeDir(), "settings.json"))).toBe(true);
     expect(fs.existsSync(path.join(mockClaudeDir(), "system-prompt.txt"))).toBe(true);
@@ -431,7 +431,7 @@ describe("launchClaude — main path", () => {
   });
 
   it("spawns claude with correct args and env", () => {
-    launchClaude(["--model", "sonnet"], vault);
+    launchClaude(["--model", "sonnet"], { mode: "single", vaultPath: vault });
     expect(mockSpawnHarness).toHaveBeenCalledTimes(1);
     const callArgs = mockSpawnHarness.mock.calls[0] as unknown as [
       string,
@@ -456,7 +456,7 @@ describe("launchClaude — main path", () => {
   });
 
   it("calls installSkillsCore with per-dir layout pointed at staging", () => {
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     expect(mockInstallSkillsCore).toHaveBeenCalledTimes(1);
     const opts = mockInstallSkillsCore.mock.calls[0]?.[0] as {
       layout: string;
@@ -475,7 +475,7 @@ describe("launchClaude — main path", () => {
     const originalHome = process.env["HOME"];
     process.env["HOME"] = fakeHome;
     try {
-      launchClaude([], vault);
+      launchClaude([], { mode: "single", vaultPath: vault });
       expect(fs.existsSync(path.join(fakeHome, ".claude"))).toBe(false);
     } finally {
       if (originalHome !== undefined) process.env["HOME"] = originalHome;
@@ -486,7 +486,7 @@ describe("launchClaude — main path", () => {
 
   it("never writes to <pkgRoot>/claude/ (read-only template invariant)", () => {
     const pkgClaudeBefore = fs.readdirSync(path.join(hoisted.state.packageRoot, "claude")).sort();
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     const pkgClaudeAfter = fs.readdirSync(path.join(hoisted.state.packageRoot, "claude")).sort();
     expect(pkgClaudeAfter).toEqual(pkgClaudeBefore);
   });
@@ -496,7 +496,7 @@ describe("launchClaude — main path", () => {
     fs.mkdirSync(path.join(mockConfigDir(), "onboarding"), { recursive: true });
     fs.writeFileSync(path.join(mockConfigDir(), "onboarding", "CLAUDE.md"), "stale\n", "utf-8");
 
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
 
     expect(fs.existsSync(path.join(mockConfigDir(), "onboarding"))).toBe(false);
   });
@@ -506,7 +506,7 @@ describe("launchClaude — main path", () => {
       if (cmd === "claude") return Buffer.from("1.0.0 (Claude Code)\n");
       return Buffer.from("");
     });
-    launchClaude([], vault);
+    launchClaude([], { mode: "single", vaultPath: vault });
     expect(mockLog.warn).toHaveBeenCalled();
     expect(mockSpawnHarness).toHaveBeenCalled();
   });
@@ -518,7 +518,7 @@ describe("launchClaude — onboarding path", () => {
   });
 
   it("no vault configured → spawns claude in onboarding dir with kickoff prompt and skip-permissions", () => {
-    launchClaude(["--some-user-arg"]);
+    launchClaude(["--some-user-arg"], { mode: "onboarding" });
 
     expect(mockSpawnHarness).toHaveBeenCalledTimes(1);
     const callArgs = mockSpawnHarness.mock.calls[0] as unknown as [
