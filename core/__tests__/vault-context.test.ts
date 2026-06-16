@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import * as path from "node:path";
 
 vi.mock("../vault.js", () => ({
   readGlobalConfig: vi.fn(),
@@ -111,7 +112,7 @@ describe("resolveVaultContext", () => {
     mockDiscoverVaults.mockReturnValue(["only"]);
 
     const ctx = resolveVaultContext();
-    expect(ctx).toEqual({ mode: "single", vaultPath: "/brain/only" });
+    expect(ctx).toEqual({ mode: "single", vaultPath: path.join(path.resolve("/brain"), "only") });
   });
 
   it("returns none when no global config", () => {
