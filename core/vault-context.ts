@@ -14,10 +14,10 @@ import type { VaultContext, BrainkitConfig } from "./types.js";
  */
 export function resolveVaultContext(): VaultContext {
   // 1. All-vaults mode (takes precedence)
-  if (process.env.BRAINKIT_ALL_VAULTS === "1") {
+  if (process.env["BRAINKIT_ALL_VAULTS"] === "1") {
     try {
       const globalConfig = readGlobalConfig();
-      if (!globalConfig?.brain_path) return { mode: "none" };
+      if (globalConfig === null || !globalConfig.brain_path) return { mode: "none" };
 
       const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
       const vaultNames = discoverVaults(brainPath);
@@ -29,6 +29,7 @@ export function resolveVaultContext(): VaultContext {
           const config = readVaultConfigSimple(vaultPath);
           vaults.push({ name, path: vaultPath, config });
         } catch {
+          // eslint-disable-next-line no-console
           console.warn(`[brainkit] Skipping vault "${name}": config unreadable`);
         }
       }
@@ -41,17 +42,19 @@ export function resolveVaultContext(): VaultContext {
   }
 
   // 2. Single vault from env var
-  const fromEnv = process.env.BRAINKIT_VAULT_PATH;
-  if (fromEnv) return { mode: "single", vaultPath: fromEnv };
+  const fromEnv = process.env["BRAINKIT_VAULT_PATH"];
+  if (fromEnv !== undefined && fromEnv !== "") return { mode: "single", vaultPath: fromEnv };
 
   // 3. Fallback discovery
   try {
     const globalConfig = readGlobalConfig();
-    if (!globalConfig?.brain_path) return { mode: "none" };
+    if (globalConfig === null || !globalConfig.brain_path) return { mode: "none" };
 
     const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
     const vaults = discoverVaults(brainPath);
-    if (vaults.length === 1) return { mode: "single", vaultPath: path.join(brainPath, vaults[0]!) };
+    if (vaults.length === 1 && vaults[0] !== undefined) {
+      return { mode: "single", vaultPath: path.join(brainPath, vaults[0]) };
+    }
   } catch {
     // Can't resolve
   }

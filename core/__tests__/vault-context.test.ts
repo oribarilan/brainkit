@@ -30,16 +30,16 @@ describe("resolveVaultContext", () => {
   });
 
   it("returns single mode when BRAINKIT_VAULT_PATH is set", () => {
-    process.env.BRAINKIT_VAULT_PATH = "/brain/work";
-    delete process.env.BRAINKIT_ALL_VAULTS;
+    process.env["BRAINKIT_VAULT_PATH"] = "/brain/work";
+    delete process.env["BRAINKIT_ALL_VAULTS"];
 
     const ctx = resolveVaultContext();
     expect(ctx).toEqual({ mode: "single", vaultPath: "/brain/work" });
   });
 
   it("returns all mode when BRAINKIT_ALL_VAULTS=1", () => {
-    process.env.BRAINKIT_ALL_VAULTS = "1";
-    delete process.env.BRAINKIT_VAULT_PATH;
+    process.env["BRAINKIT_ALL_VAULTS"] = "1";
+    delete process.env["BRAINKIT_VAULT_PATH"];
 
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
     mockDiscoverVaults.mockReturnValue(["work", "personal"]);
@@ -59,8 +59,8 @@ describe("resolveVaultContext", () => {
   });
 
   it("BRAINKIT_ALL_VAULTS takes precedence over BRAINKIT_VAULT_PATH", () => {
-    process.env.BRAINKIT_ALL_VAULTS = "1";
-    process.env.BRAINKIT_VAULT_PATH = "/brain/work";
+    process.env["BRAINKIT_ALL_VAULTS"] = "1";
+    process.env["BRAINKIT_VAULT_PATH"] = "/brain/work";
 
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
     mockDiscoverVaults.mockReturnValue(["work"]);
@@ -71,8 +71,8 @@ describe("resolveVaultContext", () => {
   });
 
   it("skips vaults with unreadable configs (warns, does not abort)", () => {
-    process.env.BRAINKIT_ALL_VAULTS = "1";
-    delete process.env.BRAINKIT_VAULT_PATH;
+    process.env["BRAINKIT_ALL_VAULTS"] = "1";
+    delete process.env["BRAINKIT_VAULT_PATH"];
 
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
     mockDiscoverVaults.mockReturnValue(["good", "bad"]);
@@ -93,8 +93,8 @@ describe("resolveVaultContext", () => {
   });
 
   it("returns none when no env vars and multiple vaults", () => {
-    delete process.env.BRAINKIT_ALL_VAULTS;
-    delete process.env.BRAINKIT_VAULT_PATH;
+    delete process.env["BRAINKIT_ALL_VAULTS"];
+    delete process.env["BRAINKIT_VAULT_PATH"];
 
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
     mockDiscoverVaults.mockReturnValue(["work", "personal"]);
@@ -104,8 +104,8 @@ describe("resolveVaultContext", () => {
   });
 
   it("auto-selects single vault in fallback (no env vars, 1 vault)", () => {
-    delete process.env.BRAINKIT_ALL_VAULTS;
-    delete process.env.BRAINKIT_VAULT_PATH;
+    delete process.env["BRAINKIT_ALL_VAULTS"];
+    delete process.env["BRAINKIT_VAULT_PATH"];
 
     mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
     mockDiscoverVaults.mockReturnValue(["only"]);
@@ -115,8 +115,8 @@ describe("resolveVaultContext", () => {
   });
 
   it("returns none when no global config", () => {
-    delete process.env.BRAINKIT_ALL_VAULTS;
-    delete process.env.BRAINKIT_VAULT_PATH;
+    delete process.env["BRAINKIT_ALL_VAULTS"];
+    delete process.env["BRAINKIT_VAULT_PATH"];
 
     mockReadGlobalConfig.mockReturnValue(null);
 

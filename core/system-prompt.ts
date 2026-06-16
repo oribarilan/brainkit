@@ -68,6 +68,7 @@ export function buildMultiVaultPrompt(
   options?: { cwd?: string; mode?: PromptMode },
 ): string {
   if (vaults.length > 5) {
+    // eslint-disable-next-line no-console
     console.warn(
       `[brainkit] ${String(vaults.length)} vaults loaded. Prompt size grows linearly; consider using fewer vaults.`,
     );
@@ -94,15 +95,16 @@ export function buildMultiVaultPrompt(
     if (bragReminders.length >= 2) break;
     const ctx: SectionContext = { config: v.config, vaultPath: v.path, mode };
     const reminder = buildBragReminder(ctx);
-    if (reminder) bragReminders.push(reminder.replace("## Reminder", `### Reminder — \`${v.name}\``));
+    if (reminder !== null) bragReminders.push(reminder.replace("## Reminder", `### Reminder — \`${v.name}\``));
   }
   // Aggregate remaining stale vaults beyond the cap
   if (vaults.length > 2) {
     const remainingStale: string[] = [];
     for (let i = 2; i < vaults.length; i++) {
-      const v = vaults[i]!;
+      const v = vaults[i];
+      if (v === undefined) continue;
       const ctx: SectionContext = { config: v.config, vaultPath: v.path, mode };
-      if (buildBragReminder(ctx)) remainingStale.push(v.name);
+      if (buildBragReminder(ctx) !== null) remainingStale.push(v.name);
     }
     if (remainingStale.length > 0) {
       bragReminders.push(`Also stale: ${remainingStale.map((n) => `\`${n}\``).join(", ")}.`);
@@ -114,9 +116,9 @@ export function buildMultiVaultPrompt(
   const freshVaults: string[] = [];
   for (const v of vaults) {
     const ctx: SectionContext = { config: v.config, vaultPath: v.path, mode };
-    if (buildOnboarding(ctx)) freshVaults.push(v.name);
+    if (buildOnboarding(ctx) !== null) freshVaults.push(v.name);
     const nudge = buildProfileNudge(ctx);
-    if (nudge) nudges.push(nudge.replace("## Profile Incomplete", `### Profile Incomplete — \`${v.name}\``));
+    if (nudge !== null) nudges.push(nudge.replace("## Profile Incomplete", `### Profile Incomplete — \`${v.name}\``));
   }
   if (freshVaults.length === 1) {
     nudges.unshift(
@@ -128,6 +130,9 @@ export function buildMultiVaultPrompt(
     );
   }
 
+  const firstVault = vaults[0];
+  if (firstVault === undefined) return BRAINKIT_PROMPT_SENTINEL + "\n";
+
   return joinSections([
     BRAINKIT_PROMPT_SENTINEL,
     buildMultiVaultPreamble(vaults),
@@ -136,7 +141,7 @@ export function buildMultiVaultPrompt(
     buildVaultStructure(),
     buildConventionsToneNeutral(),
     ...customRuleBlocks,
-    buildBehavioralRules({ config: vaults[0]!.config, vaultPath: vaults[0]!.path, mode }),
+    buildBehavioralRules({ config: firstVault.config, vaultPath: firstVault.path, mode }),
     buildWriteRouting(),
     buildMultiVaultProjectContext(vaults, options?.cwd),
     ...bragReminders,

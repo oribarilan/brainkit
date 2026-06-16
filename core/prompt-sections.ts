@@ -310,7 +310,7 @@ export function buildMultiVaultKeyFiles(
     mode: "cli",
   };
   const keyFiles = buildKeyFiles(ctx);
-  if (!keyFiles) return null;
+  if (keyFiles === null) return null;
   return keyFiles.replace("## Key Files", `### Key Files — \`${vault.name}\``);
 }
 
@@ -323,7 +323,7 @@ export function buildMultiVaultCustomRules(
     mode: "cli",
   };
   const rules = buildCustomRules(ctx);
-  if (!rules) return null;
+  if (rules === null) return null;
   return rules.replace("## Custom Rules", `### Custom Rules — \`${vault.name}\``);
 }
 
@@ -376,7 +376,8 @@ export function buildMultiVaultProjectContext(
 
   if (matches.length === 0) return null;
   if (matches.length === 1) {
-    const m = matches[0]!;
+    const m = matches[0];
+    if (m === undefined) return null;
     return [
       "## Current Project Context",
       "",

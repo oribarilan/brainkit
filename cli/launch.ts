@@ -310,8 +310,10 @@ export async function selectVault(
 
   // 1 vault — auto-select
   if (vaults.length === 1) {
-    const single = vaults[0]!;
-    return { mode: "single", vaultPath: path.join(brainPath, single), brainPath };
+    const single = vaults[0];
+    if (single !== undefined) {
+      return { mode: "single", vaultPath: path.join(brainPath, single), brainPath };
+    }
   }
 
   // 2+ vaults — interactive prompt with "All vaults" option
