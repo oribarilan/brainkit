@@ -216,10 +216,7 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
   // Filter out vaults named "all" from the picker to avoid visual collision
   const pickerVaults = vaults.filter((v) => !ALL_VAULT_RESERVED.test(v));
 
-  const options = [
-    { value: "__all__", label: "+ All vaults" },
-    ...pickerVaults.map((v) => ({ value: v, label: v })),
-  ];
+  const options = [{ value: "__all__", label: "+ All vaults" }, ...pickerVaults.map((v) => ({ value: v, label: v }))];
 
   const selected = await p.select({
     message: "Select a vault",
@@ -234,9 +231,7 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
   return selected;
 }
 
-export async function selectVault(
-  vaultFlag: string | null,
-): Promise<VaultSelection> {
+export async function selectVault(vaultFlag: string | null): Promise<VaultSelection> {
   const globalConfig = readGlobalConfig();
   if (globalConfig === null || !globalConfig.brain_path) {
     return { mode: "onboarding" };

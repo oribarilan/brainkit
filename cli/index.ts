@@ -80,9 +80,8 @@ async function main(): Promise<void> {
   const selection = await selectVault(vaultFlag);
 
   // Map VaultSelection to LaunchTarget (drop brainPath for single mode)
-  const target: LaunchTarget = selection.mode === "single"
-    ? { mode: "single", vaultPath: selection.vaultPath }
-    : selection;
+  const target: LaunchTarget =
+    selection.mode === "single" ? { mode: "single", vaultPath: selection.vaultPath } : selection;
 
   const firstArg = remaining[0];
 

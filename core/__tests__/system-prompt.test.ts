@@ -16,7 +16,10 @@ function makeConfig(): BrainkitConfig {
   };
 }
 
-function makeVaultEntry(name: string, overrides?: Partial<BrainkitConfig["user"]>): {
+function makeVaultEntry(
+  name: string,
+  overrides?: Partial<BrainkitConfig["user"]>,
+): {
   name: string;
   path: string;
   config: BrainkitConfig;

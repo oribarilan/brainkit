@@ -257,9 +257,7 @@ export function buildProfileNudge(ctx: SectionContext): string | null {
 // Multi-vault section builders
 // ---------------------------------------------------------------------------
 
-export function buildMultiVaultPreamble(
-  vaults: Array<{ name: string; path: string }>,
-): string {
+export function buildMultiVaultPreamble(vaults: Array<{ name: string; path: string }>): string {
   const table = vaults.map((v) => `| \`${v.name}\` | \`${v.path}\` |`).join("\n");
   return [
     "## Brainkit — All Vaults",
@@ -272,9 +270,7 @@ export function buildMultiVaultPreamble(
   ].join("\n");
 }
 
-export function buildMultiVaultIdentity(
-  vault: { name: string; path: string; config: BrainkitConfig },
-): string {
+export function buildMultiVaultIdentity(vault: { name: string; path: string; config: BrainkitConfig }): string {
   const { user } = vault.config;
   const expertise = user.expertise ?? [];
   const tone = user.tone ?? "direct";
@@ -301,9 +297,7 @@ export function buildMultiVaultIdentity(
   return identity;
 }
 
-export function buildMultiVaultKeyFiles(
-  vault: { name: string; path: string; config: BrainkitConfig },
-): string | null {
+export function buildMultiVaultKeyFiles(vault: { name: string; path: string; config: BrainkitConfig }): string | null {
   const ctx: SectionContext = {
     config: vault.config,
     vaultPath: vault.path,
@@ -314,9 +308,11 @@ export function buildMultiVaultKeyFiles(
   return keyFiles.replace("## Key Files", `### Key Files — \`${vault.name}\``);
 }
 
-export function buildMultiVaultCustomRules(
-  vault: { name: string; path: string; config: BrainkitConfig },
-): string | null {
+export function buildMultiVaultCustomRules(vault: {
+  name: string;
+  path: string;
+  config: BrainkitConfig;
+}): string | null {
   const ctx: SectionContext = {
     config: vault.config,
     vaultPath: vault.path,

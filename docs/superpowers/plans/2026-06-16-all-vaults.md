@@ -16,25 +16,25 @@
 
 ## File Structure
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Modify | `core/types.ts` | Add `VaultContext` discriminated union type |
-| Modify | `core/auto-commit.ts` | Refactor singleton timer to `Map<string, Timer>` |
-| Create | `core/vault-context.ts` | `resolveVaultContext()` function |
-| Modify | `core/system-prompt.ts` | Add `buildMultiVaultPrompt`, export it |
-| Modify | `core/prompt-sections.ts` | Add multi-vault section builders |
-| Modify | `core/index.ts` | Export new types and functions |
-| Modify | `cli/launch.ts` | `VaultSelection`, `LaunchTarget`, `Harness` interface, `selectVault`, picker, reserved name, `launchOpenCode` |
-| Modify | `cli/index.ts` | Map `VaultSelection` to `LaunchTarget`, pass through |
-| Modify | `cli/copilot.ts` | Gate `launchCopilot` on `target.mode !== "all"` |
-| Modify | `cli/claude.ts` | Gate `launchClaude` on `target.mode !== "all"` |
-| Modify | `opencode/server.ts` | Use `resolveVaultContext`, dispatch hooks by mode |
-| Modify | `opencode/side.tsx` | Show "All vaults" label when `BRAINKIT_ALL_VAULTS` set |
-| Create | `core/__tests__/auto-commit.test.ts` | Tests for per-vault timer map |
-| Create | `core/__tests__/vault-context.test.ts` | Tests for `resolveVaultContext` |
-| Modify | `core/__tests__/system-prompt.test.ts` | Tests for `buildMultiVaultPrompt` |
-| Modify | `cli/__tests__/vault-selection.test.ts` | Tests for `VaultSelection`, `--vault all`, picker |
-| Modify | `cli/__tests__/launch.test.ts` | Tests for `LaunchTarget` env var contract |
+| Action | File                                    | Responsibility                                                                                                |
+| ------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Modify | `core/types.ts`                         | Add `VaultContext` discriminated union type                                                                   |
+| Modify | `core/auto-commit.ts`                   | Refactor singleton timer to `Map<string, Timer>`                                                              |
+| Create | `core/vault-context.ts`                 | `resolveVaultContext()` function                                                                              |
+| Modify | `core/system-prompt.ts`                 | Add `buildMultiVaultPrompt`, export it                                                                        |
+| Modify | `core/prompt-sections.ts`               | Add multi-vault section builders                                                                              |
+| Modify | `core/index.ts`                         | Export new types and functions                                                                                |
+| Modify | `cli/launch.ts`                         | `VaultSelection`, `LaunchTarget`, `Harness` interface, `selectVault`, picker, reserved name, `launchOpenCode` |
+| Modify | `cli/index.ts`                          | Map `VaultSelection` to `LaunchTarget`, pass through                                                          |
+| Modify | `cli/copilot.ts`                        | Gate `launchCopilot` on `target.mode !== "all"`                                                               |
+| Modify | `cli/claude.ts`                         | Gate `launchClaude` on `target.mode !== "all"`                                                                |
+| Modify | `opencode/server.ts`                    | Use `resolveVaultContext`, dispatch hooks by mode                                                             |
+| Modify | `opencode/side.tsx`                     | Show "All vaults" label when `BRAINKIT_ALL_VAULTS` set                                                        |
+| Create | `core/__tests__/auto-commit.test.ts`    | Tests for per-vault timer map                                                                                 |
+| Create | `core/__tests__/vault-context.test.ts`  | Tests for `resolveVaultContext`                                                                               |
+| Modify | `core/__tests__/system-prompt.test.ts`  | Tests for `buildMultiVaultPrompt`                                                                             |
+| Modify | `cli/__tests__/vault-selection.test.ts` | Tests for `VaultSelection`, `--vault all`, picker                                                             |
+| Modify | `cli/__tests__/launch.test.ts`          | Tests for `LaunchTarget` env var contract                                                                     |
 
 ## Dependency Graph
 
@@ -51,6 +51,7 @@ Tasks 2 and 3 are independent and can be parallelized.
 ### Task 1: Foundation Types + Auto-Commit Refactor
 
 **Files:**
+
 - Modify: `core/types.ts`
 - Modify: `core/auto-commit.ts`
 - Modify: `core/index.ts`
@@ -152,9 +153,7 @@ describe("auto-commit per-vault timers", () => {
 
     const commitCallsA = mockExecSync.mock.calls.filter(
       ([cmd, opts]) =>
-        typeof cmd === "string" &&
-        cmd.includes("git commit") &&
-        (opts as { cwd?: string })?.cwd === "/vault/a",
+        typeof cmd === "string" && cmd.includes("git commit") && (opts as { cwd?: string })?.cwd === "/vault/a",
     );
     expect(commitCallsA.length).toBe(1);
   });
@@ -178,9 +177,7 @@ describe("auto-commit per-vault timers", () => {
 
     const commitCalls = mockExecSync.mock.calls.filter(
       ([cmd, opts]) =>
-        typeof cmd === "string" &&
-        cmd.includes("git commit") &&
-        (opts as { cwd?: string })?.cwd === "/vault/a",
+        typeof cmd === "string" && cmd.includes("git commit") && (opts as { cwd?: string })?.cwd === "/vault/a",
     );
     expect(commitCalls.length).toBe(1);
   });
@@ -322,6 +319,7 @@ git commit -m "feat: add VaultContext type and refactor auto-commit to per-vault
 ### Task 2: Core Multi-Vault Builders
 
 **Files:**
+
 - Create: `core/vault-context.ts`
 - Modify: `core/system-prompt.ts`
 - Modify: `core/prompt-sections.ts`
@@ -704,9 +702,7 @@ Add these functions to `core/prompt-sections.ts`:
 // Multi-vault section builders
 // ---------------------------------------------------------------------------
 
-export function buildMultiVaultPreamble(
-  vaults: Array<{ name: string; path: string }>,
-): string {
+export function buildMultiVaultPreamble(vaults: Array<{ name: string; path: string }>): string {
   const table = vaults.map((v) => `| \`${v.name}\` | \`${v.path}\` |`).join("\n");
   return [
     "## Brainkit — All Vaults",
@@ -719,23 +715,19 @@ export function buildMultiVaultPreamble(
   ].join("\n");
 }
 
-export function buildMultiVaultIdentity(
-  vault: { name: string; path: string; config: BrainkitConfig },
-): string {
+export function buildMultiVaultIdentity(vault: { name: string; path: string; config: BrainkitConfig }): string {
   const ctx: SectionContext = {
     config: vault.config,
     vaultPath: vault.path,
     mode: "cli",
   };
   const tone = vault.config.user.tone ?? "direct";
-  return `## Vault: ${vault.name}\n\n` +
-    `Tone for this vault: ${tone}.\n\n` +
-    buildIdentity(ctx).replace(/^## .+\n\n/, "");
+  return (
+    `## Vault: ${vault.name}\n\n` + `Tone for this vault: ${tone}.\n\n` + buildIdentity(ctx).replace(/^## .+\n\n/, "")
+  );
 }
 
-export function buildMultiVaultKeyFiles(
-  vault: { name: string; path: string; config: BrainkitConfig },
-): string | null {
+export function buildMultiVaultKeyFiles(vault: { name: string; path: string; config: BrainkitConfig }): string | null {
   const ctx: SectionContext = {
     config: vault.config,
     vaultPath: vault.path,
@@ -747,9 +739,11 @@ export function buildMultiVaultKeyFiles(
   return keyFiles.replace("## Key Files", `### Key Files — \`${vault.name}\``);
 }
 
-export function buildMultiVaultCustomRules(
-  vault: { name: string; path: string; config: BrainkitConfig },
-): string | null {
+export function buildMultiVaultCustomRules(vault: {
+  name: string;
+  path: string;
+  config: BrainkitConfig;
+}): string | null {
   const ctx: SectionContext = {
     config: vault.config,
     vaultPath: vault.path,
@@ -819,9 +813,7 @@ export function buildMultiVaultProjectContext(
   }
 
   // Multiple matches — ambiguity note
-  const lines = matches.map(
-    (m) => `- \`${m.vaultName}\`: \`${m.readmePath}\``,
-  );
+  const lines = matches.map((m) => `- \`${m.vaultName}\`: \`${m.readmePath}\``);
   return [
     "## Current Project Context",
     "",
@@ -859,21 +851,19 @@ export function buildMultiVaultPrompt(
   options?: { cwd?: string; mode?: PromptMode },
 ): string {
   if (vaults.length > 5) {
-    console.warn(`[brainkit] ${String(vaults.length)} vaults loaded. Prompt size grows linearly; consider using fewer vaults.`);
+    console.warn(
+      `[brainkit] ${String(vaults.length)} vaults loaded. Prompt size grows linearly; consider using fewer vaults.`,
+    );
   }
 
   // Per-vault identity blocks
   const identityBlocks = vaults.map((v) => buildMultiVaultIdentity(v));
 
   // Per-vault key files
-  const keyFileBlocks = vaults
-    .map((v) => buildMultiVaultKeyFiles(v))
-    .filter(Boolean);
+  const keyFileBlocks = vaults.map((v) => buildMultiVaultKeyFiles(v)).filter(Boolean);
 
   // Per-vault custom rules
-  const customRuleBlocks = vaults
-    .map((v) => buildMultiVaultCustomRules(v))
-    .filter(Boolean);
+  const customRuleBlocks = vaults.map((v) => buildMultiVaultCustomRules(v)).filter(Boolean);
 
   // Per-vault brag reminders (capped at 2)
   const bragReminders: string[] = [];
@@ -911,9 +901,13 @@ export function buildMultiVaultPrompt(
     if (nudge) onboardingNudges.push(nudge.replace("## Profile Incomplete", `### Profile Incomplete — \`${v.name}\``));
   }
   if (freshVaults.length === 1) {
-    onboardingNudges.unshift(`## Fresh Vault Detected\n\nVault \`${freshVaults[0]}\` was just set up and has no content yet. Guide the user through their first entries.`);
+    onboardingNudges.unshift(
+      `## Fresh Vault Detected\n\nVault \`${freshVaults[0]}\` was just set up and has no content yet. Guide the user through their first entries.`,
+    );
   } else if (freshVaults.length > 1) {
-    onboardingNudges.unshift(`## Fresh Vaults Detected\n\nThese vaults are fresh: ${freshVaults.map((n) => `\`${n}\``).join(", ")}. Guide the user through their first entries.`);
+    onboardingNudges.unshift(
+      `## Fresh Vaults Detected\n\nThese vaults are fresh: ${freshVaults.map((n) => `\`${n}\``).join(", ")}. Guide the user through their first entries.`,
+    );
   }
 
   return joinSections([
@@ -959,6 +953,7 @@ git commit -m "feat: add resolveVaultContext and buildMultiVaultPrompt"
 ### Task 3: CLI All-Vaults Support
 
 **Files:**
+
 - Modify: `cli/launch.ts`
 - Modify: `cli/index.ts`
 - Modify: `cli/copilot.ts`
@@ -1102,9 +1097,10 @@ export async function selectVault(vaultFlag: string | null): Promise<VaultSelect
   // Explicit --vault flag (specific vault name)
   if (vaultFlag !== null) {
     if (!vaults.includes(vaultFlag)) {
-      const msg = vaults.length > 0
-        ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
-        : `Vault "${vaultFlag}" not found.`;
+      const msg =
+        vaults.length > 0
+          ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
+          : `Vault "${vaultFlag}" not found.`;
       p.cancel(msg);
       process.exit(1);
     }
@@ -1143,10 +1139,7 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
   // Filter out vaults named "all" from the picker to avoid visual collision
   const pickerVaults = vaults.filter((v) => !ALL_VAULT_RESERVED.test(v));
 
-  const options = [
-    { value: "__all__", label: "+ All vaults" },
-    ...pickerVaults.map((v) => ({ value: v, label: v })),
-  ];
+  const options = [{ value: "__all__", label: "+ All vaults" }, ...pickerVaults.map((v) => ({ value: v, label: v }))];
 
   const selected = await p.select({
     message: "Select a vault",
@@ -1184,9 +1177,7 @@ function launchOpenCode(args: string[], target: LaunchTarget): void {
     env["BRAINKIT_ALL_VAULTS"] = "1";
   }
 
-  const launchArgs = isOnboarding
-    ? ["--prompt", "Let's set up my first brainkit vault!", ...args]
-    : args;
+  const launchArgs = isOnboarding ? ["--prompt", "Let's set up my first brainkit vault!", ...args] : args;
 
   const child = spawnHarness("opencode", launchArgs, { stdio: "inherit", env });
   child.on("exit", (code) => process.exit(code ?? 0));
@@ -1222,9 +1213,8 @@ export async function detectAndLaunch(args: string[], target: LaunchTarget): Pro
 ```typescript
 const selection = await selectVault(vaultFlag);
 
-const target: LaunchTarget = selection.mode === "single"
-  ? { mode: "single", vaultPath: selection.vaultPath }
-  : selection; // "all" and "onboarding" map directly
+const target: LaunchTarget =
+  selection.mode === "single" ? { mode: "single", vaultPath: selection.vaultPath } : selection; // "all" and "onboarding" map directly
 
 // Harness alias — launch explicitly
 if (firstArg !== undefined && isHarnessAlias(firstArg)) {
@@ -1310,6 +1300,7 @@ git commit -m "feat: CLI all-vaults support with VaultSelection/LaunchTarget typ
 ### Task 4: Plugin Wiring
 
 **Files:**
+
 - Modify: `opencode/server.ts`
 - Modify: `opencode/side.tsx`
 - Test: `npx vitest run` (full suite — changes to server.ts are integration-level)

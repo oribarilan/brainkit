@@ -80,14 +80,10 @@ export function buildMultiVaultPrompt(
   const identityBlocks = vaults.map((v) => buildMultiVaultIdentity(v));
 
   // Per-vault key files
-  const keyFileBlocks = vaults
-    .map((v) => buildMultiVaultKeyFiles(v))
-    .filter((b): b is string => b !== null);
+  const keyFileBlocks = vaults.map((v) => buildMultiVaultKeyFiles(v)).filter((b): b is string => b !== null);
 
   // Per-vault custom rules
-  const customRuleBlocks = vaults
-    .map((v) => buildMultiVaultCustomRules(v))
-    .filter((b): b is string => b !== null);
+  const customRuleBlocks = vaults.map((v) => buildMultiVaultCustomRules(v)).filter((b): b is string => b !== null);
 
   // Per-vault brag reminders (capped at 2)
   const bragReminders: string[] = [];

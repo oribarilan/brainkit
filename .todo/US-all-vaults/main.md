@@ -19,6 +19,7 @@ Designed for 2-4 vaults. Prompt size grows linearly with vault count; no hard ca
 **`--vault all` flag** (`cli/launch.ts:selectVault`): `"all"` is a reserved vault name (case-insensitive: `all`, `All`, `ALL` all match). `selectVault` checks for the reserved name before checking discovered vault names. If someone names a vault "all", the flag takes precedence (document this as a reserved name). Emit a warning at launch when a vault named "all" (any case) is discovered.
 
 **Env vars**: When "all" is selected the CLI sets:
+
 - `BRAINKIT_ALL_VAULTS=1` -- signals multi-vault mode
 
 It does not set `BRAINKIT_VAULT_PATH`. The absence of that var combined with `BRAINKIT_ALL_VAULTS=1` is the signal. The plugin reads `brain_path` from `readGlobalConfig()` -- no new `BRAINKIT_BRAIN_PATH` env var. The global config is the single source of truth for the brain directory. (The plugin already calls `readGlobalConfig()` in its fallback path.)
@@ -29,7 +30,7 @@ It does not set `BRAINKIT_VAULT_PATH`. The absence of that var combined with `BR
 type VaultSelection =
   | { mode: "single"; vaultPath: string; brainPath: string }
   | { mode: "all"; brainPath: string }
-  | { mode: "onboarding" }
+  | { mode: "onboarding" };
 ```
 
 This replaces the current `{ vaultPath: string | undefined; brainPath: string | undefined }`. The previous design used `vaultPath: undefined` for both onboarding and all-vaults mode, which is ambiguous -- every downstream consumer (`launchOpenCode`, `launchCopilot`, `launchClaude`) uses `vaultPath === undefined` to detect onboarding. The discriminated union eliminates this collision.
@@ -37,10 +38,7 @@ This replaces the current `{ vaultPath: string | undefined; brainPath: string | 
 **Harness launch signature**: The `Harness` interface changes from `launch: (args: string[], vaultPath?: string) => void` to accept a `LaunchTarget`:
 
 ```typescript
-type LaunchTarget =
-  | { mode: "single"; vaultPath: string }
-  | { mode: "all"; brainPath: string }
-  | { mode: "onboarding" }
+type LaunchTarget = { mode: "single"; vaultPath: string } | { mode: "all"; brainPath: string } | { mode: "onboarding" };
 
 interface Harness {
   name: string;
@@ -63,10 +61,11 @@ interface Harness {
 type VaultContext =
   | { mode: "single"; vaultPath: string }
   | { mode: "all"; vaults: Array<{ name: string; path: string; config: BrainkitConfig }> }
-  | { mode: "none" }
+  | { mode: "none" };
 ```
 
 Resolution order:
+
 1. `BRAINKIT_ALL_VAULTS=1` -> read `brain_path` from `readGlobalConfig()`, call `discoverVaults()`, read each config -> `{ mode: "all", vaults }`. If any vault's config is unreadable, skip that vault and log a warning (don't abort the whole session for one bad config).
 2. `BRAINKIT_VAULT_PATH` set -> `{ mode: "single", vaultPath }`.
 3. Fallback discovery (no env vars) -> auto-select if 1 vault, else `{ mode: "none" }`.
@@ -85,6 +84,7 @@ buildMultiVaultPrompt(
 ```
 
 Prompt structure:
+
 1. **Multi-vault preamble** (new): "You have access to multiple brainkit vaults" + vault name/path table.
 2. **Per-vault identity blocks**: `buildIdentity` per vault, labeled by vault name (e.g., `## Vault: work`). Includes role, expertise, tone, descriptions, custom context. **Tone is per-vault here** -- each identity block carries its own tone directive (e.g., "direct tone for this vault").
 3. **Per-vault key files**: `buildKeyFiles` per vault with absolute paths.
@@ -142,24 +142,24 @@ For the initial PR: accept the degradation. The sidebar shows "All vaults" as th
 
 ## Definition of Done
 
-- [ ] `selectVault` returns `VaultSelection` discriminated union (not optional fields)
-- [ ] `Harness.launch` accepts `LaunchTarget` (not `vaultPath?: string`)
-- [ ] `--vault all` accepted by CLI, sets `BRAINKIT_ALL_VAULTS=1` (no `BRAINKIT_BRAIN_PATH`)
-- [ ] `--vault all` with Copilot/Claude errors clearly ("not yet supported")
-- [ ] Vault picker shows "All vaults" option when 2+ vaults exist
-- [ ] Reserved name `"all"` is case-insensitive
-- [ ] `VaultContext` type lives in `core/types.ts`
-- [ ] `resolveVaultContext()` returns correct `VaultContext` for each env var combination
-- [ ] `resolveVaultContext()` skips vaults with unreadable configs (warns, doesn't abort)
-- [ ] `buildMultiVaultPrompt` produces per-vault identity blocks (with per-vault tone), shared conventions (tone-neutral), and routing instructions
-- [ ] Compaction hook emits condensed multi-vault block
-- [ ] Auto-commit refactored to per-vault `Map<string, Timer>` (prerequisite PR)
-- [ ] `flushAllAutoCommits` flushes all tracked vaults
-- [ ] Brag reminder fires per vault, capped at 2
-- [ ] TUI sidebar shows "All vaults" label (degraded, no per-vault stats)
-- [ ] Edge cases handled: 0 vaults error, 1 vault, reserved name warning, partial failure
-- [ ] Tests cover all acceptance criteria above
-- [ ] Existing single-vault code path is unaffected (no regressions)
+- [x] `selectVault` returns `VaultSelection` discriminated union (not optional fields)
+- [x] `Harness.launch` accepts `LaunchTarget` (not `vaultPath?: string`)
+- [x] `--vault all` accepted by CLI, sets `BRAINKIT_ALL_VAULTS=1` (no `BRAINKIT_BRAIN_PATH`)
+- [x] `--vault all` with Copilot/Claude errors clearly ("not yet supported")
+- [x] Vault picker shows "All vaults" option when 2+ vaults exist
+- [x] Reserved name `"all"` is case-insensitive
+- [x] `VaultContext` type lives in `core/types.ts`
+- [x] `resolveVaultContext()` returns correct `VaultContext` for each env var combination
+- [x] `resolveVaultContext()` skips vaults with unreadable configs (warns, doesn't abort)
+- [x] `buildMultiVaultPrompt` produces per-vault identity blocks (with per-vault tone), shared conventions (tone-neutral), and routing instructions
+- [x] Compaction hook emits condensed multi-vault block
+- [x] Auto-commit refactored to per-vault `Map<string, Timer>` (prerequisite PR)
+- [x] `flushAllAutoCommits` flushes all tracked vaults
+- [x] Brag reminder fires per vault, capped at 2
+- [x] TUI sidebar shows "All vaults" label (degraded, no per-vault stats)
+- [x] Edge cases handled: 0 vaults error, 1 vault, reserved name warning, partial failure
+- [x] Tests cover all acceptance criteria above
+- [x] Existing single-vault code path is unaffected (no regressions)
 
 ## Cross-Cutting Concerns
 
