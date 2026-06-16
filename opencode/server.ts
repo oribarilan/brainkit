@@ -1,56 +1,46 @@
 // @ts-nocheck
 import type { Plugin } from "@opencode-ai/plugin";
 import * as path from "node:path";
-import * as os from "node:os";
 import {
-  readGlobalConfig,
   readVaultConfigSimple,
-  discoverVaults,
   buildSystemPrompt,
+  buildMultiVaultPrompt,
   buildOnboardingPrompt,
   containsUserAccomplishment,
   scheduleAutoCommit,
+  resolveVaultContext,
 } from "../core/index.ts";
 
 const id = "brainkit";
 
 const suggestedSessions = new Set<string>();
 
-function resolveVaultPath(): string | undefined {
-  // 1. Env var (set by CLI launcher)
-  const fromEnv = process.env.BRAINKIT_VAULT_PATH;
-  if (fromEnv) return fromEnv;
-
-  // 2. Fallback: discover from brain_path
-  try {
-    const globalConfig = readGlobalConfig();
-    if (!globalConfig?.brain_path) return undefined;
-    const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
-    const vaults = discoverVaults(brainPath);
-    if (vaults.length === 1) return path.join(brainPath, vaults[0]!);
-  } catch {
-    // Can't resolve — return undefined
-  }
-
-  // 3. Multiple or zero vaults without env var — can't resolve
-  return undefined;
-}
-
 const server: Plugin = async () => {
   return {
     "experimental.chat.system.transform": async (_input, output) => {
-      const vaultPath = resolveVaultPath();
-      if (!vaultPath) {
+      const ctx = resolveVaultContext();
+
+      if (ctx.mode === "none") {
         const onboardingPrompt = buildOnboardingPrompt("opencode");
         if (!output.system.includes(onboardingPrompt)) {
           output.system.push(onboardingPrompt);
         }
         return;
       }
+
+      if (ctx.mode === "all") {
+        const prompt = buildMultiVaultPrompt(ctx.vaults, { mode: "cli" });
+        if (!output.system.includes(prompt)) {
+          output.system.push(prompt);
+        }
+        return;
+      }
+
+      // Single vault
       try {
-        const vaultConfig = readVaultConfigSimple(vaultPath);
+        const vaultConfig = readVaultConfigSimple(ctx.vaultPath);
         if (!vaultConfig) return;
-        const prompt = buildSystemPrompt(vaultConfig, vaultPath, { mode: "cli" });
+        const prompt = buildSystemPrompt(vaultConfig, ctx.vaultPath, { mode: "cli" });
         if (!output.system.includes(prompt)) {
           output.system.push(prompt);
         }
@@ -60,17 +50,37 @@ const server: Plugin = async () => {
     },
 
     "experimental.session.compacting": async (_input, output) => {
-      const vaultPath = resolveVaultPath();
-      if (!vaultPath) return;
+      const ctx = resolveVaultContext();
+
+      if (ctx.mode === "all") {
+        const blocks = ctx.vaults.map((v) => {
+          const features =
+            Object.entries(v.config.features ?? {})
+              .filter(([, val]) => val)
+              .map(([k]) => k)
+              .join(", ") || "defaults";
+          return [
+            `### \`${v.name}\``,
+            `- User: ${v.config.user.name} (${v.config.user.role})`,
+            `- Path: ${v.path}`,
+            `- Features: ${features}`,
+            `- Tone: ${v.config.user.tone ?? "direct"}`,
+          ].join("\n");
+        });
+        output.system.push("## Brainkit Vault Context (Condensed — All Vaults)\n" + blocks.join("\n\n"));
+        return;
+      }
+
+      if (ctx.mode !== "single") return;
       try {
-        const vaultConfig = readVaultConfigSimple(vaultPath);
+        const vaultConfig = readVaultConfigSimple(ctx.vaultPath);
         if (!vaultConfig) return;
 
-        const vaultName = path.basename(vaultPath);
+        const vaultName = path.basename(ctx.vaultPath);
         const identity = [
           "## Brainkit Vault Context (Condensed)",
           `- User: ${vaultConfig.user.name} (${vaultConfig.user.role})`,
-          `- Vault: ${vaultName} (${vaultPath})`,
+          `- Vault: ${vaultName} (${ctx.vaultPath})`,
           `- Features: ${
             Object.entries(vaultConfig.features ?? {})
               .filter(([, v]) => v)
@@ -87,9 +97,9 @@ const server: Plugin = async () => {
     },
 
     "session.idle": async (event, api) => {
-      const vaultPath = resolveVaultPath();
+      const ctx = resolveVaultContext();
 
-      // Brag detection
+      // Brag detection (unchanged — toast is generic, agent knows routing)
       try {
         const sessionId = event.session?.id;
         if (sessionId && !suggestedSessions.has(sessionId)) {
@@ -112,12 +122,16 @@ const server: Plugin = async () => {
       }
 
       // Auto-commit
-      if (vaultPath) {
-        try {
-          scheduleAutoCommit(vaultPath);
-        } catch {
-          // Gracefully handle errors
+      try {
+        if (ctx.mode === "single") {
+          scheduleAutoCommit(ctx.vaultPath);
+        } else if (ctx.mode === "all") {
+          for (const vault of ctx.vaults) {
+            scheduleAutoCommit(vault.path);
+          }
         }
+      } catch {
+        // Gracefully handle errors
       }
     },
   };

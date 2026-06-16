@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- **All vaults mode**: `--vault all` (or pick "All vaults" from the vault selector) loads every vault into a single session. The agent sees per-vault identity blocks with individual tone directives, shared conventions, and write-routing instructions that tell it which vault to target. Only OpenCode for now; Copilot and Claude error cleanly if you try.
+- Auto-commit now tracks each vault independently, so multi-vault sessions commit each vault on its own timer instead of clobbering the first vault's timer when the second one fires.
+
 ## [0.15.0] - 2026-06-08
 
 ### Added

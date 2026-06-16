@@ -56,3 +56,8 @@ export interface HealthCheckResult {
   status: "pass" | "warn" | "error";
   message: string;
 }
+
+export type VaultContext =
+  | { mode: "single"; vaultPath: string }
+  | { mode: "all"; vaults: Array<{ name: string; path: string; config: BrainkitConfig }> }
+  | { mode: "none" };
