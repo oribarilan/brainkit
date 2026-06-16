@@ -6,6 +6,7 @@ export type {
   BragStats,
   Contact,
   HealthCheckResult,
+  VaultContext,
 } from "./types.js";
 
 // Vault operations
@@ -52,7 +53,7 @@ export type { SectionContext } from "./prompt-sections.js";
 export { joinSections } from "./prompt-sections.js";
 
 // Auto-commit
-export { scheduleAutoCommit, flushAutoCommit } from "./auto-commit.js";
+export { scheduleAutoCommit, flushAutoCommit, flushAllAutoCommits } from "./auto-commit.js";
 
 // Detection helpers
 export { ACCOMPLISHMENT_KEYWORDS, containsUserAccomplishment, notifyDesktop } from "./hooks.js";
