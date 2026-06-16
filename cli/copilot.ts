@@ -14,6 +14,7 @@ import {
 import { installSkills } from "./install-skills.js";
 import { version } from "./version.js";
 import * as p from "@clack/prompts";
+import type { LaunchTarget } from "./launch.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -651,7 +652,13 @@ export function cleanupOnboardingWorkspace(configDir: string): void {
 // Launch orchestrator
 // ---------------------------------------------------------------------------
 
-export function launchCopilot(args: string[], selectedVaultPath?: string): void {
+export function launchCopilot(args: string[], target: LaunchTarget): void {
+  if (target.mode === "all") {
+    p.cancel("All-vaults mode is not yet supported for Copilot CLI. Use --vault <name> to pick one.");
+    process.exit(1);
+  }
+
+  const selectedVaultPath = target.mode === "single" ? target.vaultPath : undefined;
   const configDir = getConfigDir();
   let vaultPath = selectedVaultPath;
 

@@ -4,12 +4,12 @@ import * as fs from "node:fs";
 import { isGitRepo } from "./git.js";
 
 // ---------------------------------------------------------------------------
-// Debounced vault auto-commit
+// Debounced vault auto-commit (per-vault timers)
 // ---------------------------------------------------------------------------
 
 const DEBOUNCE_MS = 30_000; // 30 seconds
 
-let commitTimer: ReturnType<typeof setTimeout> | null = null;
+const commitTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 function hasUncommittedChanges(vaultPath: string): boolean {
   try {
@@ -34,27 +34,42 @@ export function scheduleAutoCommit(vaultPath: string): void {
   if (!fs.existsSync(vaultPath)) return;
   if (!isGitRepo(vaultPath)) return;
 
-  // Clear existing timer — restart the debounce window
-  if (commitTimer !== null) {
-    clearTimeout(commitTimer);
+  // Clear existing timer for THIS vault — restart its debounce window
+  const existing = commitTimers.get(vaultPath);
+  if (existing !== undefined) {
+    clearTimeout(existing);
   }
 
-  commitTimer = setTimeout(() => {
+  const timer = setTimeout(() => {
     if (hasUncommittedChanges(vaultPath)) {
       commitChanges(vaultPath);
     }
-    commitTimer = null;
+    commitTimers.delete(vaultPath);
   }, DEBOUNCE_MS);
+
+  commitTimers.set(vaultPath, timer);
 }
 
 export function flushAutoCommit(vaultPath: string): void {
-  // Called on session shutdown — commit immediately if pending
-  if (commitTimer !== null) {
-    clearTimeout(commitTimer);
-    commitTimer = null;
+  // Called on session shutdown for a specific vault — commit immediately if pending
+  const timer = commitTimers.get(vaultPath);
+  if (timer !== undefined) {
+    clearTimeout(timer);
+    commitTimers.delete(vaultPath);
   }
 
   if (fs.existsSync(vaultPath) && isGitRepo(vaultPath) && hasUncommittedChanges(vaultPath)) {
     commitChanges(vaultPath);
   }
+}
+
+export function flushAllAutoCommits(): void {
+  // Flush all tracked vaults — used in multi-vault mode on session shutdown
+  for (const [vaultPath, timer] of commitTimers) {
+    clearTimeout(timer);
+    if (fs.existsSync(vaultPath) && isGitRepo(vaultPath) && hasUncommittedChanges(vaultPath)) {
+      commitChanges(vaultPath);
+    }
+  }
+  commitTimers.clear();
 }

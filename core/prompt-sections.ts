@@ -252,3 +252,143 @@ export function buildProfileNudge(ctx: SectionContext): string | null {
     "Once the user is satisfied with their profile, set `onboarding_complete = true` under `[user.customization]` in brainkit.toml.",
   ].join("\n");
 }
+
+// ---------------------------------------------------------------------------
+// Multi-vault section builders
+// ---------------------------------------------------------------------------
+
+export function buildMultiVaultPreamble(vaults: Array<{ name: string; path: string }>): string {
+  const table = vaults.map((v) => `| \`${v.name}\` | \`${v.path}\` |`).join("\n");
+  return [
+    "## Brainkit — All Vaults",
+    "",
+    "You have access to multiple brainkit vaults, each a personal second brain organized with the PARA method.",
+    "",
+    "| Vault | Path |",
+    "|-------|------|",
+    table,
+  ].join("\n");
+}
+
+export function buildMultiVaultIdentity(vault: { name: string; path: string; config: BrainkitConfig }): string {
+  const { user } = vault.config;
+  const expertise = user.expertise ?? [];
+  const tone = user.tone ?? "direct";
+
+  let identity = `## Vault: ${vault.name}\n\n`;
+  identity += `Tone for this vault: ${tone}.\n\n`;
+  identity += `You have access to ${user.name}'s personal second brain vault at \`${vault.path}\`.\n`;
+  identity += `${user.name} is a ${user.role}`;
+  if (expertise.length > 0) {
+    identity += ` with expertise in ${expertise.join(", ")}`;
+  }
+  identity += `.`;
+
+  if (user.work?.description !== undefined && user.work.description !== "") {
+    identity += `\n\n**Work context:** ${user.work.description}`;
+  }
+  if (user.personal?.description !== undefined && user.personal.description !== "") {
+    identity += `\n\n**Personal context:** ${user.personal.description}`;
+  }
+  if (user.customization?.context !== undefined && user.customization.context !== "") {
+    identity += `\n\n${user.customization.context}`;
+  }
+
+  return identity;
+}
+
+export function buildMultiVaultKeyFiles(vault: { name: string; path: string; config: BrainkitConfig }): string | null {
+  const ctx: SectionContext = {
+    config: vault.config,
+    vaultPath: vault.path,
+    mode: "cli",
+  };
+  const keyFiles = buildKeyFiles(ctx);
+  if (keyFiles === null) return null;
+  return keyFiles.replace("## Key Files", `### Key Files — \`${vault.name}\``);
+}
+
+export function buildMultiVaultCustomRules(vault: {
+  name: string;
+  path: string;
+  config: BrainkitConfig;
+}): string | null {
+  const ctx: SectionContext = {
+    config: vault.config,
+    vaultPath: vault.path,
+    mode: "cli",
+  };
+  const rules = buildCustomRules(ctx);
+  if (rules === null) return null;
+  return rules.replace("## Custom Rules", `### Custom Rules — \`${vault.name}\``);
+}
+
+export function buildConventionsToneNeutral(): string {
+  return [
+    "## Conventions",
+    "",
+    "- Directory names: lowercase with hyphens (e.g., `my-project/`)",
+    "- File names: lowercase with hyphens (e.g., `meeting-notes.md`)",
+    "- `README.md` is the entry point for every directory",
+    "- Meeting notes: `YYYY-MM-DD-topic.md`",
+    "- Use **bold** for key names, decisions, action items, people",
+    "- Use the tone of the vault you are writing into.",
+    '- Use first person ("I", "my") — this is a personal vault',
+  ].join("\n");
+}
+
+export function buildWriteRouting(): string {
+  return [
+    "## Write Routing",
+    "",
+    "When writing to the vault, choose the appropriate vault based on the content's context.",
+    "Use the tone of the vault you are writing into.",
+    "If the correct vault is ambiguous, ask the user which vault to use before writing.",
+  ].join("\n");
+}
+
+export function buildMultiVaultProjectContext(
+  vaults: Array<{ name: string; path: string }>,
+  cwd?: string,
+): string | null {
+  if (cwd === undefined || cwd === "") return null;
+  const cwdBasename = path.basename(cwd);
+  const matches: Array<{ vaultName: string; readmePath: string }> = [];
+
+  for (const vault of vaults) {
+    const projectsDir = path.resolve(vault.path, "01_projects");
+    try {
+      const entries = fs.readdirSync(projectsDir);
+      if (entries.includes(cwdBasename)) {
+        matches.push({
+          vaultName: vault.name,
+          readmePath: path.join(vault.path, "01_projects", cwdBasename, "README.md"),
+        });
+      }
+    } catch {
+      // 01_projects doesn't exist in this vault
+    }
+  }
+
+  if (matches.length === 0) return null;
+  if (matches.length === 1) {
+    const m = matches[0];
+    if (m === undefined) return null;
+    return [
+      "## Current Project Context",
+      "",
+      `You are working in a directory that matches the project \`${cwdBasename}\` in vault \`${m.vaultName}\`.`,
+      `The project README is at \`${m.readmePath}\`.`,
+    ].join("\n");
+  }
+
+  const lines = matches.map((m) => `- \`${m.vaultName}\`: \`${m.readmePath}\``);
+  return [
+    "## Current Project Context",
+    "",
+    `You are working in a directory that matches the project \`${cwdBasename}\` in multiple vaults:`,
+    ...lines,
+    "",
+    "Check which vault's project is relevant before making changes.",
+  ].join("\n");
+}

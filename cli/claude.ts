@@ -15,6 +15,7 @@ import {
 } from "../core/index.js";
 import { isOlderThan } from "./version-utils.js";
 import { version } from "./version.js";
+import type { LaunchTarget } from "./launch.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -319,7 +320,13 @@ export function cleanupClaudeOnboardingWorkspace(configDir: string): void {
  * `--config-dir` flag — `CLAUDE_CONFIG_DIR` is the only redirection mechanism
  * and is honored unconditionally. No flag rejection is needed.
  */
-export function launchClaude(args: string[], selectedVaultPath?: string): void {
+export function launchClaude(args: string[], target: LaunchTarget): void {
+  if (target.mode === "all") {
+    p.cancel("All-vaults mode is not yet supported for Claude Code. Use --vault <name> to pick one.");
+    process.exit(1);
+  }
+
+  const selectedVaultPath = target.mode === "single" ? target.vaultPath : undefined;
   const configDir = getConfigDir();
   let vaultPath = selectedVaultPath;
 
