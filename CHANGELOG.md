@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-06-16
+
 ### Added
 
 - **All vaults mode**: `--vault all` (or pick "All vaults" from the vault selector) loads every vault into a single session. The agent sees per-vault identity blocks with individual tone directives, shared conventions, and write-routing instructions that tell it which vault to target. Only OpenCode for now; Copilot and Claude error cleanly if you try.
