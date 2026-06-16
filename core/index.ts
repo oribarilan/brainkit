@@ -42,7 +42,7 @@ export type { VaultState, Migration, StalenessCategory } from "./vault.js";
 export { CURRENT_SCHEMA_VERSION, migrateConfig } from "./migrations.js";
 
 // System prompt
-export { detectProjectContext, buildSystemPrompt } from "./system-prompt.js";
+export { detectProjectContext, buildSystemPrompt, buildMultiVaultPrompt } from "./system-prompt.js";
 export type { PromptMode } from "./system-prompt.js";
 
 // Onboarding
@@ -54,6 +54,9 @@ export { joinSections } from "./prompt-sections.js";
 
 // Auto-commit
 export { scheduleAutoCommit, flushAutoCommit, flushAllAutoCommits } from "./auto-commit.js";
+
+// Vault context resolution
+export { resolveVaultContext } from "./vault-context.js";
 
 // Detection helpers
 export { ACCOMPLISHMENT_KEYWORDS, containsUserAccomplishment, notifyDesktop } from "./hooks.js";
