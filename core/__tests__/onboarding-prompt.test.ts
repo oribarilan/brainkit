@@ -9,7 +9,7 @@ describe("buildOnboardingPrompt", () => {
 
   it("includes all setup steps", () => {
     const result = buildOnboardingPrompt("opencode");
-    expect(result).toContain("Brain location");
+    expect(result).toContain("Vault location");
     expect(result).toContain("Vault name");
     expect(result).toContain("Basics");
     expect(result).toContain("Context");
@@ -72,7 +72,7 @@ describe("buildOnboardingPrompt", () => {
 
   it("includes the existing-brain detection branch (Scenario B)", () => {
     const result = buildOnboardingPrompt("opencode");
-    // The prompt must instruct the agent to inspect the brain dir before
+    // The prompt must instruct the agent to inspect the vault path before
     // creating anything — and to skip re-onboarding if a configured vault
     // is already there. Otherwise users with prior brainkit data lose it.
     expect(result).toContain("existing vault");
@@ -80,5 +80,13 @@ describe("buildOnboardingPrompt", () => {
     expect(result).toContain("Scenario A");
     expect(result).toContain("Scenario B");
     expect(result).toContain("Scenario C");
+  });
+
+  it("emits v2 config format with [[vaults]] entries instead of brain_path", () => {
+    const result = buildOnboardingPrompt("opencode");
+    expect(result).toContain("version = 2");
+    expect(result).toContain("[[vaults]]");
+    expect(result).not.toContain("brain_path");
+    expect(result).not.toContain("version = 1");
   });
 });

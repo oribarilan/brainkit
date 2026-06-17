@@ -105,7 +105,7 @@ function setInstalled(binaries: string[]): void {
 
 describe("detectAndLaunch", () => {
   beforeEach(() => {
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
     vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
     });
@@ -134,8 +134,8 @@ describe("detectAndLaunch", () => {
   it("launches saved default when it is installed", async () => {
     setInstalled(["opencode", "copilot"]);
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       default_harness: "opencode",
     });
 
@@ -148,8 +148,8 @@ describe("detectAndLaunch", () => {
   it("ignores saved default when it is not installed and falls through", async () => {
     setInstalled(["copilot"]);
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       default_harness: "opencode",
     });
 
@@ -160,7 +160,7 @@ describe("detectAndLaunch", () => {
 
   it("errors in non-TTY when multiple harnesses detected and no default", async () => {
     setInstalled(["opencode", "copilot"]);
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
 
     // Simulate non-TTY
     const origIsTTY = process.stdin.isTTY;
@@ -176,7 +176,7 @@ describe("detectAndLaunch", () => {
 
   it("shows actionable message in non-TTY when multiple harnesses detected", async () => {
     setInstalled(["opencode", "copilot"]);
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
 
     // Non-TTY so it prints and exits instead of prompting
     const origIsTTY = process.stdin.isTTY;
@@ -199,7 +199,7 @@ describe("detectAndLaunch", () => {
 
   it("includes claude as an option when all three harnesses are installed (non-TTY error)", async () => {
     setInstalled(["opencode", "copilot", "claude"]);
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
 
     const origIsTTY = process.stdin.isTTY;
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
@@ -215,9 +215,9 @@ describe("detectAndLaunch", () => {
   it("respects saved default of claude when multiple harnesses installed", async () => {
     setInstalled(["opencode", "claude"]);
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
-      default_harness: "claude",
+      version: 2,
+      vaults: [],
+      default_harness: "opencode",
     });
 
     await detectAndLaunch([], { mode: "onboarding" });

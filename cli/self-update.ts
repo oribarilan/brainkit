@@ -302,7 +302,7 @@ export async function maybeCheckForSelfUpdate(): Promise<void> {
   if (p.isCancel(action) || action === "later") return;
 
   if (action === "skip") {
-    const cfg = readGlobalConfig() ?? { version: 1, brain_path: "" };
+    const cfg = readGlobalConfig() ?? { version: 2, vaults: [] };
     const skipped = cfg.skip_versions ?? [];
     if (!skipped.includes(latest)) {
       cfg.skip_versions = [...skipped, latest];

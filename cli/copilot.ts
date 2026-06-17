@@ -4,7 +4,6 @@ import { execFileSync } from "node:child_process";
 import { spawnHarness } from "./spawn.js";
 import { findPackageRoot } from "./package-root.js";
 import {
-  readGlobalConfig,
   readVaultConfigSimple,
   buildSystemPrompt,
   buildOnboardingPrompt,
@@ -658,32 +657,27 @@ export function launchCopilot(args: string[], target: LaunchTarget): void {
     process.exit(1);
   }
 
-  const selectedVaultPath = target.mode === "single" ? target.vaultPath : undefined;
-  const configDir = getConfigDir();
-  let vaultPath = selectedVaultPath;
+  if (target.mode === "onboarding") {
+    const configDir = getConfigDir();
+    const onboardingDir = ensureOnboardingWorkspace(configDir);
 
-  if (vaultPath === undefined) {
-    const globalConfig = readGlobalConfig();
-    if (globalConfig === null || !globalConfig.brain_path) {
-      // No vault configured — launch onboarding (unchanged path).
-      const onboardingDir = ensureOnboardingWorkspace(configDir);
-
-      p.outro("Starting onboarding...");
-      // Order matters: `-i, --interactive <prompt>` consumes the next token as
-      // its value. `--allow-all` must come BEFORE `-i`, and the prompt string
-      // must immediately follow `-i`. Putting `--allow-all` between them makes
-      // Copilot treat `--allow-all` as the prompt and the actual prompt as a
-      // stray positional → "error: too many arguments. Expected 0 arguments
-      // but got 1."
-      const child = spawnHarness("copilot", ["--allow-all", "-i", "Let's set up my first brainkit vault!", ...args], {
-        stdio: "inherit",
-        cwd: onboardingDir,
-      });
-      child.on("exit", (code) => process.exit(code ?? 0));
-      return;
-    }
-    vaultPath = globalConfig.brain_path;
+    p.outro("Starting onboarding...");
+    // Order matters: `-i, --interactive <prompt>` consumes the next token as
+    // its value. `--allow-all` must come BEFORE `-i`, and the prompt string
+    // must immediately follow `-i`. Putting `--allow-all` between them makes
+    // Copilot treat `--allow-all` as the prompt and the actual prompt as a
+    // stray positional → "error: too many arguments. Expected 0 arguments
+    // but got 1."
+    const child = spawnHarness("copilot", ["--allow-all", "-i", "Let's set up my first brainkit vault!", ...args], {
+      stdio: "inherit",
+      cwd: onboardingDir,
+    });
+    child.on("exit", (code) => process.exit(code ?? 0));
+    return;
   }
+
+  const vaultPath = target.vaultPath;
+  const configDir = getConfigDir();
 
   // Reject --config-dir before any other side effect.
   if (hasConfigDirArg(args)) {

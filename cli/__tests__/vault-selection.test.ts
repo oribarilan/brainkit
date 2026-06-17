@@ -1,53 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 
 // ---------------------------------------------------------------------------
-// Mock core module to control readGlobalConfig and discoverVaults
+// Mock core module
 // ---------------------------------------------------------------------------
 
 vi.mock("../../core/index.js", () => ({
+  listVaults: vi.fn(),
+  validateRegistry: vi.fn(() => []),
   readGlobalConfig: vi.fn(),
-  discoverVaults: vi.fn(),
-  getConfigDir: vi.fn(),
 }));
 
-import { readGlobalConfig, discoverVaults } from "../../core/index.js";
+import { listVaults, validateRegistry } from "../../core/index.js";
+import type { VaultEntry } from "../../core/index.js";
 
-const mockReadGlobalConfig = vi.mocked(readGlobalConfig);
-const mockDiscoverVaults = vi.mocked(discoverVaults);
-
-// ---------------------------------------------------------------------------
-// Mock reset helper to verify selectVault calls it on the missing-brain path
-// ---------------------------------------------------------------------------
-
-vi.mock("../reset.js", () => ({
-  resetBrainkitConfig: vi.fn(),
-}));
-
-import { resetBrainkitConfig } from "../reset.js";
-
-const mockResetBrainkitConfig = vi.mocked(resetBrainkitConfig);
+const mockListVaults = vi.mocked(listVaults);
+const mockValidateRegistry = vi.mocked(validateRegistry);
 
 // ---------------------------------------------------------------------------
 // Mock @clack/prompts
 // ---------------------------------------------------------------------------
 
 vi.mock("@clack/prompts", () => ({
-  cancel: vi.fn(),
-  outro: vi.fn(),
-  intro: vi.fn(),
-  note: vi.fn(),
-  log: {
-    error: vi.fn(),
-    success: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    message: vi.fn(),
-  },
   select: vi.fn(),
   confirm: vi.fn(),
+  cancel: vi.fn(),
+  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), success: vi.fn() },
   isCancel: vi.fn(() => false),
 }));
 
@@ -58,6 +35,14 @@ import * as p from "@clack/prompts";
 // ---------------------------------------------------------------------------
 
 import { parseVaultFlag, selectVault } from "../launch.js";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function makeEntry(name: string, resolvedPath: string, exists = true): VaultEntry {
+  return { name, path: resolvedPath, resolvedPath, exists };
+}
 
 // ---------------------------------------------------------------------------
 // parseVaultFlag
@@ -93,163 +78,75 @@ describe("parseVaultFlag", () => {
 // ---------------------------------------------------------------------------
 
 describe("selectVault", () => {
-  let brainDir: string;
-
   beforeEach(() => {
-    brainDir = mkdtempSync(join(tmpdir(), "brainkit-sv-"));
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: brainDir });
     vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
     });
     vi.spyOn(console, "error").mockImplementation(() => {});
+    mockListVaults.mockReturnValue([]);
+    mockValidateRegistry.mockReturnValue([]);
   });
 
   afterEach(() => {
-    rmSync(brainDir, { recursive: true, force: true });
     vi.restoreAllMocks();
   });
 
-  it("auto-selects when only one vault exists", async () => {
-    mockDiscoverVaults.mockReturnValue(["work"]);
-
+  it("returns onboarding when no vaults registered", async () => {
+    mockListVaults.mockReturnValue([]);
     const result = await selectVault(null);
-    expect(result).toEqual({ mode: "single", vaultPath: join(brainDir, "work"), brainPath: brainDir });
+    expect(result).toEqual({ mode: "onboarding" });
   });
 
-  it("resolves --vault flag to brain_path/name", async () => {
-    mockDiscoverVaults.mockReturnValue(["work", "life"]);
+  it("auto-selects when only one existing vault", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work")]);
+    const result = await selectVault(null);
+    expect(result).toEqual({ mode: "single", vaultPath: "/brain/work" });
+  });
 
+  it("resolves --vault flag by name", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work"), makeEntry("life", "/brain/life")]);
     const result = await selectVault("work");
-    expect(result).toEqual({ mode: "single", vaultPath: join(brainDir, "work"), brainPath: brainDir });
+    expect(result).toEqual({ mode: "single", vaultPath: "/brain/work" });
   });
 
-  it("exits with error when --vault names a nonexistent vault", async () => {
-    mockDiscoverVaults.mockReturnValue(["work", "life"]);
-
-    await expect(selectVault("bogus")).rejects.toThrow("process.exit");
-    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining('Vault "bogus" not found'));
+  it("exits with error when --vault names unknown vault", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work")]);
+    await expect(selectVault("unknown")).rejects.toThrow("process.exit");
   });
 
-  it("returns brainPath when zero vaults (fresh brain)", async () => {
-    mockDiscoverVaults.mockReturnValue([]);
-
-    const result = await selectVault(null);
-    expect(result).toEqual({ mode: "single", vaultPath: brainDir, brainPath: brainDir });
-  });
-
-  it("returns onboarding when no global config exists", async () => {
-    mockReadGlobalConfig.mockReturnValue(null);
-
-    const result = await selectVault(null);
-    expect(result).toEqual({ mode: "onboarding" });
-  });
-
-  it("returns onboarding when global config has empty brain_path", async () => {
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "" });
-
-    const result = await selectVault(null);
-    expect(result).toEqual({ mode: "onboarding" });
-  });
-
-  // All-vaults mode tests
   it("--vault all returns all mode", async () => {
-    mockDiscoverVaults.mockReturnValue(["work", "personal"]);
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work"), makeEntry("life", "/brain/life")]);
     const result = await selectVault("all");
-    expect(result).toEqual({ mode: "all", brainPath: brainDir });
+    expect(result).toEqual({ mode: "all" });
   });
 
   it("--vault ALL is case-insensitive", async () => {
-    mockDiscoverVaults.mockReturnValue(["work"]);
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work")]);
     const result = await selectVault("ALL");
-    expect(result).toEqual({ mode: "all", brainPath: brainDir });
+    expect(result).toEqual({ mode: "all" });
   });
 
-  it("--vault all with 0 vaults exits with error", async () => {
-    mockDiscoverVaults.mockReturnValue([]);
+  it("--vault all with 0 existing vaults exits with error", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work", false)]);
     await expect(selectVault("all")).rejects.toThrow("process.exit");
-    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("No vaults found"));
   });
 
-  it("--vault all with 1 vault enters multi-vault mode", async () => {
-    mockDiscoverVaults.mockReturnValue(["only"]);
-    const result = await selectVault("all");
-    expect(result).toEqual({ mode: "all", brainPath: brainDir });
-  });
-
-  it("warns when a vault named 'all' is discovered", async () => {
-    const originalIsTTY = process.stdin.isTTY;
-    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true, writable: true });
-
-    mockDiscoverVaults.mockReturnValue(["all", "work"]);
-    vi.mocked(p.select).mockResolvedValue("work");
+  it("warns about non-existent vault paths", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work"), makeEntry("gone", "/brain/gone", false)]);
     await selectVault(null);
-    expect(p.log.warn).toHaveBeenCalledWith(expect.stringContaining("reserved"));
-
-    Object.defineProperty(process.stdin, "isTTY", { value: originalIsTTY, configurable: true, writable: true });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// selectVault — missing-brain-dir reset path
-// ---------------------------------------------------------------------------
-
-describe("selectVault — brain dir vanished", () => {
-  let originalIsTTY: boolean | undefined;
-
-  beforeEach(() => {
-    // Point at a brain_path that does not exist so discoverVaults throws.
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/nonexistent/brain/path" });
-    mockDiscoverVaults.mockImplementation(() => {
-      throw new Error("ENOENT: brain dir not found");
-    });
-    mockResetBrainkitConfig.mockReset().mockImplementation(() => {});
-    vi.mocked(p.confirm).mockReset();
-    vi.mocked(p.isCancel).mockReset().mockReturnValue(false);
-    vi.spyOn(process, "exit").mockImplementation(() => {
-      throw new Error("process.exit called");
-    });
-    // Force interactive code path. Stash the original (which may be undefined
-    // in the test runner) so we can restore it.
-    originalIsTTY = process.stdin.isTTY;
-    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true, writable: true });
+    expect(p.log.warn).toHaveBeenCalledWith(expect.stringContaining("gone"));
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-    Object.defineProperty(process.stdin, "isTTY", { value: originalIsTTY, configurable: true, writable: true });
+  it("hard errors on name collisions", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work"), makeEntry("work", "/brain/work2")]);
+    mockValidateRegistry.mockReturnValue(["Duplicate name: work"]);
+    await expect(selectVault(null)).rejects.toThrow("process.exit");
+    expect(p.log.error).toHaveBeenCalled();
   });
 
-  it("calls resetBrainkitConfig (full wipe) when user confirms", async () => {
-    vi.mocked(p.confirm).mockResolvedValue(true);
-
+  it("returns onboarding when all registered vaults are missing", async () => {
+    mockListVaults.mockReturnValue([makeEntry("work", "/brain/work", false), makeEntry("life", "/brain/life", false)]);
     const result = await selectVault(null);
-
-    expect(mockResetBrainkitConfig).toHaveBeenCalledOnce();
     expect(result).toEqual({ mode: "onboarding" });
-  });
-
-  it("warns user up-front that the wipe includes Copilot auth/history", async () => {
-    vi.mocked(p.confirm).mockResolvedValue(true);
-
-    await selectVault(null);
-
-    const confirmCall = vi.mocked(p.confirm).mock.calls[0]?.[0] as { message: string };
-    expect(confirmCall.message).toMatch(/copilot.*auth/i);
-    expect(confirmCall.message).toMatch(/vault/i);
-  });
-
-  it("does not call resetBrainkitConfig when user declines", async () => {
-    vi.mocked(p.confirm).mockResolvedValue(false);
-
-    await expect(selectVault(null)).rejects.toThrow("process.exit");
-    expect(mockResetBrainkitConfig).not.toHaveBeenCalled();
-  });
-
-  it("non-TTY: bails out without calling reset and points user at `brainkit reset`", async () => {
-    Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true, writable: true });
-
-    await expect(selectVault(null)).rejects.toThrow("process.exit");
-    expect(mockResetBrainkitConfig).not.toHaveBeenCalled();
-    expect(p.cancel).toHaveBeenCalledWith(expect.stringContaining("brainkit reset"));
   });
 });

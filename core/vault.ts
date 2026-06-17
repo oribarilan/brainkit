@@ -14,6 +14,7 @@ import type {
 } from "./types.js";
 import { migrateConfig } from "./migrations.js";
 import type { Migration } from "./migrations.js";
+import { migrateGlobalConfig } from "./global-migration.js";
 
 export type {
   BrainkitGlobalConfig,
@@ -72,7 +73,8 @@ export function readGlobalConfig(): BrainkitGlobalConfig | null {
   const configPath = getGlobalConfigPath();
   try {
     const raw = fs.readFileSync(configPath, "utf-8");
-    return parseToml(raw) as unknown as BrainkitGlobalConfig;
+    const parsed = parseToml(raw) as Record<string, unknown>;
+    return migrateGlobalConfig(parsed);
   } catch {
     return null;
   }
@@ -83,6 +85,64 @@ export function writeGlobalConfig(config: BrainkitGlobalConfig): void {
   const dir = path.dirname(configPath);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(configPath, stringifyToml(config) + "\n", "utf-8");
+}
+
+// ---------------------------------------------------------------------------
+// Tilde expansion
+// ---------------------------------------------------------------------------
+
+export function expandTilde(p: string): string {
+  if (p === "~" || p.startsWith("~/") || p.startsWith("~\\")) {
+    return path.join(os.homedir(), p.slice(2));
+  }
+  return p;
+}
+
+// ---------------------------------------------------------------------------
+// Vault registry
+// ---------------------------------------------------------------------------
+
+export interface VaultEntry {
+  name: string;
+  path: string;
+  resolvedPath: string;
+  exists: boolean;
+}
+
+export function listVaults(): VaultEntry[] {
+  try {
+    const config = readGlobalConfig();
+    if (config === null || !Array.isArray(config.vaults) || config.vaults.length === 0) {
+      return [];
+    }
+    return config.vaults.map((v) => {
+      const resolvedPath = path.resolve(expandTilde(v.path));
+      return {
+        name: v.name ?? path.basename(resolvedPath),
+        path: v.path,
+        resolvedPath,
+        exists: fs.existsSync(resolvedPath),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+export function validateRegistry(entries: VaultEntry[]): string[] {
+  const errors: string[] = [];
+  const seen = new Map<string, VaultEntry>();
+  for (const entry of entries) {
+    const existing = seen.get(entry.name);
+    if (existing !== undefined) {
+      errors.push(
+        `Duplicate vault name "${entry.name}" from paths "${existing.path}" and "${entry.path}". Add an explicit name field to one of them.`,
+      );
+    } else {
+      seen.set(entry.name, entry);
+    }
+  }
+  return errors;
 }
 
 // ---------------------------------------------------------------------------

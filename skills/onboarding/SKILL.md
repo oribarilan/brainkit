@@ -59,7 +59,7 @@ Based on the conversation, do all of this:
      ```
    - Set features (all enabled by default)
 
-2. **Create the vault directory** under the brain directory (if not already created by the launcher)
+2. **Create the vault directory** at the chosen path (if not already created by the launcher)
 
 3. **Create PARA structure** (the four directories with README.md files)
 

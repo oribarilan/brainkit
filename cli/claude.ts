@@ -5,7 +5,6 @@ import * as p from "@clack/prompts";
 import { spawnHarness } from "./spawn.js";
 import { findPackageRoot } from "./package-root.js";
 import {
-  readGlobalConfig,
   readVaultConfigSimple,
   buildSystemPrompt,
   buildOnboardingPrompt,
@@ -296,10 +295,8 @@ export function cleanupClaudeOnboardingWorkspace(configDir: string): void {
  * @param args - User-supplied CLI args passed through to claude verbatim
  *   (e.g. `--model sonnet`, `--dangerously-skip-permissions`). Appended after
  *   brainkit's own `--plugin-dir` and `--append-system-prompt-file` flags.
- * @param selectedVaultPath - Optional vault path. When provided (e.g. by the
- *   multi-vault selector in `cli/launch.ts`), skips the global-config lookup.
- *   When undefined, falls back to `readGlobalConfig().brain_path`. If both are
- *   absent, enters the onboarding flow.
+ * @param target - Vault selection from the CLI. When `single`, skips the
+ *   global-config lookup. When `onboarding`, enters the first-run flow.
  *
  * Always runs the version check, plugin staging, and settings/theme/prompt
  * regeneration in that order. Spawns `claude` with isolated `CLAUDE_CONFIG_DIR`
@@ -326,32 +323,28 @@ export function launchClaude(args: string[], target: LaunchTarget): void {
     process.exit(1);
   }
 
-  const selectedVaultPath = target.mode === "single" ? target.vaultPath : undefined;
-  const configDir = getConfigDir();
-  let vaultPath = selectedVaultPath;
-
-  if (vaultPath === undefined) {
-    const globalConfig = readGlobalConfig();
-    if (globalConfig === null || !globalConfig.brain_path) {
-      const onboardingDir = ensureClaudeOnboardingWorkspace(configDir);
-      p.outro("Starting onboarding...");
-      // Three things matter here:
-      // 1. cwd=onboardingDir + the generated CLAUDE.md gives the agent the
-      //    brainkit setup instructions as per-project memory.
-      // 2. The positional prompt argument auto-submits the kickoff message
-      //    so the agent immediately starts the conversation (mirrors
-      //    OpenCode's --prompt and Copilot's -i flag in their onboarding).
-      // 3. --dangerously-skip-permissions removes the per-write prompt wall;
-      //    the agent needs to create config.toml + vault dirs without
-      //    interrupting the user for permission on every file (mirrors
-      //    OpenCode's `permission: "allow"` during onboarding).
-      const onboardingArgs = ["--dangerously-skip-permissions", ...args, "Let's set up my first brainkit vault!"];
-      const child = spawnHarness("claude", onboardingArgs, { stdio: "inherit", cwd: onboardingDir });
-      child.on("exit", (code) => process.exit(code ?? 0));
-      return;
-    }
-    vaultPath = globalConfig.brain_path;
+  if (target.mode === "onboarding") {
+    const configDir = getConfigDir();
+    const onboardingDir = ensureClaudeOnboardingWorkspace(configDir);
+    p.outro("Starting onboarding...");
+    // Three things matter here:
+    // 1. cwd=onboardingDir + the generated CLAUDE.md gives the agent the
+    //    brainkit setup instructions as per-project memory.
+    // 2. The positional prompt argument auto-submits the kickoff message
+    //    so the agent immediately starts the conversation (mirrors
+    //    OpenCode's --prompt and Copilot's -i flag in their onboarding).
+    // 3. --dangerously-skip-permissions removes the per-write prompt wall;
+    //    the agent needs to create config.toml + vault dirs without
+    //    interrupting the user for permission on every file (mirrors
+    //    OpenCode's `permission: "allow"` during onboarding).
+    const onboardingArgs = ["--dangerously-skip-permissions", ...args, "Let's set up my first brainkit vault!"];
+    const child = spawnHarness("claude", onboardingArgs, { stdio: "inherit", cwd: onboardingDir });
+    child.on("exit", (code) => process.exit(code ?? 0));
+    return;
   }
+
+  const vaultPath = target.vaultPath;
+  const configDir = getConfigDir();
 
   // Defensive version check (warns, doesn't abort).
   checkClaudeVersion();
