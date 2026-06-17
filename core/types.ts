@@ -1,8 +1,8 @@
 export interface BrainkitGlobalConfig {
   version: number;
-  brain_path: string;
   default_harness?: string;
   skip_versions?: string[];
+  vaults: Array<{ path: string; name?: string }>;
 }
 
 export interface BrainkitConfig {

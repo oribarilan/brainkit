@@ -61,7 +61,7 @@ function listAllFiles(root: string): string[] {
 
 function seedConfigDir(dir: string): void {
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, "config.toml"), 'version = 1\nbrain_path = "/x"\n', "utf-8");
+  fs.writeFileSync(path.join(dir, "config.toml"), "version = 2\nvaults = []\n", "utf-8");
   fs.writeFileSync(path.join(dir, "opencode.json"), "{}\n", "utf-8");
   fs.writeFileSync(path.join(dir, "tui.json"), "{}\n", "utf-8");
   const copilot = path.join(dir, "copilot");

@@ -13,6 +13,7 @@ import {
 import type { LaunchTarget } from "./launch.js";
 import { factoryReset } from "./reset.js";
 import { maybeCheckForSelfUpdate } from "./self-update.js";
+import { maybeMigrateGlobal } from "../core/index.js";
 
 const HELP_TEXT = `Usage:
   brainkit                     Launch (auto-detects harness)
@@ -73,15 +74,16 @@ async function main(): Promise<void> {
 
   await maybeCheckForSelfUpdate();
 
+  maybeMigrateGlobal();
+
   // Parse --vault from args (before or after harness alias)
   const { vault: vaultFlag, remaining } = parseVaultFlag(args);
 
   // Select vault
   const selection = await selectVault(vaultFlag);
 
-  // Map VaultSelection to LaunchTarget (drop brainPath for single mode)
-  const target: LaunchTarget =
-    selection.mode === "single" ? { mode: "single", vaultPath: selection.vaultPath } : selection;
+  // Map VaultSelection to LaunchTarget (types are now identical)
+  const target: LaunchTarget = selection;
 
   const firstArg = remaining[0];
 

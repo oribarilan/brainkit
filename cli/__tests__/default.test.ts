@@ -7,7 +7,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("../../core/index.js", () => ({
   readGlobalConfig: vi.fn(),
   writeGlobalConfig: vi.fn(),
-  discoverVaults: vi.fn(),
+  listVaults: vi.fn(),
+  validateRegistry: vi.fn(() => []),
   readVaultConfigSimple: vi.fn(),
   readVaultFile: vi.fn(),
   writeVaultFile: vi.fn(),
@@ -107,7 +108,7 @@ function setInstalled(binaries: string[]): void {
 describe("handleDefaultCommand — set alias", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
     setInstalled(["opencode", "copilot", "claude"]);
     vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
@@ -138,8 +139,8 @@ describe("handleDefaultCommand — set alias", () => {
 
   it("prints already-default when harness matches current default", async () => {
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       default_harness: "claude",
     });
 
@@ -151,8 +152,8 @@ describe("handleDefaultCommand — set alias", () => {
 
   it("treats cross-alias as already-default", async () => {
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       default_harness: "oc",
     });
 
@@ -164,8 +165,8 @@ describe("handleDefaultCommand — set alias", () => {
     vi.mocked(p.log.info).mockClear();
 
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       default_harness: "claude",
     });
 
@@ -200,8 +201,8 @@ describe("handleDefaultCommand — set alias", () => {
     await handleDefaultCommand(["oc"]);
 
     expect(mockWriteGlobalConfig).toHaveBeenCalledWith({
-      version: 1,
-      brain_path: "",
+      version: 2,
+      vaults: [],
       default_harness: "oc",
     });
   });
@@ -210,7 +211,7 @@ describe("handleDefaultCommand — set alias", () => {
 describe("handleDefaultCommand — no arg", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
     setInstalled(["opencode", "copilot", "claude"]);
     vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
@@ -228,8 +229,8 @@ describe("handleDefaultCommand — no arg", () => {
 
     try {
       mockReadGlobalConfig.mockReturnValue({
-        version: 1,
-        brain_path: "/brain",
+        version: 2,
+        vaults: [],
         default_harness: "oc",
       });
 
@@ -246,7 +247,7 @@ describe("handleDefaultCommand — no arg", () => {
     Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
 
     try {
-      mockReadGlobalConfig.mockReturnValue({ version: 1, brain_path: "/brain" });
+      mockReadGlobalConfig.mockReturnValue({ version: 2, vaults: [] });
 
       await handleDefaultCommand([]);
 
@@ -297,8 +298,8 @@ describe("handleDefaultCommand — no arg", () => {
 
     try {
       mockReadGlobalConfig.mockReturnValue({
-        version: 1,
-        brain_path: "/brain",
+        version: 2,
+        vaults: [],
         default_harness: "oc",
       });
 

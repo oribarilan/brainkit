@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-06-17
+
+### Added
+
+- **Vault registry**: vaults can live anywhere on the filesystem. Register them in `config.toml` with `[[vaults]]` entries instead of keeping everything under one parent directory. Paths support `~` for portability.
+
+### Changed
+
+- Config schema bumped to v2. The `brain_path` field is replaced by a `[[vaults]]` array. Existing v1 configs migrate automatically on first launch (backup saved as `config.toml.v1.bak`). Comments in hand-edited configs will be lost during migration.
+- Tilde expansion in vault paths is now handled by `expandTilde()`, fixing a bug where `~user/...` paths were incorrectly mangled.
+
 ## [0.16.0] - 2026-06-16
 
 ### Added

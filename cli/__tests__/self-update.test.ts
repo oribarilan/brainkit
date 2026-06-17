@@ -523,8 +523,8 @@ describe("maybeCheckForSelfUpdate", () => {
     mockGetLatestNpmVersion.mockReturnValue("0.7.0");
     mockIsOlderThan.mockImplementation((a, b) => a === "0.6.1" && b === "0.7.0");
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       skip_versions: ["0.7.0"],
     });
 
@@ -545,8 +545,8 @@ describe("maybeCheckForSelfUpdate", () => {
       return a3 < b3;
     });
     mockReadGlobalConfig.mockReturnValue({
-      version: 1,
-      brain_path: "/brain",
+      version: 2,
+      vaults: [],
       skip_versions: ["0.5.0", "0.7.0"],
     });
 
@@ -620,7 +620,7 @@ describe("maybeCheckForSelfUpdate", () => {
     mockSelect.mockResolvedValue("skip");
     // First call in main flow returns null (no skip_versions)
     // Second call in skip handler returns fresh config
-    mockReadGlobalConfig.mockReturnValueOnce(null).mockReturnValueOnce({ version: 1, brain_path: "/brain" });
+    mockReadGlobalConfig.mockReturnValueOnce(null).mockReturnValueOnce({ version: 2, vaults: [] });
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("no network")));
 
     await maybeCheckForSelfUpdate();

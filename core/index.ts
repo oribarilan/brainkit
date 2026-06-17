@@ -17,7 +17,9 @@ export {
   getCopilotConfigDir,
   readGlobalConfig,
   writeGlobalConfig,
-  discoverVaults,
+  expandTilde,
+  listVaults,
+  validateRegistry,
   readVaultConfig,
   readVaultConfigSimple,
   writeVaultConfig,
@@ -36,10 +38,13 @@ export {
   stalenessCategory,
   daysSinceLastEntry,
 } from "./vault.js";
-export type { VaultState, Migration, StalenessCategory } from "./vault.js";
+export type { VaultEntry, VaultState, Migration, StalenessCategory } from "./vault.js";
 
 // Migrations
 export { CURRENT_SCHEMA_VERSION, migrateConfig } from "./migrations.js";
+
+// Global config migration
+export { migrateGlobalConfig, maybeMigrateGlobal } from "./global-migration.js";
 
 // System prompt
 export { detectProjectContext, buildSystemPrompt, buildMultiVaultPrompt } from "./system-prompt.js";

@@ -23,19 +23,29 @@ The agent interacts with the vault by reading, writing, and searching files dire
 
 When a user runs /setup or asks to set up their vault:
 
-1. Ask where their vault should live (absolute path)
+1. Ask where their vault should live (e.g., `~/brain/work`)
 2. Create the vault directory structure at the chosen path
 3. Use the onboarding skill to conduct a comprehensive Q&A covering both professional and personal life — basics (name, role, expertise), work context (projects, team, collaborators, work rhythm), personal life (family, personal projects, responsibilities, hobbies), and communication preferences (tone, custom rules)
 4. Construct a brainkit.toml with a rich `context` field summarizing everything learned, and write it at path `brainkit.toml` in the vault root
-5. Check vault health and create missing structure (PARA directories, key files)
-6. Pre-create relevant PARA directories with README.md files based on the conversation
-7. Offer first brag entry and first contacts based on what was discussed
-8. Confirm setup is complete
+5. Register the vault in `~/.config/brainkit/config.toml` with a `[[vaults]]` entry pointing at the vault path
+6. Check vault health and create missing structure (PARA directories, key files)
+7. Pre-create relevant PARA directories with README.md files based on the conversation
+8. Offer first brag entry and first contacts based on what was discussed
+9. Confirm setup is complete
+
+Example config.toml:
+
+```toml
+version = 2
+
+[[vaults]]
+path = "~/brain/work"
+```
 
 Example brainkit.toml:
 
 ```toml
-version = 1
+version = 2
 
 [user]
 name = "Ori"

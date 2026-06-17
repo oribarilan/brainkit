@@ -47,7 +47,7 @@ vi.mock("@clack/prompts", () => ({
 }));
 
 vi.mock("../../core/index.js", () => ({
-  readGlobalConfig: vi.fn(() => ({ version: 1, brain_path: "/unused-in-tests" })),
+  readGlobalConfig: vi.fn(() => ({ version: 2, vaults: [] })),
   readVaultConfigSimple: vi.fn(() => ({ version: 1, user: { name: "Test" }, features: {} })),
   buildSystemPrompt: vi.fn(() => "# Test brainkit prompt\n<!-- brainkit:generated -->\n"),
   buildOnboardingPrompt: vi.fn(() => "# Onboarding prompt"),

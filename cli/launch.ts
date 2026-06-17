@@ -1,28 +1,21 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as os from "node:os";
 import * as p from "@clack/prompts";
 import { execFileSync } from "node:child_process";
-import { readGlobalConfig, writeGlobalConfig, discoverVaults, getConfigDir } from "../core/index.js";
+import { readGlobalConfig, writeGlobalConfig, listVaults, validateRegistry, getConfigDir } from "../core/index.js";
+import type { VaultEntry } from "../core/index.js";
 import { launchCopilot } from "./copilot.js";
 import { launchClaude } from "./claude.js";
 import { maybeCheckHarnessVersion } from "./harness-version.js";
 import { spawnHarness } from "./spawn.js";
-import { resetBrainkitConfig } from "./reset.js";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type VaultSelection =
-  | { mode: "single"; vaultPath: string; brainPath: string }
-  | { mode: "all"; brainPath: string }
-  | { mode: "onboarding" };
+export type VaultSelection = { mode: "single"; vaultPath: string } | { mode: "all" } | { mode: "onboarding" };
 
-export type LaunchTarget =
-  | { mode: "single"; vaultPath: string }
-  | { mode: "all"; brainPath: string }
-  | { mode: "onboarding" };
+export type LaunchTarget = { mode: "single"; vaultPath: string } | { mode: "all" } | { mode: "onboarding" };
 
 const ALL_VAULT_RESERVED = /^all$/i;
 
@@ -207,16 +200,22 @@ export function parseVaultFlag(args: string[]): { vault: string | null; remainin
 // Vault selection
 // ---------------------------------------------------------------------------
 
-async function promptVaultSelection(vaults: string[]): Promise<string> {
+async function promptVaultSelection(entries: VaultEntry[]): Promise<string> {
   if (!process.stdin.isTTY) {
     p.cancel("Multiple vaults found. Use --vault <name> to select one.");
     process.exit(1);
   }
 
   // Filter out vaults named "all" from the picker to avoid visual collision
-  const pickerVaults = vaults.filter((v) => !ALL_VAULT_RESERVED.test(v));
+  const pickerEntries = entries.filter((e) => !ALL_VAULT_RESERVED.test(e.name));
 
-  const options = [{ value: "__all__", label: "+ All vaults" }, ...pickerVaults.map((v) => ({ value: v, label: v }))];
+  const options = [
+    { value: "__all__", label: "+ All vaults" },
+    ...pickerEntries.map((e) => ({
+      value: e.resolvedPath,
+      label: e.exists ? e.name : `${e.name} (missing)`,
+    })),
+  ];
 
   const selected = await p.select({
     message: "Select a vault",
@@ -232,91 +231,76 @@ async function promptVaultSelection(vaults: string[]): Promise<string> {
 }
 
 export async function selectVault(vaultFlag: string | null): Promise<VaultSelection> {
-  const globalConfig = readGlobalConfig();
-  if (globalConfig === null || !globalConfig.brain_path) {
+  const entries = listVaults();
+
+  // No registered vaults → onboarding
+  if (entries.length === 0) {
     return { mode: "onboarding" };
   }
 
-  const brainPath = path.resolve(globalConfig.brain_path.replace(/^~/, os.homedir()));
-  let vaults: string[];
-
-  try {
-    vaults = discoverVaults(brainPath);
-  } catch {
-    p.log.warn(`Brain directory not found: ${brainPath}`);
-
-    if (process.stdin.isTTY) {
-      const shouldReset = await p.confirm({
-        message: "Remove all brainkit config and start fresh? (Includes Copilot auth/history; vaults are not touched.)",
-      });
-
-      if (p.isCancel(shouldReset) || !shouldReset) {
-        p.cancel("Cannot continue without a valid brain directory.");
-        process.exit(1);
-      }
-
-      // Wipe the entire brainkit config dir to trigger onboarding on next launch.
-      try {
-        resetBrainkitConfig();
-      } catch (err) {
-        p.cancel(err instanceof Error ? err.message : String(err));
-        process.exit(1);
-      }
-
-      p.log.success("Brainkit config removed. Restarting onboarding...");
-      return { mode: "onboarding" };
+  // Validate registry — hard error on name collisions
+  const errors = validateRegistry(entries);
+  if (errors.length > 0) {
+    for (const err of errors) {
+      p.log.error(err);
     }
-
-    p.cancel(`Brain directory not found. Run \`brainkit reset\` to clear config and re-onboard.`);
+    p.cancel("Fix vault name collisions in config.toml and retry.");
     process.exit(1);
   }
 
-  // Warn if a vault named "all" exists (any case)
-  if (vaults.some((v) => ALL_VAULT_RESERVED.test(v))) {
-    p.log.warn('"all" is a reserved vault name in brainkit. A vault with this name may conflict with --vault all.');
+  const existing = entries.filter((e) => e.exists);
+
+  // Warn about missing paths
+  for (const entry of entries) {
+    if (!entry.exists) {
+      p.log.warn(`Vault "${entry.name}" not found at ${entry.resolvedPath}`);
+    }
   }
 
-  // --vault all (case-insensitive reserved name)
+  // --vault all
   if (vaultFlag !== null && ALL_VAULT_RESERVED.test(vaultFlag)) {
-    if (vaults.length === 0) {
-      p.cancel("No vaults found. Run brainkit to set up your first vault.");
+    if (existing.length === 0) {
+      p.cancel("No valid vaults found.");
       process.exit(1);
     }
-    return { mode: "all", brainPath };
+    return { mode: "all" };
   }
 
-  // Explicit --vault flag (specific vault name)
+  // --vault <name>
   if (vaultFlag !== null) {
-    if (!vaults.includes(vaultFlag)) {
+    const match = entries.find((e) => e.name === vaultFlag);
+    if (match === undefined) {
+      const available = entries.map((e) => e.name).join(", ");
       const msg =
-        vaults.length > 0
-          ? `Vault "${vaultFlag}" not found. Available: ${vaults.join(", ")}`
+        entries.length > 0
+          ? `Vault "${vaultFlag}" not found. Available: ${available}`
           : `Vault "${vaultFlag}" not found.`;
       p.cancel(msg);
       process.exit(1);
     }
-    return { mode: "single", vaultPath: path.join(brainPath, vaultFlag), brainPath };
-  }
-
-  // 0 vaults — fresh brain
-  if (vaults.length === 0) {
-    return { mode: "single", vaultPath: brainPath, brainPath };
-  }
-
-  // 1 vault — auto-select
-  if (vaults.length === 1) {
-    const single = vaults[0];
-    if (single !== undefined) {
-      return { mode: "single", vaultPath: path.join(brainPath, single), brainPath };
+    if (!match.exists) {
+      p.cancel(`Vault "${vaultFlag}" not found at ${match.resolvedPath}`);
+      process.exit(1);
     }
+    return { mode: "single", vaultPath: match.resolvedPath };
   }
 
-  // 2+ vaults — interactive prompt with "All vaults" option
-  const selected = await promptVaultSelection(vaults);
-  if (selected === "__all__") {
-    return { mode: "all", brainPath };
+  // 0 existing vaults → onboarding
+  if (existing.length === 0) {
+    return { mode: "onboarding" };
   }
-  return { mode: "single", vaultPath: path.join(brainPath, selected), brainPath };
+
+  // 1 vault → auto-select
+  if (existing.length === 1 && existing[0] !== undefined) {
+    return { mode: "single", vaultPath: existing[0].resolvedPath };
+  }
+
+  // 2+ vaults → interactive picker
+  const selected = await promptVaultSelection(entries);
+  if (selected === "__all__") {
+    return { mode: "all" };
+  }
+  return { mode: "single", vaultPath: selected };
 }
 
 // ---------------------------------------------------------------------------
@@ -380,7 +364,7 @@ export async function handleDefaultCommand(args: string[]): Promise<void> {
     }
   }
 
-  const config = globalConfig ?? { version: 1, brain_path: "" };
+  const config = globalConfig ?? { version: 2, vaults: [] };
   config.default_harness = canonicalAlias;
   writeGlobalConfig(config);
   p.log.success(`Default harness set to ${harness.name}.`);
@@ -432,7 +416,7 @@ async function showOrPickDefault(): Promise<void> {
     process.exit(0);
   }
 
-  const config = globalConfig ?? { version: 1, brain_path: "" };
+  const config = globalConfig ?? { version: 2, vaults: [] };
   config.default_harness = selected.aliases[0];
   writeGlobalConfig(config);
   p.log.success(`Default harness set to ${selected.name}.`);
@@ -490,7 +474,7 @@ export async function detectAndLaunch(args: string[], target: LaunchTarget): Pro
   }
 
   // Save default
-  const config = globalConfig ?? { version: 1, brain_path: "" };
+  const config = globalConfig ?? { version: 2, vaults: [] };
   config.default_harness = selected.aliases[0];
   writeGlobalConfig(config);
   p.log.success(`Default harness set to ${selected.name}.`);
