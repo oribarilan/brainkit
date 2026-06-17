@@ -78,7 +78,7 @@ describe("listVaults", () => {
     const personal = path.join(vaultDir, "personal");
     mkdirSync(personal);
 
-    writeConfig(`version = 2\n\n[[vaults]]\npath = "${personal}"\n`);
+    writeConfig(stringifyToml({ version: 2, vaults: [{ path: personal }] }));
 
     const result = listVaults();
     expect(result).toHaveLength(1);
@@ -94,7 +94,7 @@ describe("listVaults", () => {
     const engVault = path.join(vaultDir, "eng-vault");
     mkdirSync(engVault);
 
-    writeConfig(`version = 2\n\n[[vaults]]\npath = "${engVault}"\n`);
+    writeConfig(stringifyToml({ version: 2, vaults: [{ path: engVault }] }));
 
     const result = listVaults();
     expect(result[0]?.name).toBe("eng-vault");
@@ -104,7 +104,7 @@ describe("listVaults", () => {
     const personal = path.join(vaultDir, "personal");
     mkdirSync(personal);
 
-    writeConfig(`version = 2\n\n[[vaults]]\npath = "${personal}"\nname = "home"\n`);
+    writeConfig(stringifyToml({ version: 2, vaults: [{ path: personal, name: "home" }] }));
 
     const result = listVaults();
     expect(result[0]?.name).toBe("home");
@@ -112,7 +112,7 @@ describe("listVaults", () => {
 
   it("sets exists to false for non-existent paths", () => {
     const nonexistent = path.join(vaultDir, "nonexistent");
-    writeConfig(`version = 2\n\n[[vaults]]\npath = "${nonexistent}"\n`);
+    writeConfig(stringifyToml({ version: 2, vaults: [{ path: nonexistent }] }));
 
     const result = listVaults();
     expect(result[0]?.exists).toBe(false);
@@ -124,7 +124,7 @@ describe("listVaults", () => {
     mkdirSync(work);
     mkdirSync(life);
 
-    writeConfig(`version = 2\n\n[[vaults]]\npath = "${work}"\n\n[[vaults]]\npath = "${life}"\n`);
+    writeConfig(stringifyToml({ version: 2, vaults: [{ path: work }, { path: life }] }));
 
     const result = listVaults();
     expect(result).toHaveLength(2);

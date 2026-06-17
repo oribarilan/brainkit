@@ -146,7 +146,7 @@ describe("maybeMigrateGlobal", () => {
 
   it("migrates v1 config and creates backup", () => {
     createVault("personal");
-    writeConfig(`version = 1\nbrain_path = "${brainDir}"\n`);
+    writeConfig(stringifyToml({ version: 1, brain_path: brainDir }));
 
     maybeMigrateGlobal();
 
@@ -185,7 +185,7 @@ describe("maybeMigrateGlobal", () => {
   });
 
   it("backup contains original v1 content", () => {
-    const original = `version = 1\nbrain_path = "${brainDir}"\n`;
+    const original = stringifyToml({ version: 1, brain_path: brainDir });
     writeConfig(original);
 
     maybeMigrateGlobal();
